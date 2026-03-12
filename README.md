@@ -5,7 +5,7 @@
 <h1 align="center">033-Skizze</h1>
 
 <p align="center">
-  Web-basiertes Verkehrsunfallskizzen-Tool für die Polizei Niedersachsen
+  Web-basiertes Verkehrsunfallskizzen-Tool
 </p>
 
 <p align="center">
@@ -20,7 +20,7 @@
 
 ## Überblick
 
-**033-Skizze** ist eine professionelle Webanwendung zur Erstellung von Verkehrsunfallskizzen. Das Tool ermöglicht es Polizeibeamten, direkt im Browser präzise und maßstabsgetreue Unfallskizzen zu erstellen — mit parametrischen Straßen, Fahrzeugen, Verkehrszeichen, Umgebungselementen und freiem Zeichnen.
+**033-Skizze** ist eine professionelle Webanwendung zur Erstellung von Verkehrsunfallskizzen. Das Tool ermöglicht es, direkt im Browser Unfallskizzen zu erstellen — mit parametrischen Straßen, Fahrzeugen, Verkehrszeichen, Umgebungselementen und freiem Zeichnen.
 
 ### Kernfunktionen
 
@@ -30,7 +30,7 @@
 - **Layer-Management** — Sichtbarkeit, Sperren, Z-Reihenfolge und Benennung einzelner Elemente
 - **Undo/Redo** — Transaktionsbasiertes Command Pattern mit bis zu 100 Schritten
 - **PDF-Export** — PDF/A-1b-konformer Export mit 300 DPI, sRGB-ICC-Profil und Metadaten
-- **Vorgangsdaten** — Erfassung von Dienststelle, Aktenzeichen, Datum und weiteren Falldaten
+- **Vorgangsdaten** — Erfassung von Metadaten wie Aktenzeichen, Datum und weiteren Falldaten
 - **Dark/Light Theme** — Systemübergreifendes Farbschema mit FOUC-Prävention
 - **Touch-Support** — Optimiert für Tablet-Nutzung mit Touch-Pan und -Gesten
 - **PWA-fähig** — Web App Manifest für die Installation auf Endgeräten
@@ -253,7 +253,7 @@ Lose Kopplung über Window Custom Events:
 
 ## PDF-Export
 
-- **Standard:** PDF/A-1b (maximale Kompatibilität mit Behörden-Systemen)
+- **Standard:** PDF/A-1b (maximale Kompatibilität)
 - **Auflösung:** 300 DPI (konfigurierbar)
 - **Farbprofil:** Eingebettetes sRGB-ICC-Profil
 - **Format:** DIN A4, Hoch- oder Querformat
@@ -291,5 +291,5 @@ Proprietär. Alle Rechte vorbehalten.
 ---
 
 <p align="center">
-  <sub>Entwickelt für die Polizei Niedersachsen</sub>
+  <sub>Entwickelt von choboworks</sub>
 </p>

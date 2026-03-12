@@ -22,3 +22,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment & secrets
+.env
+.env.*
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+
+# Sensitive config
+api/mail-config.php
+*.secret
+*.credentials
+
+# Claude Code local config
+.claude/
