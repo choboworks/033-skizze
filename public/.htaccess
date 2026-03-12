@@ -1,0 +1,84 @@
+# ====================== .htaccess (Root) ======================
+
+# --- Security & CSP -----------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set Content-Security-Policy "\
+default-src 'self'; \
+script-src 'self'; \
+style-src 'self' 'unsafe-inline'; \
+img-src 'self' data: blob:; \
+font-src 'self'; \
+connect-src 'self' blob: data:; \
+worker-src 'self' blob:; \
+frame-src 'self' blob:; \
+object-src 'none'; \
+base-uri 'self'; \
+form-action 'self'; \
+frame-ancestors 'none'; \
+manifest-src 'self';"
+
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "no-referrer"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+  Header always set X-Frame-Options "DENY"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+</IfModule>
+
+# --- MIME Types ---------------------------------------------------------------
+<IfModule mod_mime.c>
+  AddType font/woff2 .woff2
+  AddType application/vnd.iccprofile .icc
+</IfModule>
+
+# --- Verzeichnis-Listing aus --------------------------------------------------
+Options -Indexes
+
+# --- API-Härtung --------------------------------------------------------------
+# sensible Dateien sperren
+<FilesMatch "(?i)^(mail-config\.php|\.env|composer\.(json|lock))$">
+  Require all denied
+</FilesMatch>
+
+# PHPMailer-Quellordner nicht ausliefern
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Blockiere direkten Zugriff auf Bibliotheken im API-Ordner
+  RewriteRule ^api/PHPMailer/ - [F,L]
+
+  # API-Endpunkte NICHT an SPA weiterreichen
+  RewriteCond %{REQUEST_URI} ^/api/ [NC]
+  RewriteRule ^ - [L]
+
+  # Vorhandene Dateien/Ordner normal ausliefern
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Single Page App Fallback
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# --- Kompression --------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+# --- Caching ------------------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  # Fingerprinted Build-Assets: lange cachen
+  <FilesMatch "\.(js|css|woff2|png|jpe?g|svg)$">
+    ExpiresDefault "access plus 1 year"
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  # HTML: kein Caching
+  <FilesMatch "\.html$">
+    ExpiresDefault "access plus 0 seconds"
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>

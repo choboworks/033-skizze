@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "033-Skizze",
+  "short_name": "Skizze",
+  "description": "Browser-Tool für Unfallskizzen mit Zeichen-, Layer- und Export-Funktionen.",
+  "lang": "de",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563EB",
+  "orientation": "any",
+  "shortcuts": [
+    { "name": "Neue Skizze", "short_name": "Neu", "url": "/?new=1" },
+    { "name": "Zuletzt geöffnet", "short_name": "Zuletzt", "url": "/?recent=1" }
+  ]
+}

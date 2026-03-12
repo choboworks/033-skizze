@@ -1,0 +1,208 @@
+// src/modules/library/assets/umgebungAssets.ts
+import type { AssetBaseMeta } from '../libraryManifest'
+
+export const UMGEBUNG_ASSETS: AssetBaseMeta[] = [
+
+  // Vegetation
+  {
+    id: 'env_baum_laub',
+    label: 'Baum (Laub)',
+    category: 'umgebung',
+    subcategory: 'um_vegetation',
+    tags: ['baum', 'laubbaum'],
+    searchKeywords: ['baum'],
+    popularity: 60,
+  },
+  {
+    id: 'env_baum_nadel',
+    label: 'Baum (Nadel)',
+    category: 'umgebung',
+    subcategory: 'um_vegetation',
+    tags: ['baum', 'nadelbaum'],
+    searchKeywords: ['baum'],
+    popularity: 50,
+  },
+  {
+    id: 'env_busch',
+    label: 'Busch',
+    category: 'umgebung',
+    subcategory: 'um_vegetation',
+    tags: ['busch'],
+    searchKeywords: ['busch'],
+    popularity: 50,
+  },
+  {
+    id: 'env_hecke',
+    label: 'Hecke',
+    category: 'umgebung',
+    subcategory: 'um_vegetation',
+    tags: ['hecke'],
+    searchKeywords: ['hecke'],
+    popularity: 50,
+  },
+
+  // Stadtmöbel
+  {
+    id: 'env_bank',
+    label: 'Bank',
+    category: 'umgebung',
+    subcategory: 'um_stadtmoebel',
+    tags: ['bank', 'sitzgelegenheit'],
+    searchKeywords: ['bank'],
+    popularity: 55,
+  },
+  {
+    id: 'env_papierkorb',
+    label: 'Papierkorb',
+    category: 'umgebung',
+    subcategory: 'um_stadtmoebel',
+    tags: ['papierkorb'],
+    searchKeywords: ['papierkorb'],
+    popularity: 45,
+  },
+  {
+    id: 'env_laterne',
+    label: 'Straßenlaterne',
+    category: 'umgebung',
+    subcategory: 'um_stadtmoebel',
+    tags: ['laterne'],
+    searchKeywords: ['straßenlaterne'],
+    popularity: 55,
+  },
+  {
+    id: 'env_bushaltestelle',
+    label: 'Bushaltestellen-Element',
+    category: 'umgebung',
+    subcategory: 'um_stadtmoebel',
+    tags: ['bushaltestelle'],
+    searchKeywords: ['bushaltestelle'],
+    popularity: 50,
+  },
+
+    // Mensch & Tier
+  {
+    id: 'env_reh',
+    label: 'Reh',
+    category: 'umgebung',
+    subcategory: 'um_mensch_tier',
+    tags: ['reh', 'wild'],
+    searchKeywords: ['reh'],
+    popularity: 60,
+  },
+
+  // Gebäude & Bauliches
+  {
+    id: 'env_haus_einfamilien',
+    label: 'Einfamilienhaus',
+    category: 'umgebung',
+    subcategory: 'um_gebaeude_bauliches',
+    tags: ['haus', 'einfamilienhaus'],
+    searchKeywords: ['haus'],
+    popularity: 60,
+  },
+  {
+    id: 'env_mehrfamilienhaus',
+    label: 'Mehrfamilienhaus',
+    category: 'umgebung',
+    subcategory: 'um_gebaeude_bauliches',
+    tags: ['haus', 'mehrfamilienhaus'],
+    searchKeywords: ['mehrfamilienhaus'],
+    popularity: 50,
+  },
+  {
+    id: 'env_garage',
+    label: 'Garage',
+    category: 'umgebung',
+    subcategory: 'um_gebaeude_bauliches',
+    tags: ['garage'],
+    searchKeywords: ['garage'],
+    popularity: 55,
+  },
+
+  // Technische Objekte
+  {
+    id: 'env_verteilerkasten',
+    label: 'Verteilerkasten',
+    category: 'umgebung',
+    subcategory: 'um_technische_objekte',
+    tags: ['verteilerkasten'],
+    searchKeywords: ['verteilerkasten'],
+    popularity: 40,
+  },
+  {
+    id: 'env_trafohaus',
+    label: 'Trafohaus',
+    category: 'umgebung',
+    subcategory: 'um_technische_objekte',
+    tags: ['trafohaus'],
+    searchKeywords: ['trafohaus'],
+    popularity: 40,
+  },
+  {
+    id: 'env_mast',
+    label: 'Mast',
+    category: 'umgebung',
+    subcategory: 'um_technische_objekte',
+    tags: ['mast'],
+    searchKeywords: ['mast'],
+    popularity: 40,
+  },
+
+  // Müll & Container
+  {
+    id: 'env_muelltonne',
+    label: 'Mülltonne',
+    category: 'umgebung',
+    subcategory: 'um_muells_container',
+    tags: ['mülltonne'],
+    searchKeywords: ['mülltonne'],
+    popularity: 45,
+  },
+  {
+    id: 'env_altglas_container',
+    label: 'Altglascontainer',
+    category: 'umgebung',
+    subcategory: 'um_muells_container',
+    tags: ['altglas', 'container'],
+    searchKeywords: ['altglascontainer'],
+    popularity: 45,
+  },
+  {
+    id: 'env_container_gross',
+    label: 'Großcontainer',
+    category: 'umgebung',
+    subcategory: 'um_muells_container',
+    tags: ['container'],
+    searchKeywords: ['container'],
+    popularity: 40,
+  },
+
+  // Sonstige Umgebung
+  {
+    id: 'env_zaun',
+    label: 'Zaun',
+    category: 'umgebung',
+    subcategory: 'um_sonstige',
+    tags: ['zaun'],
+    searchKeywords: ['zaun'],
+    popularity: 50,
+  },
+  {
+    id: 'env_poller',
+    label: 'Poller',
+    category: 'umgebung',
+    subcategory: 'um_sonstige',
+    tags: ['poller'],
+    searchKeywords: ['poller'],
+    popularity: 50,
+  },
+  {
+    id: 'env_schildhalter',
+    label: 'Schildhalter',
+    category: 'umgebung',
+    subcategory: 'um_sonstige',
+    tags: ['schildhalter'],
+    searchKeywords: ['schildhalter'],
+    popularity: 40,
+  },
+]

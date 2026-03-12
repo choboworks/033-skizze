@@ -1,0 +1,632 @@
+[
+  {
+    "id": "PDOL PI CLOPPENBURG VECHTA",
+    "name": "Polizeiinspektion Cloppenburg/Vechta",
+    "adresse": "Bahnhofstraße 62, 49661 Cloppenburg",
+    "telefon": "+49 4471 1860 0"
+  },
+  {
+    "id": "PDOL PD OLDENBURG",
+    "name": "Polizeidirektion Oldenburg",
+    "adresse": "Theodor-Tantzen-Platz 8, 26122 Oldenburg",
+    "telefon": "+49 441 790 0"
+  },
+  {
+    "id": "PDOL_PST_CAPPELN",
+    "name": "Polizeistation Cappeln",
+    "adresse": "Großer Kamp 6, 49692 Cappeln",
+    "telefon": "+49 4478 958600"
+  },
+  {
+    "id": "PDOL_PST_EMSTEK",
+    "name": "Polizeistation Emstek",
+    "adresse": "Am Markt 1b, 49685 Emstek",
+    "telefon": "+49 4473 93218 0"
+  },
+  {
+    "id": "PDOL_PST_ESSEN",
+    "name": "Polizeistation Essen",
+    "adresse": "Prof.-von-Klitzing-Straße 1, 49632 Essen",
+    "telefon": "+49 5434 924700"
+  },
+  {
+    "id": "PDOL_PST_GARREL",
+    "name": "Polizeistation Garrel",
+    "adresse": "Hauptstraße 15, 49681 Garrel",
+    "telefon": "+49 4474 93942 0"
+  },
+  {
+    "id": "PDOL_PST_LASTRUP",
+    "name": "Polizeistation Lastrup",
+    "adresse": "Am Marktplatz 3, 49688 Lastrup",
+    "telefon": "+49 4472 932860"
+  },
+  {
+    "id": "PDOL_PST_LINDERN",
+    "name": "Polizeistation Lindern",
+    "adresse": "Kirchstraße 1, 49699 Lindern",
+    "telefon": "+49 5957 967790"
+  },
+  {
+    "id": "PDOL_PST_LOENINGEN",
+    "name": "Polizeistation Löningen",
+    "adresse": "Lindenallee 6, 49624 Löningen",
+    "telefon": "+49 5432 803840"
+  },
+  {
+    "id": "PDOL_PST_MOLBERGEN",
+    "name": "Polizeistation Molbergen",
+    "adresse": "Cloppenburger Straße 15, 49696 Molbergen",
+    "telefon": "+49 4475 941220"
+  },
+  {
+    "id": "PDOL_PK_FRIESOYTHE",
+    "name": "Polizeikommissariat Friesoythe",
+    "adresse": "Grüner Hof 59, 26169 Friesoythe",
+    "telefon": "+49 4491 9339 0"
+  },
+  {
+    "id": "PDOL_PST_BARSSSEL",
+    "name": "Polizeistation Barßel",
+    "adresse": "Ammerländer Straße 12, 26676 Barßel",
+    "telefon": "+49 4499 92220 0"
+  },
+  {
+    "id": "PDOL_PST_BOESEL",
+    "name": "Polizeistation Bösel",
+    "adresse": "Am Kirchplatz 8, 26219 Bösel",
+    "telefon": "+49 4494 92262 0"
+  },
+  {
+    "id": "PDOL_PST_SATERLAND",
+    "name": "Polizeistation Saterland",
+    "adresse": "Zur Ziegelei 22, 26683 Saterland / OT Scharrel",
+    "telefon": "+49 4498 92377 0"
+  },
+  {
+    "id": "PDOL_PST_BAKUM",
+    "name": "Polizeistation Bakum",
+    "adresse": "Kirchstraße 3, 49456 Bakum",
+    "telefon": "+49 4446 959710"
+  },
+  {
+    "id": "PDOL_PST_DAMME",
+    "name": "Polizeistation Damme",
+    "adresse": "Große Straße 71/73, 49401 Damme",
+    "telefon": "+49 5491 999360"
+  },
+  {
+    "id": "PDOL_PST_DINKLAGE",
+    "name": "Polizeistation Dinklage",
+    "adresse": "Am Markt 2, 49413 Dinklage",
+    "telefon": "+49 4443 977490"
+  },
+  {
+    "id": "PDOL_PST_GOLDENSTEDT",
+    "name": "Polizeistation Goldenstedt",
+    "adresse": "Pastor-Albers-Weg 1, 49424 Goldenstedt",
+    "telefon": "+49 4444 967220"
+  },
+  {
+    "id": "PDOL_PST_HOLDORF",
+    "name": "Polizeistation Holdorf",
+    "adresse": "Drosselstraße 3a, 49451 Holdorf",
+    "telefon": "+49 5494 914200"
+  },
+  {
+    "id": "PDOL_PST_LOHNE",
+    "name": "Polizeistation Lohne",
+    "adresse": "Bahnhofstraße 26, 49393 Lohne",
+    "telefon": "+49 4442 808460"
+  },
+  {
+    "id": "PDOL_PST_NEUENKIRCHEN_VOERDEN",
+    "name": "Polizeistation Neuenkirchen-Vörden",
+    "adresse": "Alter Markt 3, 49434 Neuenkirchen-Vörden",
+    "telefon": "+49 5493 913560"
+  },
+  {
+    "id": "PDOL_PST_STEINFELD",
+    "name": "Polizeistation Steinfeld",
+    "adresse": "Bahnhofstraße 38a, 49439 Steinfeld",
+    "telefon": "+49 5492 960660"
+  },
+  {
+    "id": "PDOL_PST_VISBEK",
+    "name": "Polizeistation Visbek",
+    "adresse": "Corveyweg 1, 49429 Visbek",
+    "telefon": "+49 4445 950470"
+  },
+  {
+    "id": "PDOL PI CUXHAVEN",
+    "name": "Polizeiinspektion Cuxhaven",
+    "adresse": "Werner-Kammann-Straße 8, 27472 Cuxhaven",
+    "telefon": "+49 4721 573 0"
+  },
+  {
+    "id": "PDOL_PST_ALTENWALDE",
+    "name": "Polizeistation Altenwalde",
+    "adresse": "Hauptstraße 56, 27478 Cuxhaven",
+    "telefon": "+49 4723 50036 0"
+  },
+  {
+    "id": "PDOL_PST_NORDHOLZ",
+    "name": "Polizeistation Nordholz",
+    "adresse": "Memelstraße 4, 27639 Wurster Nordseeküste",
+    "telefon": "+49 4741 98115 0"
+  },
+  {
+    "id": "PDOL_PST_DORUM",
+    "name": "Polizeistation Dorum",
+    "adresse": "Speckenstraße 25, 27639 Wurster Nordseeküste",
+    "telefon": "+49 4742 92698 0"
+  },
+  {
+    "id": "PDOL_PK_GEESTLAND",
+    "name": "Polizeikommissariat Geestland",
+    "adresse": "Sieverner Straße 1, 27607 Geestland",
+    "telefon": "+49 4743 928 0"
+  },
+  {
+    "id": "PDOL_PST_BAD_BEDERKESA",
+    "name": "Polizeistation Bad Bederkesa",
+    "adresse": "Am Markt 4, 27624 Geestland",
+    "telefon": "+49 4745 93114 0"
+  },
+  {
+    "id": "PDOL_PK_SCHIFFDORF",
+    "name": "Polizeikommissariat Schiffdorf",
+    "adresse": "Bohlenstraße 54, 27619 Schiffdorf",
+    "telefon": "+49 4706 948 0"
+  },
+  {
+    "id": "PDOL_PST_LOXSTEDT",
+    "name": "Polizeistation Loxstedt",
+    "adresse": "Parkstraße 21, 27612 Loxstedt",
+    "telefon": "+49 4744 73166 0"
+  },
+  {
+    "id": "PDOL_PST_HAGEN_IM_BREMISCHEN",
+    "name": "Polizeistation Hagen",
+    "adresse": "Amtsdamm 74, 27628 Hagen im Bremischen",
+    "telefon": "+49 4746 93116 0"
+  },
+  {
+    "id": "PDOL_PST_BEVERSTEDT",
+    "name": "Polizeistation Beverstedt",
+    "adresse": "Schulstraße 1, 27616 Beverstedt",
+    "telefon": "+49 4747 93173 0"
+  },
+  {
+    "id": "PDOL_PST_LAMSTEDT",
+    "name": "Polizeistation Lamstedt",
+    "adresse": "Schützenstraße 20, 21769 Lamstedt",
+    "telefon": "+49 4773 88034 0"
+  },
+  {
+    "id": "PDOL_PK_HEMMOOR",
+    "name": "Polizeikommissariat Hemmoor",
+    "adresse": "Zentrumstraße 2, 21745 Hemmoor",
+    "telefon": "+49 4771 607 0"
+  },
+  {
+    "id": "PDOL_PST_IHLIENWORTH",
+    "name": "Polizeistation Ihlienworth",
+    "adresse": "Hauptstraße 15, 21775 Ihlienworth",
+    "telefon": "+49 4755 33307 0"
+  },
+  {
+    "id": "PDOL_PST_CADENBERGE",
+    "name": "Polizeistation Cadenberge",
+    "adresse": "Bahnhofstraße 16, 21781 Cadenberge",
+    "telefon": "+49 4777 80063 0"
+  },
+  {
+    "id": "PDOL_PST_OTTERNDORF",
+    "name": "Polizeistation Otterndorf",
+    "adresse": "Am Großen Specken 7, 21762 Otterndorf",
+    "telefon": "+49 4751 99835 0"
+  },
+  {
+    "id": "PDOL PI DELMENHORST OLDENBURGLAND WESERMARSCH",
+    "name": "Polizeiinspektion Delmenhorst/Oldenburg-Land/Wesermarsch",
+    "adresse": "Marktstraße 6-7, 27749 Delmenhorst",
+    "telefon": "+49 4221 1559 0"
+  },
+  {
+    "id": "PDOL_APK_AHLHORN",
+    "name": "Autobahnpolizeikommissariat Ahlhorn",
+    "adresse": "Cloppenburger Straße 17, 26197 Großenkneten-Ahlhorn",
+    "telefon": "+49 4435 9316 0"
+  },
+  {
+    "id": "PDOL_PK_BRAKE",
+    "name": "Polizeikommissariat Brake",
+    "adresse": "Schrabberdeich 39, 26919 Brake",
+    "telefon": "+49 4401 935 0"
+  },
+  {
+    "id": "PDOL_PST_BERNE",
+    "name": "Polizeistation Berne",
+    "adresse": "Eichenstraße 16, 27804 Berne",
+    "telefon": "+49 4406 92078 0"
+  },
+  {
+    "id": "PDOL_PST_ELSFLLETH",
+    "name": "Polizeistation Elsfleth",
+    "adresse": "Rittersweg 6a, 26931 Elsfleth",
+    "telefon": "+49 4404 95485 0"
+  },
+  {
+    "id": "PDOL_PST_LEMWERDER",
+    "name": "Polizeistation Lemwerder",
+    "adresse": "Stedinger Strae 53a, 27809 Lemwerder",
+    "telefon": "+49 421 485064 0"
+  },
+  {
+    "id": "PDOL_PST_OVELGOENNE",
+    "name": "Polizeistation Ovelgönne",
+    "adresse": "Lerchenstraße 1, 26939 Ovelgönne-Oldenbrok",
+    "telefon": "+49 4480 94990 0"
+  },
+  {
+    "id": "PDOL_PK_NORDENHAM",
+    "name": "Polizeikommissariat Nordenham",
+    "adresse": "Walther-Rathenau-Straße 4, 26954 Nordenham",
+    "telefon": "+49 4731 2694 0"
+  },
+  {
+    "id": "PDOL_PST_STADLAND",
+    "name": "Polizeistation Stadland",
+    "adresse": "Berliner Platz 4, 26935 Stadland",
+    "telefon": "+49 4732 18436 0"
+  },
+  {
+    "id": "PDOL_PST_BUTJADINGEN",
+    "name": "Polizeistation Butjadingen",
+    "adresse": "Zur Alten Ziegelei 2, 26969 Butjadingen-Burhave",
+    "telefon": "+49 4733 17420 0"
+  },
+  {
+    "id": "PDOL_PST_JADE",
+    "name": "Polizeistation Jade",
+    "adresse": "Raiffeisenstr. 1a, 26349 Jaderberg",
+    "telefon": "+49 4454 979430"
+  },
+  {
+    "id": "PDOL_PK_WILDESHAUSEN",
+    "name": "Polizeikommissariat Wildeshausen",
+    "adresse": "Daimlerstraße 7a, 27793 Wildeshausen",
+    "telefon": "+49 4431 941 0"
+  },
+  {
+    "id": "PDOL_PST_BOOKHOLZBERG",
+    "name": "Polizeistation Bookholzberg",
+    "adresse": "Stedinger Straße 15, 27777 Ganderkesee",
+    "telefon": "+49 4223 38150 0"
+  },
+  {
+    "id": "PDOL_PST_GANDERKESEE",
+    "name": "Polizeistation Ganderkesee",
+    "adresse": "Bergedorfer Str. 5, 27777 Ganderkesee",
+    "telefon": "+49 4222 94695 0"
+  },
+  {
+    "id": "PDOL_PST_GROSSENKNETEN",
+    "name": "Polizeistation Großenkneten",
+    "adresse": "Wildeshauser Straße 19a, 26197 Großenkneten",
+    "telefon": "+49 4435 97385 0"
+  },
+  {
+    "id": "PDOL_PST_WARDENBURG",
+    "name": "Polizeistation Wardenburg",
+    "adresse": "Oldenburger Str. 203, 26203 Wardenburg",
+    "telefon": "+49 4407 71635 0"
+  },
+  {
+    "id": "PDOL_PST_HUDE",
+    "name": "Polizeistation Hude",
+    "adresse": "Parkstraße 53b, 27798 Hude",
+    "telefon": "+49 4408 80903 0"
+  },
+  {
+    "id": "PDOL_PST_HARPSTEDT",
+    "name": "Polizeistation Harpstedt",
+    "adresse": "Burgstraße 37, 27243 Harpstedt",
+    "telefon": "+49 4244 96789 0"
+  },
+  {
+    "id": "PDOL_PST_HATTEN_SANDKRUG",
+    "name": "Polizeistation Hatten/Sandkrug",
+    "adresse": "Gartenweg 1, 26209 Sandkrug",
+    "telefon": "+49 4481 93753 0"
+  },
+  {
+    "id": "PDOL_PST_DOETLINGEN",
+    "name": "Polizeistation Dötlingen",
+    "adresse": "Heuberge 1b, 27801 Dötlingen",
+    "telefon": "+49 4432 91185 0"
+  },
+  {
+    "id": "PDOL PI DIEPHOLZ",
+    "name": "Polizeiinspektion Diepholz",
+    "adresse": "Dr.-Klatte-Straße 1, 49356 Diepholz",
+    "telefon": "+49 5441 971 0"
+  },
+  {
+    "id": "PDOL_PK_SULINGEN",
+    "name": "Polizeikommissariat Sulingen",
+    "adresse": "Nienburger Straße 2, 27232 Sulingen",
+    "telefon": "+49 4271 949 0"
+  },
+  {
+    "id": "PDOL_PST_SIEDENBURG",
+    "name": "Polizeistation Siedenburg",
+    "adresse": "Allee 80a, 27254 Siedenburg",
+    "telefon": "+49 4272 1399"
+  },
+  {
+    "id": "PDOL_PST_KIRCHDORF",
+    "name": "Polizeistation Kirchdorf",
+    "adresse": "Rathaustraße 14, 27245 Kirchdorf",
+    "telefon": "+49 4273 8105"
+  },
+  {
+    "id": "PDOL_PST_SCHWAFOERDEN",
+    "name": "Polizeistation Schwaförden",
+    "adresse": "Poststraße 157, 27252 Schwaförden",
+    "telefon": "+49 4277 1330"
+  },
+  {
+    "id": "PDOL_PK_SYKE",
+    "name": "Polizeikommissariat Syke",
+    "adresse": "Waldstraße 4, 28857 Syke",
+    "telefon": "+49 4242 969 0"
+  },
+  {
+    "id": "PDOL_PST_TWISTRINGEN",
+    "name": "Polizeistation Twistringen",
+    "adresse": "Steller Straße 34, 27239 Twistringen",
+    "telefon": "+49 4243 97057 0"
+  },
+  {
+    "id": "PDOL_PST_BRUCHHAUSEN_VILSEN",
+    "name": "Polizeistation Bruchhausen-Vilsen",
+    "adresse": "Lange Str. 3, 27305 Bruchhausen-Vilsen",
+    "telefon": "+49 4252 93825 0"
+  },
+  {
+    "id": "PDOL_PST_BASSUM",
+    "name": "Polizeistation Bassum",
+    "adresse": "Mittelstraße 2, 27211 Bassum",
+    "telefon": "+49 4241 97168 0"
+  },
+  {
+    "id": "PDOL_PK_WEYHE",
+    "name": "Polizeikommissariat Weyhe",
+    "adresse": "Alte Poststraße 1, 28844 Weyhe",
+    "telefon": "+49 421 8066 0"
+  },
+  {
+    "id": "PDOL_PST_STUHR",
+    "name": "Polizeistation Stuhr",
+    "adresse": "Am Rathaus 5, 28816 Stuhr",
+    "telefon": "+49 421 427079 0"
+  },
+  {
+    "id": "PDOL PI OLDENBURG STADT AMMERLAND",
+    "name": "Polizeiinspektion Oldenburg-Stadt/Ammerland",
+    "adresse": "Friedhofsweg 30, 26121 Oldenburg",
+    "telefon": "+49 441 790 0"
+  },
+  {
+    "id": "PDOL_VUD_OLDENBURG",
+    "name": "Verkehrsunfalldienst Oldenburg",
+    "adresse": "Friedhofsweg 30, 26121 Oldenburg",
+    "telefon": "+49 441 790 4115"
+  },
+  {
+    "id": "PDOL_PK_BAD_ZWISCHENAHN",
+    "name": "Polizeikommissariat Bad Zwischenahn",
+    "adresse": "Wilhelmstraße 8, 26160 Bad Zwischenahn",
+    "telefon": "+49 4403 927 0"
+  },
+  {
+    "id": "PDOL_PST_RASTEDE",
+    "name": "Polizeistation Rastede",
+    "adresse": "Bahnhofstr. 24, 26180 Rastede",
+    "telefon": "+49 4402 91652 0"
+  },
+  {
+    "id": "PDOL_PST_WIEFELSTEDE",
+    "name": "Polizeistation Wiefelstede",
+    "adresse": "Hauptstraße 40c, 26215 Wiefelstede",
+    "telefon": "+49 4402 91612 0"
+  },
+  {
+    "id": "PDOL_PST_EDEWECHT",
+    "name": "Polizeistation Edewecht",
+    "adresse": "Hauptstraße 29, 26188 Edewecht",
+    "telefon": "+49 4405 92596 0"
+  },
+  {
+    "id": "PDOL_PK_WESTERSTEDE",
+    "name": "Polizeikommissariat Westerstede",
+    "adresse": "Wilhelm-Geiler-Straße 12, 26655 Westerstede",
+    "telefon": "+49 4488 833 0"
+  },
+  {
+    "id": "PDOL_PST_APEN",
+    "name": "Polizeistation Apen",
+    "adresse": "Mühlenstr. 1c, 26689 Apen-Augustfehn",
+    "telefon": "+49 4489 935880"
+  },
+  {
+    "id": "PDOL_APK_OLDENBURG",
+    "name": "Autobahnpolizeikommissariat Oldenburg",
+    "adresse": "Neusüdende 2 / Klinkerstraße 50, 26180 Rastede",
+    "telefon": "+49 4402 933 0"
+  },
+  {
+    "id": "PDOL PI VERDEN OSTERHOLZ",
+    "name": "Polizeiinspektion Verden/Osterholz",
+    "adresse": "Im Burgfeld 6, 27283 Verden/Aller",
+    "telefon": "+49 4231 806 0"
+  },
+  {
+    "id": "PDOL_PK_ACHIM",
+    "name": "Polizeikommissariat Achim",
+    "adresse": "Obernstraße 136, 28832 Achim",
+    "telefon": "+49 4202 996 0"
+  },
+  {
+    "id": "PDOL_AUTOBAHNWACHE_LANGWEDEL",
+    "name": "Autobahnwache Langwedel",
+    "adresse": "Feldstraße 100, 27299 Langwedel",
+    "telefon": "+49 4232 9459 0"
+  },
+  {
+    "id": "PDOL_PST_DOERVERDEN",
+    "name": "Polizeistation Dörverden",
+    "adresse": "Große Straße 80, 27313 Dörverden",
+    "telefon": "+49 4234 94396 0"
+  },
+  {
+    "id": "PDOL_PST_OTTERSBERG",
+    "name": "Polizeistation Ottersberg",
+    "adresse": "Grüne Straße 26, 28870 Ottersberg",
+    "telefon": "+49 4205 31581 0"
+  },
+  {
+    "id": "PDOL_PST_OYTEN",
+    "name": "Polizeistation Oyten",
+    "adresse": "Hauptstraße 45-47, 28876 Oyten",
+    "telefon": "+49 4207 91106 0"
+  },
+  {
+    "id": "PDOL_PST_KIRCHLINTELN",
+    "name": "Polizeistation Kirchlinteln",
+    "adresse": "Am Rathaus 1, 27308 Kirchlinteln",
+    "telefon": "+49 4236 94337 0"
+  },
+  {
+    "id": "PDOL_PST_LANGWEDEL",
+    "name": "Polizeistation Langwedel",
+    "adresse": "Hauptstraße 45, 27299 Langwedel",
+    "telefon": "+49 4232 93491 0"
+  },
+  {
+    "id": "PDOL_PST_THEDINGHAUSEN",
+    "name": "Polizeistation Thedinghausen",
+    "adresse": "Syker Straße 25, 27321 Thedinghausen",
+    "telefon": "+49 4204 91438 0"
+  },
+  {
+    "id": "PDOL_PK_OSTERHOLZ",
+    "name": "Polizeikommissariat Osterholz",
+    "adresse": "Pappstraße 4-6, 27711 Osterholz-Scharmbeck",
+    "telefon": "+49 4791 307 0"
+  },
+  {
+    "id": "PDOL_PST_GRASBERG",
+    "name": "Polizeistation Grasberg",
+    "adresse": "Speckmannstraße 35, 28879 Grasberg",
+    "telefon": "+49 4208 91988 0"
+  },
+  {
+    "id": "PDOL_PST_RITTERHUDE",
+    "name": "Polizeistation Ritterhude",
+    "adresse": "Riesstraße 30, 27721 Ritterhude",
+    "telefon": "+49 4292 81174 0"
+  },
+  {
+    "id": "PDOL_PST_SCHWANEWEDE",
+    "name": "Polizeistation Schwanewede",
+    "adresse": "Am Markt 2a, 28790 Schwanewede",
+    "telefon": "+49 4209 91865 0"
+  },
+  {
+    "id": "PDOL_PST_HAMBERGEN",
+    "name": "Polizeistation Hambergen",
+    "adresse": "Bremer Straße 2a, 27729 Hambergen",
+    "telefon": "+49 4793 95758 0"
+  },
+  {
+    "id": "PDOL_PST_LILIENTHAL",
+    "name": "Polizeistation Lilienthal",
+    "adresse": "Zinckestraße 24, 28865 Lilienthal",
+    "telefon": "+49 4298 46566 0"
+  },
+  {
+    "id": "PDOL_PST_WORPSWEDE",
+    "name": "Polizeistation Worpswede",
+    "adresse": "Hembergstraße 12, 27726 Worpswede",
+    "telefon": "+49 4792 95679 0"
+  },
+  {
+    "id": "PDOL PI WILHELMSHAVEN FRIESLAND",
+    "name": "Polizeiinspektion Wilhelmshaven/Friesland",
+    "adresse": "Mozartstraße 29, 26382 Wilhelmshaven",
+    "telefon": "+49 4421 942 0"
+  },
+  {
+    "id": "PDOL_PST_FEDDERWARDERGRODEN",
+    "name": "Polizeistation Fedderwardergroden",
+    "adresse": "Inhauser Landstraße 20, 26388 Wilhelmshaven",
+    "telefon": "+49 4421 75822 0"
+  },
+  {
+    "id": "PDOL_PST_WIESENHOF",
+    "name": "Polizeistation Wiesenhof",
+    "adresse": "Kniphauser Straße 1a, 26389 Wilhelmshaven",
+    "telefon": "+49 4421 98705 0"
+  },
+  {
+    "id": "PDOL_PK_JEVER",
+    "name": "Polizeikommissariat Jever",
+    "adresse": "Ziegelhofstr. 34, 26441 Jever",
+    "telefon": "+49 4461 7449 0"
+  },
+  {
+    "id": "PDOL_PST_WANGEROOGE",
+    "name": "Polizeistation Wangerooge",
+    "adresse": "Charlottenstraße 9, 26486 Wangerooge",
+    "telefon": "+49 4469 94690 0"
+  },
+  {
+    "id": "PDOL_PST_SCHORTENS",
+    "name": "Polizeistation Schortens",
+    "adresse": "Oldenburger Str. 27, 26419 Schortens",
+    "telefon": "+49 4461 98493 0"
+  },
+  {
+    "id": "PDOL_PST_SANDE",
+    "name": "Polizeistation Sande",
+    "adresse": "Am Markt 6-8, 26452 Sande",
+    "telefon": "+49 4422 99975 0"
+  },
+  {
+    "id": "PDOL_PST_WANGERLAND",
+    "name": "Polizeistation Wangerland",
+    "adresse": "Alma-Rogge-Weg 2, 26434 Wangerland",
+    "telefon": "+49 4463 80891 0"
+  },
+  {
+    "id": "PDOL_PK_VAREL",
+    "name": "Polizeikommissariat Varel",
+    "adresse": "Bahnhofstraße 51, 26316 Varel",
+    "telefon": "+49 4451 923 0"
+  },
+  {
+    "id": "PDOL_PST_BOCKHORN",
+    "name": "Polizeistation Bockhorn",
+    "adresse": "Steinhauser Straße 11, 26345 Bockhorn",
+    "telefon": "+49 4453 97862 0"
+  },
+  {
+    "id": "PDOL_PST_ZETEL",
+    "name": "Polizeistation Zetel",
+    "adresse": "Jakob-Borchers-Str. 34, 26340 Zetel",
+    "telefon": "+49 4453 98959 0"
+  }
+]

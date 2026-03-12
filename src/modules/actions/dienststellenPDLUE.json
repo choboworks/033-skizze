@@ -1,0 +1,374 @@
+[
+  {
+    "id": "PDLUE PD LUENEBURG",
+    "name": "Polizeidirektion Lüneburg",
+    "adresse": "Auf der Hude 2, 21339 Lüneburg",
+    "telefon": "+49 4131 607 0"
+  },
+  {
+    "id": "PDLUE PI CELLE",
+    "name": "Polizeiinspektion Celle",
+    "adresse": "Jägerstraße 1, 29221 Celle",
+    "telefon": "+49 5141 277 0"
+  },
+  {
+    "id": "PDLUE_PST_HERMANNSBURG",
+    "name": "Polizeistation Hermannsburg",
+    "adresse": "Billingstraße 32, 29320 Hermannsburg",
+    "telefon": "+49 5052 91331 0"
+  },
+  {
+    "id": "PDLUE_PST_WATHLINGEN",
+    "name": "Polizeistation Wathlingen",
+    "adresse": "Am Schmiedeberg 3, 29339 Wathlingen",
+    "telefon": "+49 5144 49546 0"
+  },
+  {
+    "id": "PDLUE_PST_WIENHAUSEN",
+    "name": "Polizeistation Wienhausen",
+    "adresse": "Am Alten Bahnhof 1, 29342 Wienhausen",
+    "telefon": "+49 5149 98719 0"
+  },
+  {
+    "id": "PDLUE_PST_WINSEN_ALLER",
+    "name": "Polizeistation Winsen",
+    "adresse": "Stechinellistraße 4, 29308 Winsen/A.",
+    "telefon": "+49 5143 66772 0"
+  },
+  {
+    "id": "PDLUE_PST_ESCHEDE",
+    "name": "Polizeistation Eschede",
+    "adresse": "Uelzener Straße 5-7, 29348 Eschede",
+    "telefon": "+49 5142 98876 0"
+  },
+  {
+    "id": "PDLUE PI HARBURG BUCHHOLZ",
+    "name": "Polizeiinspektion Harburg in Buchholz",
+    "adresse": "Schützenstrasse 17, 21244 Buchholz in der Nordheide",
+    "telefon": "+49 4181 285 0"
+  },
+  {
+    "id": "PDLUE_PK_SEEVETAL",
+    "name": "Polizeikommissariat Seevetal",
+    "adresse": "Hamburger Straße 1, 21220 Seevetal-Maschen",
+    "telefon": "+49 4105 6200"
+  },
+  {
+    "id": "PDLUE_APK_MASCHEN",
+    "name": "Autobahnpolizeikommissariat Maschen",
+    "adresse": "Hamburger Straße 1a, 21220 Seevetal",
+    "telefon": "+49 4105 620 200"
+  },
+  {
+    "id": "PDLUE_PK_WINSEN_LUHE",
+    "name": "Polizeikommissariat Winsen/Luhe",
+    "adresse": "Luhdorfer Str. 49 a-d, 21423 Winsen/Luhe",
+    "telefon": "+49 4171 796 0"
+  },
+  {
+    "id": "PDLUE PI HEIDEKREIS",
+    "name": "Polizeiinspektion Heidekreis",
+    "adresse": "Böhmheide 37-41, 29614 Soltau",
+    "telefon": "+49 5191 9380 0"
+  },
+  {
+    "id": "PDLUE_PST_SCHNEVERDINGEN",
+    "name": "Polizeistation Schneverdingen",
+    "adresse": "Verdener Straße 32, 29640 Schneverdingen",
+    "telefon": "+49 5193 982500"
+  },
+  {
+    "id": "PDLUE_PK_BAD_FALLINGBOSTEL",
+    "name": "Polizeikommissariat Bad Fallingbostel",
+    "adresse": "Düshorner Straße 17, 29683 Bad Fallingbostel",
+    "telefon": "+49 5162 9720"
+  },
+  {
+    "id": "PDLUE_PK_MUNSTER",
+    "name": "Polizeikommissariat Munster",
+    "adresse": "Klappgarten 2a, 29633 Munster",
+    "telefon": "+49 5192 9600"
+  },
+  {
+    "id": "PDLUE_PST_NEUENKIRCHEN_HK",
+    "name": "Polizeistation Neuenkirchen",
+    "adresse": "Am Kleinbahnhof 8, 29643 Neuenkirchen",
+    "telefon": "+49 5195 933970"
+  },
+  {
+    "id": "PDLUE_PK_WALSRODE",
+    "name": "Polizeikommissariat Walsrode",
+    "adresse": "Hannoversche Straße 14, 29664 Walsrode",
+    "telefon": "+49 5161 4864 0"
+  },
+  {
+    "id": "PDLUE_PST_BOMLITZ",
+    "name": "Polizeistation Bomlitz",
+    "adresse": "Walsroder Straße 18, 29699 Bomlitz",
+    "telefon": "+49 5161 949630"
+  },
+  {
+    "id": "PDLUE_PST_SCHWARMSTEDT",
+    "name": "Polizeistation Schwarmstedt",
+    "adresse": "Celler Straße 41, 29690 Schwarmstedt",
+    "telefon": "+49 5071 800350"
+  },
+  {
+    "id": "PDLUE_PST_HODENHAGEN",
+    "name": "Polizeistation Hodenhagen",
+    "adresse": "Heerstraße 40, 29693 Hodenhagen",
+    "telefon": "+49 5164 802550"
+  },
+  {
+    "id": "PDLUE_PST_RETHEM",
+    "name": "Polizeistation Rethem (Aller)",
+    "adresse": "Zur Scheibenwiese 2, 27336 Rethem",
+    "telefon": "+49 5165 291340"
+  },
+  {
+    "id": "PDLUE PI LÜNEBURG LÜCHOW DANNENBERG UELZEN",
+    "name": "Polizeiinspektion Lüneburg/Lüchow-Dannenberg/Uelzen",
+    "adresse": "Auf der Hude 1, 21339 Lüneburg",
+    "telefon": "+49 4131 607 2215"
+  },
+  {
+    "id": "PDLUE_PI_LUENEBURG_LUECHOW_DANNENBERG_UELZEN_ZKD",
+    "name": "Polizeiinspektion Lüneburg/Lüchow-Dannenberg/Uelzen - Zentraler Kriminaldienst",
+    "adresse": "Auf der Hude 1, 21339 Lüneburg",
+    "telefon": "+49 4131 607 2103"
+  },
+  {
+    "id": "PDLUE_PK_UELZEN",
+    "name": "Polizeikommissariat Uelzen",
+    "adresse": "An der Zuckerfabrik 6, 29525 Uelzen",
+    "telefon": "+49 581 930 215"
+  },
+  {
+    "id": "PDLUE_PST_CLENZE",
+    "name": "Polizeistation Clenze",
+    "adresse": "Lüchower Straße 13, 29459 Clenze",
+    "telefon": "+49 5844 97640 0"
+  },
+  {
+    "id": "PDLUE_PST_DANNENBERG",
+    "name": "Polizeistation Dannenberg",
+    "adresse": "Am Markt 6, 29451 Dannenberg",
+    "telefon": "+49 5861 98576"
+  },
+  {
+    "id": "PDLUE_PST_GARTOW",
+    "name": "Polizeistation Gartow",
+    "adresse": "Springstraße 14, 29471 Gartow",
+    "telefon": "+49 5846 97963 0"
+  },
+  {
+    "id": "PDLUE_PST_HITZACKER",
+    "name": "Polizeistation Hitzacker",
+    "adresse": "Brauhofstraße 1, 29456 Hitzacker",
+    "telefon": "+49 5862 98701 0"
+  },
+  {
+    "id": "PDLUE_PST_NEUHAUS",
+    "name": "Polizeistation Neuhaus",
+    "adresse": "Parkstraße 2, 19273 Neuhaus",
+    "telefon": "+49 38841 6195 0"
+  },
+  {
+    "id": "PDLUE_PST_BAD_BEVENSEN",
+    "name": "Polizeistation Bad Bevensen",
+    "adresse": "Klein Bünstorfer Straße 2, 29549 Bad Bevensen",
+    "telefon": "+49 5821 97655 0"
+  },
+  {
+    "id": "PDLUE_PST_BAD_BODENTEICH",
+    "name": "Polizeistation Bad Bodenteich",
+    "adresse": "Schützenstraße 10, 29389 Bad Bodenteich",
+    "telefon": "+49 5824 96598 0"
+  },
+  {
+    "id": "PDLUE_PST_BIENENBUETTEL",
+    "name": "Polizeistation Bienenbüttel",
+    "adresse": "Bahnhofstraße 33, 29553 Bienenbüttel",
+    "telefon": "+49 5823 95400 0"
+  },
+  {
+    "id": "PDLUE_PST_EBSTORF",
+    "name": "Polizeistation Ebstorf",
+    "adresse": "Lüneburger Straße 17a, 29574 Ebstorf",
+    "telefon": "+49 5822 94792 0"
+  },
+  {
+    "id": "PDLUE_PST_ROSCHE",
+    "name": "Polizeistation Rosche",
+    "adresse": "Lüchower Straße 12, 29571 Rosche",
+    "telefon": "+49 5803 96934 0"
+  },
+  {
+    "id": "PDLUE_PST_SUDERBURG",
+    "name": "Polizeistation Suderburg",
+    "adresse": "Hauptstraße 5a, 29556 Suderburg",
+    "telefon": "+49 5826 95897 0"
+  },
+  {
+    "id": "PDLUE_PST_WRESTEDT",
+    "name": "Polizeistation Wrestedt",
+    "adresse": "Lerchenweg 5, 29559 Wrestedt",
+    "telefon": "+49 5802 98715 0"
+  },
+  {
+    "id": "PDLUE PI ROTENBURG",
+    "name": "Polizeiinspektion Rotenburg",
+    "adresse": "Königsberger Straße 46, 27356 Rotenburg (Wümme)",
+    "telefon": "+49 4261 947 0"
+  },
+  {
+    "id": "PDLUE PI STADE",
+    "name": "Polizeiinspektion Stade",
+    "adresse": "Teichstraße 10, 21680 Stade",
+    "telefon": "+49 4141 102 0"
+  },
+  {
+    "id": "PDLUE_PK_BUXTEHUDE",
+    "name": "Polizeikommissariat Buxtehude",
+    "adresse": "Kottmeierstraße 1, 21614 Buxtehude",
+    "telefon": "+49 4161 6470"
+  },
+  {
+    "id": "PDLUE_PST_BOTHEL",
+    "name": "Polizeistation Bothel",
+    "adresse": "Eschfeldweg 2, 28386 Bothel",
+    "telefon": "+49 4266 95568 0"
+  },
+  {
+    "id": "PDLUE_PST_FINTEL",
+    "name": "Polizeistation Fintel",
+    "adresse": "Rotenburger Straße 10, 27389 Fintel",
+    "telefon": "+49 4265 95486 0"
+  },
+  {
+    "id": "PDLUE_PST_SCHEESSEL",
+    "name": "Polizeistation Scheeßel",
+    "adresse": "Hirschberger Straße 26, 27383 Scheeßel",
+    "telefon": "+49 4263 98516 0"
+  },
+  {
+    "id": "PDLUE_PST_SOTTRUM",
+    "name": "Polizeistation Sottrum",
+    "adresse": "Am Eichkamp 27, 27367 Sottrum",
+    "telefon": "+49 4264 83646 0"
+  },
+  {
+    "id": "PDLUE_PST_VISSELHOEVEDE",
+    "name": "Polizeistation Visselhövede",
+    "adresse": "Marktplatz 16, 27374 Visselhövede",
+    "telefon": "+49 4262 95908 0"
+  },
+  {
+    "id": "PDLUE_ESD_BAB_SITTENSEN",
+    "name": "Einsatz- und Streifendienst (ESD) BAB Sittensen",
+    "adresse": "Stader Straße 26, 27419 Sittensen",
+    "telefon": "+49 4282 5087 0"
+  },
+  {
+    "id": "PDLUE_PK_ZEVEN",
+    "name": "Polizeikommissariat Zeven",
+    "adresse": "Auf den Diekackern 1, 27404 Zeven",
+    "telefon": "+49 4281 9592 0"
+  },
+  {
+    "id": "PDLUE_PST_SITTENSEN",
+    "name": "Polizeistation Sittensen",
+    "adresse": "Stader Straße 26, 27419 Sittensen",
+    "telefon": "+49 4282 5087 0"
+  },
+  {
+    "id": "PDLUE_PST_TARMSTEDT",
+    "name": "Polizeistation Tarmstedt",
+    "adresse": "Hepstedter Straße 9, 27412 Tarmstedt",
+    "telefon": "+49 4283 95518 0"
+  },
+  {
+    "id": "PDLUE_PK_BREMERVORDE",
+    "name": "Polizeikommissariat Bremervörde",
+    "adresse": "Huddelberg 30, 27432 Bremervörde",
+    "telefon": "+49 4761 7489 0"
+  },
+  {
+    "id": "PDLUE_PST_GNARRENBURG",
+    "name": "Polizeistation Gnarrenburg",
+    "adresse": "Hindenburgstraße 1 a, 27442 Gnarrenburg",
+    "telefon": "+49 4763 62892 0"
+  },
+  {
+    "id": "PDLUE_PST_OEREL",
+    "name": "Polizeistation Oerel",
+    "adresse": "Bohlenstraße 10, 27432 Oerel",
+    "telefon": "+49 4765 83123 0"
+  },
+  {
+    "id": "PDLUE_PST_SELSINGEN",
+    "name": "Polizeistation Selsingen",
+    "adresse": "Hauptstraße 30, 27446 Selsingen",
+    "telefon": "+49 4284 92755 0"
+  },
+  {
+    "id": "PDLUE_PST_APENSEN",
+    "name": "Polizeistation Apensen",
+    "adresse": "Buxtehuder Straße 27, 21641 Apensen",
+    "telefon": "+49 4167 69924 0"
+  },
+  {
+    "id": "PDLUE_PST_DROCHTERSEN",
+    "name": "Polizeistation Drochtersen",
+    "adresse": "Sietwender Str. 20, 21706 Drochtersen",
+    "telefon": "+49 4143 91234 0"
+  },
+  {
+    "id": "PDLUE_PST_FREDENBECK",
+    "name": "Polizeistation Fredenbeck",
+    "adresse": "Hauptstr. 3, 21717 Fredenbeck",
+    "telefon": "+49 4149 93351 0"
+  },
+  {
+    "id": "PDLUE_PST_FREIBURG",
+    "name": "Polizeistation Freiburg",
+    "adresse": "Hans-Mügge-Str. 11, 21729 Freiburg",
+    "telefon": "+49 4779 92692 0"
+  },
+  {
+    "id": "PDLUE_PST_HARSEFELD",
+    "name": "Polizeistation Harsefeld",
+    "adresse": "Am Rosenborn 5, 21698 Harsefeld",
+    "telefon": "+49 4164 88826 0"
+  },
+  {
+    "id": "PDLUE_PST_HIMMELPFORTEN",
+    "name": "Polizeistation Himmelpforten",
+    "adresse": "Mittelweg 10, 21709 Himmelpforten",
+    "telefon": "+49 4144 60608 0"
+  },
+  {
+    "id": "PDLUE_PST_HORNEBURG",
+    "name": "Polizeistation Horneburg",
+    "adresse": "Bleiche 5, 21640 Horneburg",
+    "telefon": "+49 4163 82895 0"
+  },
+  {
+    "id": "PDLUE_PST_JORK",
+    "name": "Polizeistation Jork",
+    "adresse": "Borsteler Reihe 54, 21635 Jork",
+    "telefon": "+49 4162 91383 0"
+  },
+  {
+    "id": "PDLUE_PST_OLDENDORF",
+    "name": "Polizeistation Oldendorf",
+    "adresse": "Schützenstr. 5, 21726 Oldendorf",
+    "telefon": "+49 4144 60641 0"
+  },
+  {
+    "id": "PDLUE_PST_STEINKIRCHEN",
+    "name": "Polizeistation Steinkirchen",
+    "adresse": "Alter Marktplatz 9, 21720 Steinkirchen",
+    "telefon": "+49 4142 89813 0"
+  }
+]

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="de" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    <title>033-Skizze.de</title>
+
+    <!-- System-Form-Controls im richtigen Modus rendern -->
+    <meta name="color-scheme" content="light dark" />
+
+    <!-- ⚡ Theme-Bootstrap: synchron vor React/Vite ausführen -->
+    <script src="/theme-bootstrap.js"></script>
+
+    <!-- Favicons -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#0ea5e9" />
+
+    <!-- Adressleistenfarbe je nach Systemmodus -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F6F7FB" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#12161c" />
+
+    <link rel="manifest" href="/manifest.webmanifest" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

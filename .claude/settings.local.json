@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -E \"\\\\.tsx?$\")",
+      "Bash(grep -v \"^//\")",
+      "Bash(node -e \":*)",
+      "Bash(npx vite:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(where npm:*)",
+      "Bash(find /c/033-skizze -maxdepth 2 -name README* -o -name *.md)",
+      "Bash(npx eslint:*)",
+      "Bash(export PATH=\"$PATH:/c/Program Files/GitHub CLI\")",
+      "Bash(gh auth:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

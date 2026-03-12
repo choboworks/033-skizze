@@ -1,0 +1,416 @@
+[
+  {
+    "id": "PDGOE PI GOETTINGEN",
+    "name": "Polizeiinspektion Göttingen",
+    "adresse": "Otto-Hahn-Straße 2, 37077 Göttingen",
+    "telefon": "+49 551 491 0"
+  },
+  {
+    "id": "PDGOE PI GOETTINGEN ZKD",
+    "name": "Polizeiinspektion Göttingen - Zentraler Kriminaldienst",
+    "adresse": "Groner Landstraße 51, 37081 Göttingen",
+    "telefon": "+49 551 491 0"
+  },
+  {
+    "id": "PDGOE_PK_DUDERSTADT",
+    "name": "Polizeikommissariat Duderstadt",
+    "adresse": "Herzberger Straße 10, 37115 Duderstadt",
+    "telefon": "+49 5527 8461 0"
+  },
+  {
+    "id": "PDGOE_PST_FRIEDLAND",
+    "name": "Polizeistation Friedland",
+    "adresse": "Am Kirschgarten 1, 37133 Friedland",
+    "telefon": "+49 5504 94982 0"
+  },
+  {
+    "id": "PDGOE_PST_EBERGOETZEN",
+    "name": "Polizeistation Ebergötzen",
+    "adresse": "Vöhreweg 10, 37134 Ebergötzen",
+    "telefon": "+49 5507 919 56 0"
+  },
+  {
+    "id": "PDGOE_PST_GIEBOLDEHAUSEN",
+    "name": "Polizeistation Gieboldehausen",
+    "adresse": "Obertorstraße 58, 37434 Gieboldehausen",
+    "telefon": "+49 5528 20 58 40"
+  },
+  {
+    "id": "PDGOE_PST_GLEICHEN_RATHAUS",
+    "name": "Polizeistationen Gleichen (Rathaus)",
+    "adresse": "Waldstraße 7, 37130 Gleichen-Reinhausen",
+    "telefon": "+49 5592 927 42 0"
+  },
+  {
+    "id": "PDGOE_PK_HANN_MUENDEN",
+    "name": "Polizeikommissariat Hann. Münden",
+    "adresse": "Welfenstraße 3, 34346 Hann. Münden",
+    "telefon": "+49 5541 951 0"
+  },
+  {
+    "id": "PDGOE_PST_DRANSFELD",
+    "name": "Polizeistation Dransfeld",
+    "adresse": "Kirchplatz 1, 37127 Dransfeld",
+    "telefon": "+49 5502 999 79 0"
+  },
+  {
+    "id": "PDGOE_PST_STAUFENBERG",
+    "name": "Polizeistation Staufenberg",
+    "adresse": "Gartenstraße 2 a, 34355 Staufenberg / Landwehrhagen",
+    "telefon": "+49 5543 30331 0"
+  },
+  {
+    "id": "PDGOE_PK_OSTERODE_AM_HARZ",
+    "name": "Polizeikommissariat Osterode am Harz",
+    "adresse": "Abgunst 5, 37520 Osterode am Harz",
+    "telefon": "+49 5522 508 0"
+  },
+  {
+    "id": "PDGOE_PST_BAD_GRUND",
+    "name": "Polizeistation Bad Grund",
+    "adresse": "Clausthaler Str. 2, 37539 Bad Grund",
+    "telefon": "+49 5327 829 82 0"
+  },
+  {
+    "id": "PDGOE_PST_HATTORF",
+    "name": "Polizeistation Hattorf",
+    "adresse": "Bahnhofstr. 8, 37197 Hattorf am Harz",
+    "telefon": "+49 5584 999 84 0"
+  },
+  {
+    "id": "PDGOE_PST_HERZBERG",
+    "name": "Polizeistation Herzberg",
+    "adresse": "Gartenstraße 36, 37412 Herzberg am Harz",
+    "telefon": "+49 5521 99895 0"
+  },
+  {
+    "id": "PDGOE_PK_BAD_LAUTERBERG",
+    "name": "Polizeikommissariat Bad Lauterberg",
+    "adresse": "Scharzfelder Straße 102-104, 37431 Bad Lauterberg",
+    "telefon": "+49 5524 963 0"
+  },
+  {
+    "id": "PDGOE_PST_WALKENRIED",
+    "name": "Polizeistation Walkenried",
+    "adresse": "Bahnhofstr. 17, 37445 Walkenried",
+    "telefon": "+49 5525 95986 0"
+  },
+  {
+    "id": "PDGOE_PST_BAD_SACHSA",
+    "name": "Polizeistation Bad Sachsa",
+    "adresse": "Marktstr. 47, 37441 Bad Sachsa",
+    "telefon": "+49 5523 952 79 0"
+  },
+  {
+    "id": "PDGOE PI NORTHEIM",
+    "name": "Polizeiinspektion Northeim",
+    "adresse": "Teichstraße 4, 37154 Northeim",
+    "telefon": "+49 5551 9148 0"
+  },
+  {
+    "id": "PDGOE_PK_BAD_GANDERSHEIM",
+    "name": "Polizeikommissariat Bad Gandersheim",
+    "adresse": "Stiftsfreiheit 5, 37581 Bad Gandersheim",
+    "telefon": "+49 5382 9539 0"
+  },
+  {
+    "id": "PDGOE_PK_EINBECK",
+    "name": "Polizeikommissariat Einbeck",
+    "adresse": "Grimsehlstraße 1, 37574 Einbeck",
+    "telefon": "+49 5561 3131 0"
+  },
+  {
+    "id": "PDGOE_PK_USLAR",
+    "name": "Polizeikommissariat Uslar",
+    "adresse": "Eichhagen 28, 37170 Uslar",
+    "telefon": "+49 5571 8006 0"
+  },
+  {
+    "id": "PDGOE PI HILDESHEIM",
+    "name": "Polizeiinspektion Hildesheim",
+    "adresse": "Schützenwiese 24, 31137 Hildesheim",
+    "telefon": "+49 5121 939 0"
+  },
+  {
+    "id": "PDGOE_PK_ALFELD",
+    "name": "Polizeikommissariat Alfeld",
+    "adresse": "Ravenstr. 8, 31061 Alfeld",
+    "telefon": "+49 5181 80730"
+  },
+  {
+    "id": "PDGOE_PST_DUINGEN",
+    "name": "Polizeistation Duingen",
+    "adresse": "Töpferstraße 9, 31089 Duingen",
+    "telefon": "+49 5185 60217 0"
+  },
+  {
+    "id": "PDGOE_PST_FREDEN",
+    "name": "Polizeistation Freden",
+    "adresse": "Am Schillerplatz 4, 31084 Freden",
+    "telefon": "+49 5184 79197 0"
+  },
+  {
+    "id": "PDGOE_PST_SIBBESSE",
+    "name": "Polizeistation Sibbesse",
+    "adresse": "Lindenhof 1, 31079 Sibbesse",
+    "telefon": "+49 5065 96391 0"
+  },
+  {
+    "id": "PDGOE_PK_BAD_SALZDETFURTH",
+    "name": "Polizeikommissariat Bad Salzdetfurth",
+    "adresse": "Bahnhofstr. 11, 31162 Bad Salzdetfurth",
+    "telefon": "+49 5063 901 0"
+  },
+  {
+    "id": "PDGOE_PST_BOCKENEM",
+    "name": "Polizeistation Bockenem",
+    "adresse": "Steintorstr. 6a, 31167 Bockenem",
+    "telefon": "+49 5067 24981 0"
+  },
+  {
+    "id": "PDGOE_PST_HOLLE",
+    "name": "Polizeistation Holle",
+    "adresse": "Am Thie 1, 31188 Holle",
+    "telefon": "+49 5062 96404 0"
+  },
+  {
+    "id": "PDGOE_PST_LAMSPRINGE",
+    "name": "Polizeistation Lamspringe",
+    "adresse": "Hauptstr. 86, 31195 Lamspringe",
+    "telefon": "+49 5183 50199 0"
+  },
+  {
+    "id": "PDGOE_PST_SCHELLERTEN",
+    "name": "Polizeistation Schellerten",
+    "adresse": "Rathausstr. 8, 31174 Schellerten",
+    "telefon": "+49 5123 40069 0"
+  },
+  {
+    "id": "PDGOE_PST_SOEHLDE",
+    "name": "Polizeistation Söhlde",
+    "adresse": "Bürgerm.-Burgd.-Str. 8, 31185 Söhlde",
+    "telefon": "+49 5129 97102 0"
+  },
+  {
+    "id": "PDGOE_PK_ELZE",
+    "name": "Polizeikommissariat Elze",
+    "adresse": "Sedanstr. 34, 31008 Elze",
+    "telefon": "+49 5068 9338 0"
+  },
+  {
+    "id": "PDGOE_PK_SARSTEDT",
+    "name": "Polizeikommissariat Sarstedt",
+    "adresse": "Am Bruchgraben 7a, 31157 Sarstedt",
+    "telefon": "+49 5066 985 0"
+  },
+  {
+    "id": "PDGOE_PST_ALGERMISSEN",
+    "name": "Polizeistation Algermissen",
+    "adresse": "Marktstr. 7 a, 31191 Algermissen",
+    "telefon": "+49 5126 80372 0"
+  },
+  {
+    "id": "PDGOE_PST_GIESEN",
+    "name": "Polizeistation Giesen",
+    "adresse": "Küsterstraße 17, 31180 Giesen",
+    "telefon": "+49 5121 99854 0"
+  },
+  {
+    "id": "PDGOE_PST_HARSUM",
+    "name": "Polizeistation Harsum",
+    "adresse": "Mahnhof 11, 31177 Harsum",
+    "telefon": "+49 5127 90393 0"
+  },
+  {
+    "id": "PDGOE_PST_NORDSTEMMEN",
+    "name": "Polizeistation Nordstemmen",
+    "adresse": "Rathausstraße 3, 31171 Nordstemmen",
+    "telefon": "+49 5069 80620 0"
+  },
+  {
+    "id": "PDGOE PI HAMELN PYRMONT HOLZMINDEN",
+    "name": "Polizeiinspektion Hameln-Pyrmont/Holzminden",
+    "adresse": "Zentralstraße 9, 31785 Hameln",
+    "telefon": "+49 5151 933 0"
+  },
+  {
+    "id": "PDGOE_PK_BAD_MUENDER",
+    "name": "Polizeikommissariat Bad Münder",
+    "adresse": "Angerstraße 23, 31848 Bad Münder",
+    "telefon": "+49 5042 50640"
+  },
+  {
+    "id": "PDGOE_PK_BAD_PYRMONT",
+    "name": "Polizeikommissariat Bad Pyrmont",
+    "adresse": "Bahnhofstraße 42, 31812 Bad Pyrmont",
+    "telefon": "+49 5281 98990"
+  },
+  {
+    "id": "PDGOE_PK_HOLZMINDEN",
+    "name": "Polizeikommissariat Holzminden",
+    "adresse": "Allersheimer Straße 2, 37603 Holzminden",
+    "telefon": "+49 5531 958 0"
+  },
+  {
+    "id": "PDGOE PI NIENBURG SCHAUMBURG",
+    "name": "Polizeiinspektion Nienburg/Schaumburg",
+    "adresse": "Amalie-Thomas-Platz 1, 31582 Nienburg",
+    "telefon": "+49 5021 9212 0"
+  },
+  {
+    "id": "PDGOE_PK_BAD_NENNDORF",
+    "name": "Polizeikommissariat Bad Nenndorf",
+    "adresse": "Kurhausstraße 4, 31542 Bad Nenndorf",
+    "telefon": "+49 5723 7492 0"
+  },
+  {
+    "id": "PDGOE_PST_LAUENAU",
+    "name": "Polizeistation Lauenau",
+    "adresse": "Carl-Sasse-Straße 3, 31867 Lauenau",
+    "telefon": "+49 5043 98 73 60"
+  },
+  {
+    "id": "PDGOE_PST_RODENBERG",
+    "name": "Polizeistation Rodenberg",
+    "adresse": "Amtsstraße 5, 31552 Rodenberg",
+    "telefon": "+49 5723 98 76 40"
+  },
+  {
+    "id": "PDGOE_PK_BUECKEBURG",
+    "name": "Polizeikommissariat Bückeburg",
+    "adresse": "Ulmenallee 9, 31675 Bückeburg",
+    "telefon": "+49 5722 28 94 0"
+  },
+  {
+    "id": "PDGOE_PST_BAD_EILSEN",
+    "name": "Polizeistation Bad Eilsen",
+    "adresse": "Bückeburger Straße 4, 31707 Bad Eilsen",
+    "telefon": "+49 5722 90 63 40"
+  },
+  {
+    "id": "PDGOE_PST_NIENSTAEDT",
+    "name": "Polizeistation Nienstädt",
+    "adresse": "Bahnhofstraße 7, 31691 Helpsen",
+    "telefon": "+49 5724 39 74 30"
+  },
+  {
+    "id": "PDGOE_PST_OBERNKIRCHEN",
+    "name": "Polizeistation Obernkirchen",
+    "adresse": "Lange Straße 1, 31683 Obernkirchen",
+    "telefon": "+49 5724 95 88 60"
+  },
+  {
+    "id": "PDGOE_PK_RINTELN",
+    "name": "Polizeikommissariat Rinteln",
+    "adresse": "Hasphurtweg 3, 31737 Rinteln",
+    "telefon": "+49 5751 96 46 0"
+  },
+  {
+    "id": "PDGOE_PST_REHREN",
+    "name": "Polizeistation Rehren",
+    "adresse": "Rehrener Straße 8, 31749 Auetal",
+    "telefon": "+49 5752 92 90 90"
+  },
+  {
+    "id": "PDGOE_PK_STADTHAGEN",
+    "name": "Polizeikommissariat Stadthagen",
+    "adresse": "Vornhäger Straße 15, 31655 Stadthagen",
+    "telefon": "+49 5721 9822 0"
+  },
+  {
+    "id": "PDGOE_PST_HAGENBURG",
+    "name": "Polizeistation Hagenburg",
+    "adresse": "Steinhuder-Meer-Straße 1, 31558 Hagenburg",
+    "telefon": "+49 5033 98 01 30"
+  },
+  {
+    "id": "PDGOE_PST_LINDHORST",
+    "name": "Polizeistation Lindhorst",
+    "adresse": "Industriestraße 1, 31698 Lindhorst",
+    "telefon": "+49 5725 70 83 40"
+  },
+  {
+    "id": "PDGOE_PST_NIEDERNWOEHREN",
+    "name": "Polizeistation Niedernwöhren",
+    "adresse": "Hauptstraße 38, 31712 Niedernwöhren",
+    "telefon": "+49 5721 98 07 10"
+  },
+  {
+    "id": "PDGOE_PK_STOLZENAU",
+    "name": "Polizeikommissariat Stolzenau",
+    "adresse": "Sandbrink 2, 31592 Stolzenau",
+    "telefon": "+49 5761 9020 0"
+  },
+  {
+    "id": "PDGOE_PST_LANDESBERGEN",
+    "name": "Polizeistation Landesbergen",
+    "adresse": "Feldstraße 12, 31628 Landesbergen",
+    "telefon": "+49 5025 94 68 40"
+  },
+  {
+    "id": "PDGOE_PST_REHBURG_LOCCUM",
+    "name": "Polizeistation Rehburg-Loccum",
+    "adresse": "Heidtorstraße 7, 31547 Rehburg-Loccum",
+    "telefon": "+49 5037 96 98 40"
+  },
+  {
+    "id": "PDGOE_PST_STEYERBERG",
+    "name": "Polizeistation Steyerberg",
+    "adresse": "Am Markt 4, 31595 Steyerberg",
+    "telefon": "+49 5764 94 21 30"
+  },
+  {
+    "id": "PDGOE_PST_UCHTE",
+    "name": "Polizeistation Uchte",
+    "adresse": "Brinkstraße 21, 31600 Uchte",
+    "telefon": "+49 5763 94 49 40"
+  },
+  {
+    "id": "PDGOE_PST_STEIMBKE",
+    "name": "Polizeistation Steimbke",
+    "adresse": "Koppelberg 4, 31634 Steimbke",
+    "telefon": "+49 5026 900 850"
+  },
+  {
+    "id": "PDGOE_PST_LIEBENAU",
+    "name": "Polizeistation Liebenau",
+    "adresse": "Königsberger Straße 4, 31618 Liebenau",
+    "telefon": "+49 5023 98 89 90"
+  },
+  {
+    "id": "PDGOE_PST_ROHRSEN",
+    "name": "Polizeistation Rohrsen",
+    "adresse": "Wilhelmstraße 4, 31627 Rohrsen",
+    "telefon": "+49 5024 88 72 90"
+  },
+  {
+    "id": "PDGOE_PK_HOYA",
+    "name": "Polizeikommissariat Hoya",
+    "adresse": "Hasseler Steinweg 4, 27318 Hoya",
+    "telefon": "+49 4251 67 280"
+  },
+  {
+    "id": "PDGOE_PST_MARKLOHE",
+    "name": "Polizeistation Marklohe",
+    "adresse": "Hoyaer Straße 31, 31608 Marklohe",
+    "telefon": "+49 5021 92 40 60"
+  },
+  {
+    "id": "PDGOE_PST_EYSTRUP",
+    "name": "Polizeistation Eystrup",
+    "adresse": "Bahnhofstraße 11, 27324 Eystrup",
+    "telefon": "+49 4254 80 22 10"
+  },
+  {
+    "id": "PDGOE PD GOETTINGEN",
+    "name": "Polizeidirektion Göttingen",
+    "adresse": "Groner Landstraße 51, 37081 Göttingen",
+    "telefon": "+49 551 491 0"
+  },
+  {
+    "id": "PDGOE_ESD_BUNDESAUTOBAHN_GOETTINGEN",
+    "name": "Einsatz- und Streifendienst Bundesautobahn Göttingen",
+    "adresse": "Robert-Bosch-Breite 14, 37079 Göttingen-Grone",
+    "telefon": "+49 551 491 6515"
+  }
+]
