@@ -4,9 +4,10 @@
 
 import { useState } from 'react'
 import { Stamp, MoveRight, OctagonAlert, ShieldBan, Type, Footprints, Shapes, Minus } from 'lucide-react'
-import type { SmartRoadConfig, RoadMarking, ArrowMarking, ZebraMarking, StopLineMarking, WaitLineMarking, SharkTeethMarking, SpeedNumberMarking, LaneLineMarking, BlockedAreaMarking } from '../../types'
+import type { SmartRoadConfig, RoadMarking, ArrowMarking, ZebraMarking, StopLineMarking, WaitLineMarking, SharkTeethMarking, SpeedNumberMarking, LaneLineMarking, BlockedAreaMarking, TextMarking, SymbolMarking } from '../../types'
 import { ARROW_DEFS, ARROW_LABELS, type ArrowType } from '../../markings/arrowSvgs'
 import { BLOCKED_AREA_DEFS } from '../../markings/blockedAreaSvgs'
+import { SYMBOL_DEFS } from '../../markings/symbolSvgs'
 
 type Props = {
   config: SmartRoadConfig
@@ -127,14 +128,57 @@ function SharkTeethMini({ size = 24 }: { size?: number }) {
 function SpeedMini({ value, size = 24 }: { value: number; size?: number }) {
   return (
     <svg viewBox="0 0 60 40" width={size} height={size * 0.67}>
-      <text 
-        x="30" y="32" 
-        textAnchor="middle" 
-        fill="currentColor" 
-        fontFamily="Arial, sans-serif" 
-        fontWeight="bold" 
+      <text
+        x="30" y="32"
+        textAnchor="middle"
+        fill="currentColor"
+        fontFamily="Arial, sans-serif"
+        fontWeight="bold"
         fontSize={value >= 100 ? 28 : 34}
       >{value}</text>
+    </svg>
+  )
+}
+
+function TextMini({ text, orientation, size = 20 }: { text: string; orientation: 'horizontal' | 'vertical'; size?: number }) {
+  if (orientation === 'vertical') {
+    const chars = text.split('')
+    const h = chars.length * 14 + 4
+    return (
+      <svg viewBox={`0 0 18 ${h}`} width={size * 0.4} height={size}>
+        {chars.map((c, i) => (
+          <text key={i} x="9" y={14 + i * 14} textAnchor="middle" fill="currentColor"
+            fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="13">{c}</text>
+        ))}
+      </svg>
+    )
+  }
+  const w = text.length * 11 + 8
+  return (
+    <svg viewBox={`0 0 ${w} 20`} width={size} height={size * (20 / w)}>
+      <text x={w / 2} y="16" textAnchor="middle" fill="currentColor"
+        fontFamily="Arial, sans-serif" fontWeight="bold" fontSize="15">{text}</text>
+    </svg>
+  )
+}
+
+function SymbolMini({ symbolType, size = 20 }: { symbolType: SymbolMarking['symbolType']; size?: number }) {
+  const def = SYMBOL_DEFS[symbolType]
+  if (!def) return null
+  const aspect = def.width / def.height
+  const w = aspect >= 1 ? size : size * aspect
+  const h = aspect >= 1 ? size / aspect : size
+  // Für Symbole mit Text (tempo30) nutze svgBody, sonst paths
+  const useBody = def.svgBody.includes('<text') || def.svgBody.includes('<circle')
+  if (useBody) {
+    const colored = def.svgBody.replace(/#fff/g, 'currentColor').replace(/"white"/g, '"currentColor"')
+    return <svg viewBox={def.viewBox} width={w} height={h} dangerouslySetInnerHTML={{ __html: colored }} />
+  }
+  return (
+    <svg viewBox={def.viewBox} width={w} height={h}>
+      {def.paths.map((p, i) => (
+        <path key={i} d={p.d} fill="currentColor" />
+      ))}
     </svg>
   )
 }
@@ -213,6 +257,10 @@ const BLOCKED_AREA_LABELS: Record<BlockedAreaMarking['areaType'], string> = {
   hatchWedge: 'Keil',
   hatchWedgeRounded: 'Keil abger.',
   hatchBogen: 'Bogen',
+  zigzagLine: 'Zickzack',
+  boundaryContinuous: 'Grenzm. fortl.',
+  boundaryNShape: 'Grenzm. N',
+  noStoppingLine: 'Halteverbot',
 }
 
 // ============================================================================
@@ -297,9 +345,17 @@ function PlacedMarkingItem({
       case 'speedNumber': return `${marking.value} km/h • Spur ${marking.laneIndex + 1}`
       case 'laneLine': return `${LANE_LINE_LABELS[marking.lineType]} • Spur ${marking.laneIndex + 1}`
       case 'blockedArea': return BLOCKED_AREA_LABELS[marking.areaType]
+      case 'textMarking': return `${marking.text} ${marking.orientation === 'vertical' ? '(vert.)' : ''} • Spur ${marking.laneIndex + 1}`
+      case 'symbolMarking': {
+        const symLabels: Record<string, string> = {
+          accessible: 'Behinderung', busSymbol: 'Bus-Symbol', tempo30: 'Tempo 30',
+          pedestrian: 'Fußgänger', bicycle: 'Fahrrad', pedestrianZone: 'Fußgängerzone',
+        }
+        return `${symLabels[marking.symbolType] || marking.symbolType} • Spur ${marking.laneIndex + 1}`
+      }
     }
   }
-  
+
   const getIcon = () => {
     switch (marking.type) {
       case 'arrow': return <ArrowMini type={marking.arrowType} size={14} />
@@ -310,6 +366,8 @@ function PlacedMarkingItem({
       case 'speedNumber': return <SpeedMini value={marking.value} size={18} />
       case 'laneLine': return <LaneLineMini lineType={marking.lineType} size={16} />
       case 'blockedArea': return <BlockedAreaMini areaType={marking.areaType} size={14} />
+      case 'textMarking': return <TextMini text={marking.text} orientation={marking.orientation} size={16} />
+      case 'symbolMarking': return <SymbolMini symbolType={marking.symbolType} size={16} />
     }
   }
   
@@ -486,6 +544,8 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
       laneIndex: 0,
       positionPercent: findFreePosition(0),
       rotation: 0,
+      scaleX: 0.6,
+      scaleY: 0.6,
     }
     onUpdate({ ...config, markings: [...markings, newMarking] }, true)
   }
@@ -513,7 +573,36 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
     }
     onUpdate({ ...config, markings: [...markings, newMarking] }, true)
   }
-  
+
+  const addTextMarking = (text: TextMarking['text'], orientation: TextMarking['orientation']) => {
+    const newMarking: TextMarking = {
+      id: generateMarkingId(),
+      type: 'textMarking',
+      text,
+      orientation,
+      laneIndex: 0,
+      positionPercent: findFreePosition(0),
+      rotation: 0,
+      scaleX: 0.5,
+      scaleY: 0.5,
+    }
+    onUpdate({ ...config, markings: [...markings, newMarking] }, true)
+  }
+
+  const addSymbolMarking = (symbolType: SymbolMarking['symbolType']) => {
+    const newMarking: SymbolMarking = {
+      id: generateMarkingId(),
+      type: 'symbolMarking',
+      symbolType,
+      laneIndex: 0,
+      positionPercent: findFreePosition(0),
+      rotation: 0,
+      scaleX: 0.4,
+      scaleY: 0.4,
+    }
+    onUpdate({ ...config, markings: [...markings, newMarking] }, true)
+  }
+
   const removeMarking = (id: string) => {
     onUpdate({ ...config, markings: markings.filter(m => m.id !== id) }, true)
   }
@@ -530,10 +619,10 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
   const laneLineCount = markings.filter(m => m.type === 'laneLine').length
   const arrowCount = markings.filter(m => m.type === 'arrow').length
   const stopLineCount = markings.filter(m => m.type === 'stopLine' || m.type === 'waitLine' || m.type === 'sharkTeeth').length
-  const speedCount = markings.filter(m => m.type === 'speedNumber').length
-  const zebraCount = markings.filter(m => m.type === 'zebra').length
+  const textSymbolCount = markings.filter(m => m.type === 'speedNumber' || m.type === 'textMarking' || m.type === 'symbolMarking').length
+  const zebraCount = markings.filter(m => m.type === 'zebra' || (m.type === 'symbolMarking' && ['pedestrian', 'bicycle', 'pedestrianZone'].includes(m.symbolType))).length
   const blockedAreaCount = markings.filter(m => m.type === 'blockedArea').length
-  
+
   const arrowTypes: ArrowType[] = ['straight', 'left', 'right', 'straight-left', 'straight-right', 'all', 'half-left', 'half-right']
   const speedValues: SpeedNumberMarking['value'][] = [30, 50, 70, 100]
   
@@ -653,6 +742,10 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
               <GridTile icon={<BlockedAreaMini areaType="hatchWedge" size={20} />} label="Keil" onAdd={() => addBlockedArea('hatchWedge', 50, 20)} color="#f59e0b" />
               <GridTile icon={<BlockedAreaMini areaType="hatchWedgeRounded" size={20} />} label="Keil abger." onAdd={() => addBlockedArea('hatchWedgeRounded', 25, 20)} color="#f59e0b" />
               <GridTile icon={<BlockedAreaMini areaType="hatchBogen" size={20} />} label="Bogen" onAdd={() => addBlockedArea('hatchBogen', 30, 15)} color="#f59e0b" />
+              <GridTile icon={<BlockedAreaMini areaType="zigzagLine" size={20} />} label="Zickzack" onAdd={() => addBlockedArea('zigzagLine', 18, 25)} color="#f59e0b" />
+              <GridTile icon={<BlockedAreaMini areaType="boundaryContinuous" size={20} />} label="Grenzm. fortl." onAdd={() => addBlockedArea('boundaryContinuous', 20, 10)} color="#f59e0b" />
+              <GridTile icon={<BlockedAreaMini areaType="boundaryNShape" size={20} />} label="Grenzm. N" onAdd={() => addBlockedArea('boundaryNShape', 18, 10)} color="#f59e0b" />
+              <GridTile icon={<BlockedAreaMini areaType="noStoppingLine" size={20} />} label="Halteverbot" onAdd={() => addBlockedArea('noStoppingLine', 10, 20)} color="#f59e0b" />
             </div>
           </div>
         )}
@@ -660,22 +753,44 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
         {/* ========== 4. SCHRIFT UND SYMBOLE ========== */}
         <CategoryHeader 
           info={CATEGORY_INFO.textSymbols} 
-          count={speedCount}
+          count={textSymbolCount}
           expanded={expandedCategory === 'textSymbols'} 
           onToggle={() => toggleCategory('textSymbols')} 
         />
         {expandedCategory === 'textSymbols' && (
           <div className="px-3 pb-2" style={{ animation: 'fadeIn 0.1s ease-out' }}>
-            <div className="grid grid-cols-3 gap-1.5">
+            {/* Geschwindigkeiten */}
+            <div className="text-[10px] font-medium uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Geschwindigkeit</div>
+            <div className="grid grid-cols-4 gap-1.5 mb-2">
               {speedValues.map((v) => (
                 <GridTile
                   key={v}
                   icon={<SpeedMini value={v} size={18} />}
-                  label={`${v} km/h`}
+                  label={`${v}`}
                   onAdd={() => addSpeedNumber(v)}
                   color="#22c55e"
                 />
               ))}
+            </div>
+            {/* Schrift */}
+            <div className="text-[10px] font-medium uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Schrift</div>
+            <div className="grid grid-cols-3 gap-1.5 mb-2">
+              <GridTile icon={<TextMini text="TAXI" orientation="horizontal" size={18} />} label="Taxi" onAdd={() => addTextMarking('TAXI', 'horizontal')} color="#22c55e" />
+              <GridTile icon={<TextMini text="BUS" orientation="horizontal" size={18} />} label="Bus" onAdd={() => addTextMarking('BUS', 'horizontal')} color="#22c55e" />
+              <GridTile icon={<TextMini text="POLIZEI" orientation="horizontal" size={18} />} label="Polizei" onAdd={() => addTextMarking('POLIZEI', 'horizontal')} color="#22c55e" />
+              <GridTile icon={<TextMini text="H" orientation="horizontal" size={18} />} label="H (Haltest.)" onAdd={() => addTextMarking('H', 'horizontal')} color="#22c55e" />
+              <GridTile icon={<TextMini text="P" orientation="horizontal" size={18} />} label="P (Parken)" onAdd={() => addTextMarking('P', 'horizontal')} color="#22c55e" />
+              <GridTile icon={<TextMini text="STOP" orientation="horizontal" size={18} />} label="Stop" onAdd={() => addTextMarking('STOP', 'horizontal')} color="#22c55e" />
+              <GridTile icon={<TextMini text="TAXI" orientation="vertical" size={18} />} label="Taxi vert." onAdd={() => addTextMarking('TAXI', 'vertical')} color="#22c55e" />
+              <GridTile icon={<TextMini text="BUS" orientation="vertical" size={18} />} label="Bus vert." onAdd={() => addTextMarking('BUS', 'vertical')} color="#22c55e" />
+              <GridTile icon={<TextMini text="POLIZEI" orientation="vertical" size={18} />} label="Polizei vert." onAdd={() => addTextMarking('POLIZEI', 'vertical')} color="#22c55e" />
+            </div>
+            {/* Symbole */}
+            <div className="text-[10px] font-medium uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Symbole</div>
+            <div className="grid grid-cols-3 gap-1.5">
+              <GridTile icon={<SymbolMini symbolType="accessible" size={18} />} label="Behinderung" onAdd={() => addSymbolMarking('accessible')} color="#22c55e" />
+              <GridTile icon={<SymbolMini symbolType="busSymbol" size={18} />} label="Bus-Symbol" onAdd={() => addSymbolMarking('busSymbol')} color="#22c55e" />
+              <GridTile icon={<SymbolMini symbolType="tempo30" size={18} />} label="Tempo 30" onAdd={() => addSymbolMarking('tempo30')} color="#22c55e" />
             </div>
           </div>
         )}
@@ -691,6 +806,9 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
           <div className="px-3 pb-2" style={{ animation: 'fadeIn 0.1s ease-out' }}>
             <div className="grid grid-cols-3 gap-1.5">
               <GridTile icon={<ZebraMini size={18} />} label="Zebrastreifen" onAdd={addZebra} color="#8b5cf6" />
+              <GridTile icon={<SymbolMini symbolType="pedestrian" size={18} />} label="Fußgänger" onAdd={() => addSymbolMarking('pedestrian')} color="#8b5cf6" />
+              <GridTile icon={<SymbolMini symbolType="bicycle" size={18} />} label="Fahrrad" onAdd={() => addSymbolMarking('bicycle')} color="#8b5cf6" />
+              <GridTile icon={<SymbolMini symbolType="pedestrianZone" size={18} />} label="Fußg.-zone" onAdd={() => addSymbolMarking('pedestrianZone')} color="#8b5cf6" />
             </div>
           </div>
         )}
@@ -715,10 +833,11 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
             
             <div className="py-1">
               {markings.map((marking) => {
-                const accent = marking.type === 'arrow' ? '#3b82f6' 
+                const accent = marking.type === 'arrow' ? '#3b82f6'
                   : marking.type === 'stopLine' || marking.type === 'waitLine' || marking.type === 'sharkTeeth' ? '#ef4444'
                   : marking.type === 'zebra' ? '#8b5cf6'
-                  : marking.type === 'speedNumber' ? '#22c55e'
+                  : marking.type === 'symbolMarking' && ['pedestrian', 'bicycle', 'pedestrianZone'].includes(marking.symbolType) ? '#8b5cf6'
+                  : marking.type === 'speedNumber' || marking.type === 'textMarking' || marking.type === 'symbolMarking' ? '#22c55e'
                   : marking.type === 'laneLine' ? '#06b6d4'
                   : marking.type === 'blockedArea' ? '#f59e0b'
                   : '#6b7280'

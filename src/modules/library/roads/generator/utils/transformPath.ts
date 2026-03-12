@@ -46,18 +46,32 @@ export function transformPathData(d: string, m: Matrix): string {
         break
       }
       case 'H': {
-        // Horizontal line — wird zu L konvertiert (kann nicht horizontal bleiben nach Rotation)
+        // H/h → nach Rotation nicht mehr horizontal → konvertiere zu L/l
         const x = parseFloat(tokens[i])
-        // H hat nur x, y bleibt gleich → aber nach Transform ist es ein normaler Punkt
-        // Wir müssen den aktuellen Y-Wert kennen, was komplex ist.
-        // Einfachere Lösung: H und V als Wert durchreichen (sie werden selten in diesen Pfaden verwendet)
-        result.push(fmt(isRelative ? x * m.a : x * m.a + m.e))
+        // Ersetze das H/h im result mit l/L
+        result[result.length - 1] = isRelative ? 'l' : 'L'
+        if (isRelative) {
+          const [tx, ty] = transformRel(x, 0, m)
+          result.push(`${fmt(tx)},${fmt(ty)}`)
+        } else {
+          // Absolute H braucht aktuelles Y — approximiere mit 0 (selten in diesen Pfaden)
+          const [tx, ty] = transformAbs(x, 0, m)
+          result.push(`${fmt(tx)},${fmt(ty)}`)
+        }
         i += 1
         break
       }
       case 'V': {
         const y = parseFloat(tokens[i])
-        result.push(fmt(isRelative ? y * m.d : y * m.d + m.f))
+        // V/v → nach Rotation nicht mehr vertikal → konvertiere zu L/l
+        result[result.length - 1] = isRelative ? 'l' : 'L'
+        if (isRelative) {
+          const [tx, ty] = transformRel(0, y, m)
+          result.push(`${fmt(tx)},${fmt(ty)}`)
+        } else {
+          const [tx, ty] = transformAbs(0, y, m)
+          result.push(`${fmt(tx)},${fmt(ty)}`)
+        }
         i += 1
         break
       }

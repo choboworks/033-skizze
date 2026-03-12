@@ -6,6 +6,7 @@ import type { SmartRoadConfig, RoadsideElementType } from '../types'
 import { getActiveOrder, getMarkingX, getCrossMarkingBounds } from '../types'
 import { ARROW_SVGS, ARROW_DEFS } from '../markings/arrowSvgs'
 import { BLOCKED_AREA_DEFS } from '../markings/blockedAreaSvgs'
+import { SYMBOL_DEFS } from '../markings/symbolSvgs'
 // lucide-react icons removed — handles are now SVG-based
 
 // Types & Constants
@@ -62,6 +63,15 @@ export function InteractiveRoadPreview({
   const calc = useRoadCalculations(config)
   
   const markings = useMemo(() => config.markings || [], [config.markings])
+
+  // Auto-select: Wenn ein neues Marking hinzugefügt wird, automatisch auswählen
+  const prevMarkingsLenRef = useRef(markings.length)
+  useEffect(() => {
+    if (markings.length > prevMarkingsLenRef.current && markings.length > 0) {
+      setSelectedMarkingId(markings[markings.length - 1].id)
+    }
+    prevMarkingsLenRef.current = markings.length
+  }, [markings])
 
   // Konvertiert SVG-Koordinaten → Screen-Koordinaten für Drag-Operationen
   const svgToScreen = (svgX: number, svgY: number): { sx: number; sy: number } | null => {
@@ -628,6 +638,46 @@ export function InteractiveRoadPreview({
             )
           }
 
+          // ===== ZEBRASTREIFEN =====
+          if (marking.type === 'zebra') {
+            const x1 = calc.leftSideWidth
+            const x2 = calc.leftSideWidth + config.width
+            const lineWidth = x2 - x1
+            const centerX = (x1 + x2) / 2
+            const sx = marking.scaleX ?? marking.scale ?? 1
+            const sy = marking.scaleY ?? marking.scale ?? 1
+            const zebraWidth = (marking.width || 40) * sy
+            const stripeW = 5 * sx
+            const gapW = 5 * sx
+            const totalWidth = x2 - x1
+            // Edge-to-edge: first stripe at x1, last stripe ends at x2
+            const N = Math.max(1, Math.round((totalWidth + gapW) / (stripeW + gapW)))
+            const actualGap = N > 1 ? (totalWidth - N * stripeW) / (N - 1) : 0
+            const stripes: React.ReactElement[] = []
+            for (let idx = 0; idx < N; idx++) {
+              const cx = x1 + idx * (stripeW + actualGap)
+              stripes.push(<rect key={idx} x={cx} y={yPosition - zebraWidth / 2} width={stripeW} height={zebraWidth} fill="#ffffff" />)
+            }
+            const rotation = marking.rotation || 0
+            return (
+              <g key={marking.id}>
+                <g transform={rotation ? `rotate(${rotation}, ${centerX}, ${yPosition})` : undefined}>
+                  {stripes}
+                  <rect x={x1 - 5} y={yPosition - zebraWidth / 2 - 5} width={lineWidth + 10} height={zebraWidth + 10}
+                    fill="transparent" style={{ cursor: 'pointer' }}
+                    onMouseDown={(e) => {
+                      e.stopPropagation(); e.preventDefault()
+                      setSelectedMarkingId(marking.id)
+                      setDraggingMarkingId(marking.id)
+                      setDragMode('move')
+                      dragOriginRef.current = { x: e.clientX, y: e.clientY, startRotation: marking.rotation || 0, startScaleX: marking.scaleX ?? marking.scale ?? 1, startScaleY: marking.scaleY ?? marking.scale ?? 1 }
+                    }}
+                  />
+                </g>
+              </g>
+            )
+          }
+
           // ===== HALTELINIE / WARTELINIE / HAIFISCHZÄHNE =====
           if (marking.type === 'stopLine' || marking.type === 'waitLine' || marking.type === 'sharkTeeth') {
             const { x1, x2, centerX, lineWidth } = getCrossMarkingBounds(marking, config.width, calc.leftSideWidth)
@@ -759,6 +809,183 @@ export function InteractiveRoadPreview({
             )
           }
           
+          // ===== GESCHWINDIGKEITSZAHLEN =====
+          if (marking.type === 'speedNumber') {
+            const laneCenter = getMarkingX(marking, config.width, config.lanes, calc.leftSideWidth)
+            const rotation = marking.rotation || 0
+            const sx = marking.scaleX ?? marking.scale ?? 1
+            const sy = marking.scaleY ?? marking.scale ?? 1
+            const fontSize = laneWidth * 0.55
+            const textW = (marking.value >= 100 ? fontSize * 1.8 : fontSize * 1.2) * sx
+            const textH = fontSize * 1.1 * sy
+
+            return (
+              <g key={marking.id}>
+                <g transform={`translate(${laneCenter}, ${yPosition})`}>
+                  <g transform={`rotate(${rotation})`}>
+                    <text
+                      x={0} y={fontSize * 0.35 * sy}
+                      textAnchor="middle"
+                      fill="#ffffff"
+                      fontFamily="Arial, sans-serif"
+                      fontWeight="bold"
+                      fontSize={fontSize}
+                      transform={`scale(${sx}, ${sy})`}
+                      style={{
+                        cursor: isDragging ? 'grabbing' : 'pointer',
+                        filter: isDragging ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+                      }}
+                    >{marking.value}</text>
+                  </g>
+                  {/* Hitbox */}
+                  <rect x={-textW / 2} y={-textH / 2} width={textW} height={textH}
+                    fill="transparent" style={{ cursor: 'pointer' }}
+                    onMouseDown={(e) => {
+                      e.stopPropagation(); e.preventDefault()
+                      setSelectedMarkingId(marking.id)
+                      setDraggingMarkingId(marking.id)
+                      setDragMode('move')
+                      dragOriginRef.current = { x: e.clientX, y: e.clientY, startRotation: rotation, startScaleX: sx, startScaleY: sy }
+                    }}
+                  />
+                </g>
+              </g>
+            )
+          }
+
+          // ===== TEXTMARKIERUNGEN =====
+          if (marking.type === 'textMarking') {
+            const laneCenter = getMarkingX(marking, config.width, config.lanes, calc.leftSideWidth)
+            const rotation = marking.rotation || 0
+            const sx = marking.scaleX ?? marking.scale ?? 1
+            const sy = marking.scaleY ?? marking.scale ?? 1
+            const fontSize = laneWidth * 0.4
+
+            if (marking.orientation === 'vertical') {
+              const chars = marking.text.split('')
+              const charH = fontSize * 1.3
+              const totalH = chars.length * charH * sy
+              const totalW = fontSize * 0.8 * sx
+
+              return (
+                <g key={marking.id}>
+                  <g transform={`translate(${laneCenter}, ${yPosition})`}>
+                    <g transform={`rotate(${rotation})`}>
+                      {chars.map((c, i) => (
+                        <text key={i}
+                          x={0} y={(-totalH / 2 + charH * 0.8 + i * charH) / (sy || 1)}
+                          textAnchor="middle" fill="#ffffff"
+                          fontFamily="Arial, sans-serif" fontWeight="bold" fontSize={fontSize}
+                          transform={`scale(${sx}, ${sy})`}
+                          style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}
+                        >{c}</text>
+                      ))}
+                    </g>
+                    <rect x={-totalW / 2} y={-totalH / 2} width={totalW} height={totalH}
+                      fill="transparent" style={{ cursor: 'pointer' }}
+                      onMouseDown={(e) => {
+                        e.stopPropagation(); e.preventDefault()
+                        setSelectedMarkingId(marking.id)
+                        setDraggingMarkingId(marking.id)
+                        setDragMode('move')
+                        dragOriginRef.current = { x: e.clientX, y: e.clientY, startRotation: rotation, startScaleX: sx, startScaleY: sy }
+                      }}
+                    />
+                  </g>
+                </g>
+              )
+            }
+
+            // horizontal
+            const textW = marking.text.length * fontSize * 0.65 * sx
+            const textH = fontSize * 1.1 * sy
+            return (
+              <g key={marking.id}>
+                <g transform={`translate(${laneCenter}, ${yPosition})`}>
+                  <g transform={`rotate(${rotation})`}>
+                    <text
+                      x={0} y={fontSize * 0.35 * sy}
+                      textAnchor="middle" fill="#ffffff"
+                      fontFamily="Arial, sans-serif" fontWeight="bold" fontSize={fontSize}
+                      transform={`scale(${sx}, ${sy})`}
+                      style={{
+                        cursor: isDragging ? 'grabbing' : 'pointer',
+                        filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+                      }}
+                    >{marking.text}</text>
+                  </g>
+                  <rect x={-textW / 2} y={-textH / 2} width={textW} height={textH}
+                    fill="transparent" style={{ cursor: 'pointer' }}
+                    onMouseDown={(e) => {
+                      e.stopPropagation(); e.preventDefault()
+                      setSelectedMarkingId(marking.id)
+                      setDraggingMarkingId(marking.id)
+                      setDragMode('move')
+                      dragOriginRef.current = { x: e.clientX, y: e.clientY, startRotation: rotation, startScaleX: sx, startScaleY: sy }
+                    }}
+                  />
+                </g>
+              </g>
+            )
+          }
+
+          // ===== SYMBOLMARKIERUNGEN =====
+          if (marking.type === 'symbolMarking') {
+            const def = SYMBOL_DEFS[marking.symbolType]
+            if (!def) return null
+
+            const laneCenter = getMarkingX(marking, config.width, config.lanes, calc.leftSideWidth)
+            const rotation = marking.rotation || 0
+            const sx = marking.scaleX ?? marking.scale ?? 1
+            const sy = marking.scaleY ?? marking.scale ?? 1
+
+            const targetH = laneWidth * 0.8
+            const baseScale = targetH / def.height
+            const scaleX = baseScale * sx
+            const scaleY = baseScale * sy
+            const scaledW = def.width * scaleX
+            const scaledH = def.height * scaleY
+
+            return (
+              <g key={marking.id}>
+                <g transform={`translate(${laneCenter}, ${yPosition})`}>
+                  <g transform={`rotate(${rotation})`}>
+                    {(def.svgBody.includes('<text') || def.svgBody.includes('<circle')) ? (
+                      <g transform={`translate(${-scaledW / 2}, ${-scaledH / 2}) scale(${scaleX}, ${scaleY})`}
+                        style={{
+                          cursor: isDragging ? 'grabbing' : 'pointer',
+                          filter: isDragging ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+                        }}
+                        dangerouslySetInnerHTML={{ __html: def.svgBody }}
+                      />
+                    ) : (
+                      <g transform={`translate(${-scaledW / 2}, ${-scaledH / 2}) scale(${scaleX}, ${scaleY})`}
+                        style={{
+                          cursor: isDragging ? 'grabbing' : 'pointer',
+                          filter: isDragging ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
+                        }}
+                      >
+                        {def.paths.map((p, i) => (
+                          <path key={i} d={p.d} fill={p.fill} />
+                        ))}
+                      </g>
+                    )}
+                  </g>
+                  <rect x={-scaledW / 2} y={-scaledH / 2} width={scaledW} height={scaledH}
+                    fill="transparent" style={{ cursor: 'pointer' }}
+                    onMouseDown={(e) => {
+                      e.stopPropagation(); e.preventDefault()
+                      setSelectedMarkingId(marking.id)
+                      setDraggingMarkingId(marking.id)
+                      setDragMode('move')
+                      dragOriginRef.current = { x: e.clientX, y: e.clientY, startRotation: rotation, startScaleX: sx, startScaleY: sy }
+                    }}
+                  />
+                </g>
+              </g>
+            )
+          }
+
           return null
         })}
           </svg>
@@ -791,11 +1018,12 @@ export function InteractiveRoadPreview({
               for (const marking of markings) {
                 const yPos = (marking.positionPercent / 100) * config.length
                 
-                // Quermarkierungen (stopLine, waitLine) — ganze Fahrbahnbreite
-                if (marking.type === 'stopLine' || marking.type === 'waitLine') {
+                // Quermarkierungen (zebra, stopLine, waitLine) — ganze Fahrbahnbreite
+                if (marking.type === 'zebra' || marking.type === 'stopLine' || marking.type === 'waitLine') {
                   const roadLeft = calc.leftSideWidth
                   const roadRight = calc.leftSideWidth + config.width
-                  if (configX >= roadLeft - 5 && configX <= roadRight + 5 && configY >= yPos - 12 && configY <= yPos + 12) {
+                  const hitH = marking.type === 'zebra' ? ((marking.width || 40) * (marking.scaleY ?? marking.scale ?? 1)) / 2 + 5 : 12
+                  if (configX >= roadLeft - 5 && configX <= roadRight + 5 && configY >= yPos - hitH && configY <= yPos + hitH) {
                     setSelectedMarkingId(marking.id)
                     setDraggingMarkingId(marking.id)
                     setDragMode('move')
@@ -807,7 +1035,7 @@ export function InteractiveRoadPreview({
                 }
                 
                 // Pfeile + SpeedNumber — Spur-basiert
-                if (marking.type !== 'arrow' && marking.type !== 'speedNumber' && marking.type !== 'laneLine') continue
+                if (marking.type !== 'arrow' && marking.type !== 'speedNumber' && marking.type !== 'laneLine' && marking.type !== 'textMarking' && marking.type !== 'symbolMarking') continue
                 const ms = marking.scale || 1
                 const laneCenter = getMarkingX(marking, config.width, config.lanes, calc.leftSideWidth)
                 
@@ -949,8 +1177,9 @@ export function InteractiveRoadPreview({
                 const yPos = (marking.positionPercent / 100) * config.length
                 
                 // Quermarkierungen
-                if (marking.type === 'stopLine' || marking.type === 'waitLine' || marking.type === 'sharkTeeth' || marking.type === 'blockedArea') {
-                  if (configX >= calc.leftSideWidth - 5 && configX <= calc.leftSideWidth + config.width + 5 && configY >= yPos - 12 && configY <= yPos + 12) {
+                if (marking.type === 'zebra' || marking.type === 'stopLine' || marking.type === 'waitLine' || marking.type === 'sharkTeeth' || marking.type === 'blockedArea') {
+                  const dblHitH = marking.type === 'zebra' ? ((marking.width || 40) * (marking.scaleY ?? marking.scale ?? 1)) / 2 + 5 : 12
+                  if (configX >= calc.leftSideWidth - 5 && configX <= calc.leftSideWidth + config.width + 5 && configY >= yPos - dblHitH && configY <= yPos + dblHitH) {
                     updatePartial({ markings: markings.filter(m => m.id !== marking.id) })
                     setSelectedMarkingId(null)
                     return
@@ -958,7 +1187,7 @@ export function InteractiveRoadPreview({
                   continue
                 }
                 
-                if (marking.type !== 'arrow' && marking.type !== 'speedNumber' && marking.type !== 'laneLine') continue
+                if (marking.type !== 'arrow' && marking.type !== 'speedNumber' && marking.type !== 'laneLine' && marking.type !== 'textMarking' && marking.type !== 'symbolMarking') continue
                 const ms = marking.scale || 1
                 const laneCenter = getMarkingX(marking, config.width, config.lanes, calc.leftSideWidth)
                 
@@ -1026,6 +1255,11 @@ export function InteractiveRoadPreview({
               const lineH = config.length * 0.12 * msy
               hwSvg = 8 * msx
               hhSvg = lineH / 2 + 4
+            } else if (marking.type === 'zebra') {
+              centerSvgX = calc.leftSideWidth + config.width / 2
+              centerSvgY = yPos
+              hwSvg = config.width / 2 + 4
+              hhSvg = (marking.width || 40) * msy / 2 + 4
             } else if (marking.type === 'stopLine' || marking.type === 'waitLine' || marking.type === 'sharkTeeth') {
               const { centerX, lineWidth } = getCrossMarkingBounds(marking, config.width, calc.leftSideWidth)
               centerSvgX = centerX
@@ -1047,6 +1281,33 @@ export function InteractiveRoadPreview({
               centerSvgY = yPos
               hwSvg = bDef.contentBox.w * bScaleX / 2 + 4
               hhSvg = bDef.contentBox.h * bScaleY / 2 + 4
+            } else if (marking.type === 'speedNumber') {
+              const fontSize = laneWidth * 0.55
+              centerSvgX = getMarkingX(marking, config.width, config.lanes, calc.leftSideWidth)
+              centerSvgY = yPos
+              hwSvg = (marking.value >= 100 ? fontSize * 1.8 : fontSize * 1.2) * msx / 2 + 4
+              hhSvg = fontSize * 1.1 * msy / 2 + 4
+            } else if (marking.type === 'textMarking') {
+              const fontSize = laneWidth * 0.4
+              centerSvgX = getMarkingX(marking, config.width, config.lanes, calc.leftSideWidth)
+              centerSvgY = yPos
+              if (marking.orientation === 'vertical') {
+                const charH = fontSize * 1.3
+                hwSvg = fontSize * 0.8 * msx / 2 + 4
+                hhSvg = marking.text.length * charH * msy / 2 + 4
+              } else {
+                hwSvg = marking.text.length * fontSize * 0.65 * msx / 2 + 4
+                hhSvg = fontSize * 1.1 * msy / 2 + 4
+              }
+            } else if (marking.type === 'symbolMarking') {
+              const sDef = SYMBOL_DEFS[marking.symbolType]
+              if (!sDef) return null
+              const targetH = laneWidth * 0.8
+              const baseScale = targetH / sDef.height
+              centerSvgX = getMarkingX(marking, config.width, config.lanes, calc.leftSideWidth)
+              centerSvgY = yPos
+              hwSvg = sDef.width * baseScale * msx / 2 + 4
+              hhSvg = sDef.height * baseScale * msy / 2 + 4
             } else {
               return null
             }

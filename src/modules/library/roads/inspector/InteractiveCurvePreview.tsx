@@ -7,6 +7,7 @@ import { getActiveOrder, getElementWidth } from '../types'
 // lucide-react icons removed — handles sind jetzt einfache SVG/HTML-Elemente
 import { ARROW_DEFS } from '../markings/arrowSvgs'
 import { BLOCKED_AREA_DEFS } from '../markings/blockedAreaSvgs'
+import { SYMBOL_DEFS } from '../markings/symbolSvgs'
 
 // Types aus previewTypes
 import type { HoveredZone, PopupPosition, ZoneType, ZoneSide } from './previewTypes'
@@ -65,7 +66,16 @@ export function InteractiveCurvePreview({ config, updatePartial, onZoneSelect }:
   } | null>(null)
   
   const markings = useMemo(() => config.markings || [], [config.markings])
-  
+
+  // Auto-select: Wenn ein neues Marking hinzugefügt wird, automatisch auswählen
+  const prevMarkingsLenRef = useRef(markings.length)
+  useEffect(() => {
+    if (markings.length > prevMarkingsLenRef.current && markings.length > 0) {
+      setSelectedMarkingId(markings[markings.length - 1].id)
+    }
+    prevMarkingsLenRef.current = markings.length
+  }, [markings])
+
   // Berechnungen
   const calc = useMemo(() => {
     const curve = config.curve || { angle: 90, direction: 'right', radius: 100 }
@@ -667,19 +677,71 @@ export function InteractiveCurvePreview({ config, updatePartial, onZoneSelect }:
                 dropTargetIndex={dragSide === 'left' ? dropTargetIndex : null}
               />
               
-              {/* ========== LINIEN-MARKIERUNGEN (Halte-/Wartelinien/Haifischzähne) ========== */}
+              {/* ========== LINIEN-MARKIERUNGEN (Zebra/Halte-/Wartelinien/Haifischzähne) ========== */}
               {(config.markings || []).map((marking) => {
-                if (marking.type !== 'stopLine' && marking.type !== 'waitLine' && marking.type !== 'sharkTeeth' && marking.type !== 'blockedArea') return null
-                
+                if (marking.type !== 'zebra' && marking.type !== 'stopLine' && marking.type !== 'waitLine' && marking.type !== 'sharkTeeth' && marking.type !== 'blockedArea') return null
+
                 const posAngle = (marking.positionPercent / 100) * angle
                 const posAngleRad = (posAngle * Math.PI) / 180
                 const roadWidth = outerRadius - innerRadius
+                const r1Full = innerRadius
+                const r2Full = outerRadius
+
+                // Zebra: eigene Logik
+                if (marking.type === 'zebra') {
+                  const msx = marking.scaleX ?? marking.scale ?? 1
+                  const msy = marking.scaleY ?? marking.scale ?? 1
+                  const zebraWidth = (marking.width || 40) * msy
+                  const stripeRadial = 5 * msx
+                  const gapRadial = 5 * msx
+                  // Edge-to-edge radial tiling
+                  const totalRadial = r2Full - r1Full
+                  const N = Math.max(1, Math.round((totalRadial + gapRadial) / (stripeRadial + gapRadial)))
+                  const actualGap = N > 1 ? (totalRadial - N * stripeRadial) / (N - 1) : 0
+                  const posAngleRad2 = (posAngle * Math.PI) / 180
+                  const stripes: React.ReactElement[] = []
+                  for (let idx = 0; idx < N; idx++) {
+                    const rIn = r1Full + idx * (stripeRadial + actualGap)
+                    const rOut = rIn + stripeRadial
+                    // Per-stripe angular extent based on radius → constant visual width
+                    const rMid = (rIn + rOut) / 2
+                    const halfAngRad = (zebraWidth / 2) / rMid
+                    const a1 = posAngleRad2 - halfAngRad
+                    const a2 = posAngleRad2 + halfAngRad
+                    // Arc-band with constant-width angular extent
+                    const ix1 = viewBoxSize - rIn * Math.sin(a1)
+                    const iy1 = viewBoxSize - rIn * Math.cos(a1)
+                    const ix2 = viewBoxSize - rIn * Math.sin(a2)
+                    const iy2 = viewBoxSize - rIn * Math.cos(a2)
+                    const ox1 = viewBoxSize - rOut * Math.sin(a1)
+                    const oy1 = viewBoxSize - rOut * Math.cos(a1)
+                    const ox2 = viewBoxSize - rOut * Math.sin(a2)
+                    const oy2 = viewBoxSize - rOut * Math.cos(a2)
+                    const d = `M ${ix1},${iy1} L ${ox1},${oy1} A ${rOut},${rOut} 0 0,0 ${ox2},${oy2} L ${ix2},${iy2} A ${rIn},${rIn} 0 0,1 ${ix1},${iy1} Z`
+                    stripes.push(<path key={idx} d={d} fill="#ffffff" />)
+                  }
+                  return (
+                    <g key={marking.id} style={{ filter: undefined }}>
+                      {stripes}
+                      {/* Hitbox — radiale Linie über gesamte Fahrbahnbreite */}
+                      {(() => {
+                        const hx1 = viewBoxSize - r1Full * Math.sin(posAngleRad)
+                        const hy1 = viewBoxSize - r1Full * Math.cos(posAngleRad)
+                        const hx2 = viewBoxSize - r2Full * Math.sin(posAngleRad)
+                        const hy2 = viewBoxSize - r2Full * Math.cos(posAngleRad)
+                        return <line x1={hx1} y1={hy1} x2={hx2} y2={hy2} stroke="transparent" strokeWidth={Math.max(12, zebraWidth)} strokeLinecap="round" data-marking-hitbox="true" style={{ cursor: 'pointer' }}
+                          onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); setSelectedMarkingId(marking.id); setMarkingDraggingId(marking.id); setMarkingDragMode('move'); markingDragOriginRef.current = { x: e.clientX, y: e.clientY, startRotation: marking.rotation || 0, startScaleX: marking.scaleX ?? marking.scale ?? 1, startScaleY: marking.scaleY ?? marking.scale ?? 1 } }} />
+                      })()}
+                    </g>
+                  )
+                }
+
                 const centerPct = marking.xPercent ?? 50
                 const widthPct = marking.widthPercent ?? 100
                 const halfW = widthPct / 2
                 const r1 = innerRadius + (Math.max(0, centerPct - halfW) / 100) * roadWidth
                 const r2 = innerRadius + (Math.min(100, centerPct + halfW) / 100) * roadWidth
-                
+
                 if (marking.type === 'sharkTeeth') {
                   // Haifischzähne: Dreiecke entlang des Radius
                   const msx = marking.scaleX ?? marking.scale ?? 1
@@ -830,7 +892,8 @@ export function InteractiveCurvePreview({ config, updatePartial, onZoneSelect }:
                 const p1y = viewBoxSize - r1 * Math.cos(posAngleRad)
                 const p2x = viewBoxSize - r2 * Math.sin(posAngleRad)
                 const p2y = viewBoxSize - r2 * Math.cos(posAngleRad)
-                const thickness = marking.type === 'stopLine' ? 3 : 2
+                const msy = marking.scaleY ?? marking.scale ?? 1
+                const thickness = (marking.type === 'stopLine' ? 3 : 2) * msy
                 
                 // Render line content based on type
                 const lineContent = (() => {
@@ -918,9 +981,13 @@ export function InteractiveCurvePreview({ config, updatePartial, onZoneSelect }:
 
             // hwScreen/hhScreen berechnen
             let hwScreen: number, hhScreen: number
-            if (marking.type === 'stopLine' || marking.type === 'waitLine' || marking.type === 'sharkTeeth') {
+            if (marking.type === 'zebra') {
               hwScreen = (roadWidth / 2 + 6) * svgScale
-              hhScreen = 10 * svgScale
+              hhScreen = ((marking.width || 40) * msy / 2 + 6) * svgScale
+            } else if (marking.type === 'stopLine' || marking.type === 'waitLine' || marking.type === 'sharkTeeth') {
+              hwScreen = (roadWidth / 2 + 6) * svgScale
+              const thk = marking.type === 'sharkTeeth' ? 8 * msy : (marking.type === 'stopLine' ? 3 : 2) * msy
+              hhScreen = (thk / 2 + 6) * svgScale
             } else if (marking.type === 'blockedArea') {
               const bDef = BLOCKED_AREA_DEFS[marking.areaType]
               if (bDef) {
@@ -938,8 +1005,8 @@ export function InteractiveCurvePreview({ config, updatePartial, onZoneSelect }:
               } else {
                 hwScreen = 20 * svgScale; hhScreen = 20 * svgScale
               }
-            } else {
-              const def = marking.type === 'arrow' ? ARROW_DEFS[marking.arrowType] : null
+            } else if (marking.type === 'arrow') {
+              const def = ARROW_DEFS[marking.arrowType]
               if (def) {
                 const midRadius = (calc.innerRadius + calc.outerRadius) / 2
                 const arcLength = midRadius * (calc.angle * Math.PI / 180)
@@ -951,6 +1018,32 @@ export function InteractiveCurvePreview({ config, updatePartial, onZoneSelect }:
               } else {
                 hwScreen = 15 * svgScale; hhScreen = 15 * svgScale
               }
+            } else if (marking.type === 'speedNumber') {
+              const fontSize = laneWidth * 0.55
+              hwScreen = ((marking.value >= 100 ? fontSize * 1.8 : fontSize * 1.2) * msx / 2 + 6) * svgScale
+              hhScreen = (fontSize * 1.1 * msy / 2 + 6) * svgScale
+            } else if (marking.type === 'textMarking') {
+              const fontSize = laneWidth * 0.4
+              if (marking.orientation === 'vertical') {
+                const charH = fontSize * 1.3
+                hwScreen = (fontSize * 0.8 * msx / 2 + 6) * svgScale
+                hhScreen = (marking.text.length * charH * msy / 2 + 6) * svgScale
+              } else {
+                hwScreen = (marking.text.length * fontSize * 0.65 * msx / 2 + 6) * svgScale
+                hhScreen = (fontSize * 1.1 * msy / 2 + 6) * svgScale
+              }
+            } else if (marking.type === 'symbolMarking') {
+              const sDef = SYMBOL_DEFS[marking.symbolType]
+              if (sDef) {
+                const targetH = laneWidth * 0.8
+                const baseScale = targetH / sDef.height
+                hwScreen = (sDef.width * baseScale * msx / 2 + 6) * svgScale
+                hhScreen = (sDef.height * baseScale * msy / 2 + 6) * svgScale
+              } else {
+                hwScreen = 15 * svgScale; hhScreen = 15 * svgScale
+              }
+            } else {
+              hwScreen = 15 * svgScale; hhScreen = 15 * svgScale
             }
 
             // Screen-Zentrum für Drag-Berechnungen
@@ -1785,7 +1878,6 @@ function CurveArrowMarkings({
     <g 
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
     >
       {markings.map((marking) => {
         if (marking.type === 'arrow') {
@@ -1856,7 +1948,7 @@ function CurveArrowMarkings({
           })()
 
           const hitW = 12 * msx
-          
+
           return (
             <g key={marking.id}
               transform={`translate(${x}, ${y}) rotate(${totalRotation})`}
@@ -1870,7 +1962,146 @@ function CurveArrowMarkings({
             </g>
           )
         }
-        
+
+        // ===== GESCHWINDIGKEITSZAHLEN =====
+        if (marking.type === 'speedNumber') {
+          const { x, y, tangentRotation } = getArrowPosition(marking.laneIndex, marking.positionPercent, marking.xPercent)
+          const totalRotation = tangentRotation + (marking.rotation || 0)
+          const isDragging = draggingId === marking.id
+          const sx = marking.scaleX ?? marking.scale ?? 1
+          const sy = marking.scaleY ?? marking.scale ?? 1
+          const fontSize = laneWidth * 0.55
+          const textW = (marking.value >= 100 ? fontSize * 1.8 : fontSize * 1.2) * sx
+          const textH = fontSize * 1.1 * sy
+
+          return (
+            <g key={marking.id}
+              transform={`translate(${x}, ${y}) rotate(${totalRotation})`}
+              style={{ cursor: isDragging ? 'grabbing' : 'pointer', opacity: isDragging ? 0.7 : 1, filter: undefined }}
+              onMouseDown={(e) => handleMouseDown(e, marking.id)}
+              onDoubleClick={(e) => handleDoubleClick(e, marking.id)}
+              onWheel={(e) => handleWheel(e, marking.id)}
+            >
+              <text
+                x={0} y={fontSize * 0.35 * sy}
+                textAnchor="middle" fill="#ffffff"
+                fontFamily="Arial, sans-serif" fontWeight="bold" fontSize={fontSize}
+                transform={`scale(${sx}, ${sy})`}
+                style={{ filter: undefined }}
+              >{marking.value}</text>
+              <rect x={-textW / 2} y={-textH / 2} width={textW} height={textH}
+                fill="transparent" data-marking-hitbox="true" />
+            </g>
+          )
+        }
+
+        // ===== TEXTMARKIERUNGEN =====
+        if (marking.type === 'textMarking') {
+          const { x, y, tangentRotation } = getArrowPosition(marking.laneIndex, marking.positionPercent, marking.xPercent)
+          const totalRotation = tangentRotation + (marking.rotation || 0)
+          const isDragging = draggingId === marking.id
+          const sx = marking.scaleX ?? marking.scale ?? 1
+          const sy = marking.scaleY ?? marking.scale ?? 1
+          const fontSize = laneWidth * 0.4
+
+          if (marking.orientation === 'vertical') {
+            const chars = marking.text.split('')
+            const charH = fontSize * 1.3
+            const totalH = chars.length * charH * sy
+            const totalW = fontSize * 0.8 * sx
+
+            return (
+              <g key={marking.id}
+                transform={`translate(${x}, ${y}) rotate(${totalRotation})`}
+                style={{ cursor: isDragging ? 'grabbing' : 'pointer', opacity: isDragging ? 0.7 : 1, filter: undefined }}
+                onMouseDown={(e) => handleMouseDown(e, marking.id)}
+                onDoubleClick={(e) => handleDoubleClick(e, marking.id)}
+                onWheel={(e) => handleWheel(e, marking.id)}
+              >
+                {chars.map((c, i) => (
+                  <text key={i}
+                    x={0} y={(-totalH / 2 + charH * 0.8 + i * charH) / (sy || 1)}
+                    textAnchor="middle" fill="#ffffff"
+                    fontFamily="Arial, sans-serif" fontWeight="bold" fontSize={fontSize}
+                    transform={`scale(${sx}, ${sy})`}
+                    style={{ filter: undefined }}
+                  >{c}</text>
+                ))}
+                <rect x={-totalW / 2} y={-totalH / 2} width={totalW} height={totalH}
+                  fill="transparent" data-marking-hitbox="true" />
+              </g>
+            )
+          }
+
+          // horizontal
+          const textW = marking.text.length * fontSize * 0.65 * sx
+          const textH = fontSize * 1.1 * sy
+          return (
+            <g key={marking.id}
+              transform={`translate(${x}, ${y}) rotate(${totalRotation})`}
+              style={{ cursor: isDragging ? 'grabbing' : 'pointer', opacity: isDragging ? 0.7 : 1, filter: undefined }}
+              onMouseDown={(e) => handleMouseDown(e, marking.id)}
+              onDoubleClick={(e) => handleDoubleClick(e, marking.id)}
+              onWheel={(e) => handleWheel(e, marking.id)}
+            >
+              <text
+                x={0} y={fontSize * 0.35 * sy}
+                textAnchor="middle" fill="#ffffff"
+                fontFamily="Arial, sans-serif" fontWeight="bold" fontSize={fontSize}
+                transform={`scale(${sx}, ${sy})`}
+                style={{ filter: undefined }}
+              >{marking.text}</text>
+              <rect x={-textW / 2} y={-textH / 2} width={textW} height={textH}
+                fill="transparent" data-marking-hitbox="true" />
+            </g>
+          )
+        }
+
+        // ===== SYMBOLMARKIERUNGEN =====
+        if (marking.type === 'symbolMarking') {
+          const def = SYMBOL_DEFS[marking.symbolType]
+          if (!def) return null
+
+          const { x, y, tangentRotation } = getArrowPosition(marking.laneIndex, marking.positionPercent, marking.xPercent)
+          const totalRotation = tangentRotation + (marking.rotation || 0)
+          const isDragging = draggingId === marking.id
+          const sx = marking.scaleX ?? marking.scale ?? 1
+          const sy = marking.scaleY ?? marking.scale ?? 1
+
+          const targetH = laneWidth * 0.8
+          const baseScale = targetH / def.height
+          const scaleX = baseScale * sx
+          const scaleY = baseScale * sy
+          const scaledW = def.width * scaleX
+          const scaledH = def.height * scaleY
+
+          const useBody = def.svgBody.includes('<text') || def.svgBody.includes('<circle')
+
+          return (
+            <g key={marking.id}
+              transform={`translate(${x}, ${y}) rotate(${totalRotation})`}
+              style={{ cursor: isDragging ? 'grabbing' : 'pointer', opacity: isDragging ? 0.7 : 1, filter: undefined }}
+              onMouseDown={(e) => handleMouseDown(e, marking.id)}
+              onDoubleClick={(e) => handleDoubleClick(e, marking.id)}
+              onWheel={(e) => handleWheel(e, marking.id)}
+            >
+              {useBody ? (
+                <g transform={`translate(${-scaledW / 2}, ${-scaledH / 2}) scale(${scaleX}, ${scaleY})`}
+                  dangerouslySetInnerHTML={{ __html: def.svgBody }}
+                />
+              ) : (
+                <g transform={`translate(${-scaledW / 2}, ${-scaledH / 2}) scale(${scaleX}, ${scaleY})`}>
+                  {def.paths.map((p, i) => (
+                    <path key={i} d={p.d} fill={p.fill} />
+                  ))}
+                </g>
+              )}
+              <rect x={-scaledW / 2} y={-scaledH / 2} width={scaledW} height={scaledH}
+                fill="transparent" data-marking-hitbox="true" />
+            </g>
+          )
+        }
+
         return null
       })}
     </g>

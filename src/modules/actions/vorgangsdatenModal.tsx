@@ -185,7 +185,7 @@ export function VorgangsdatenModal({ meta, onCancel, onSave }: VorgangsdatenModa
                 value={form.officer}
                 error={errors.officer}
                 onChange={(v) => updateField('officer', v)}
-                placeholder="z.B. Milne, PK"
+                placeholder="z.B. Pohlmeier, PK"
               />
 
               <Field
@@ -193,7 +193,7 @@ export function VorgangsdatenModal({ meta, onCancel, onSave }: VorgangsdatenModa
                 value={form.caseNumber}
                 error={errors.caseNumber}
                 onChange={(v) => updateField('caseNumber', v)}
-                placeholder="z.B. 202501..."
+                placeholder="z.B. 202601..."
               />
 
               <Field

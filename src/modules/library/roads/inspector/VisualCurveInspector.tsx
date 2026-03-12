@@ -164,7 +164,7 @@ export default function VisualCurveInspector({ open, config, onClose, onUpdate }
             
             {/* Preview Area */}
             <div className="flex-1 flex items-center justify-center relative"
-              style={{ background: 'var(--panel-elev)', minHeight: '450px' }}
+              style={{ background: 'var(--panel-elev)', minHeight: '450px', boxShadow: 'inset 0 2px 12px rgba(0,0,0,0.08)' }}
               onClick={() => setContextPopup(null)}
             >
               <InteractiveCurvePreview 

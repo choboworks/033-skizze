@@ -3,6 +3,7 @@
 import type { SmartRoadConfig, RoadsideConfig, RoadsideElementType } from '../types'
 import { ARROW_DEFS } from '../markings/arrowSvgs'
 import { BLOCKED_AREA_DEFS } from '../markings/blockedAreaSvgs'
+import { SYMBOL_DEFS } from '../markings/symbolSvgs'
 import { getActiveOrder, getElementWidth } from '../types'
 import { transformPathData, buildMatrix } from './utils/transformPath'
 
@@ -636,7 +637,127 @@ export class CurveRoadGenerator {
       else if (lt === 'solid-dashed') { parts.push(mkLine(gap/2, false)); parts.push(mkLine(-gap/2, true)) }
       else if (lt === 'dashed-solid') { parts.push(mkLine(gap/2, true)); parts.push(mkLine(-gap/2, false)) }
     }
-    
+
+    // ===== GESCHWINDIGKEITSZAHLEN =====
+    for (const marking of markings) {
+      if (marking.type !== 'speedNumber') continue
+
+      const roadWidth = outerRadius - innerRadius
+      let markingRadius: number
+      if (marking.xPercent !== undefined) {
+        markingRadius = innerRadius + (marking.xPercent / 100) * roadWidth
+      } else {
+        markingRadius = innerRadius + (marking.laneIndex + 0.5) * laneWidth
+      }
+      const positionAngle = (marking.positionPercent / 100) * angle
+      const posAngleRad = (positionAngle * Math.PI) / 180
+      const pos = this.tp(viewBoxSize - markingRadius * Math.sin(posAngleRad), viewBoxSize - markingRadius * Math.cos(posAngleRad))
+
+      const sx = marking.scaleX ?? marking.scale ?? 1
+      const sy = marking.scaleY ?? marking.scale ?? 1
+      const fontSize = laneWidth * 0.55
+
+      const tangentDeg = 90 - positionAngle
+      const mirrorOffset = this.mirrorX ? -180 : 0
+      const rotDeg = (this.rotRad * 180) / Math.PI
+      const totalRotDeg = tangentDeg + (marking.rotation || 0) + rotDeg + mirrorOffset
+
+      parts.push(`<text x="${pos.x.toFixed(2)}" y="${pos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="central" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="${(fontSize * sx).toFixed(1)}" transform="rotate(${totalRotDeg.toFixed(2)}, ${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}) scale(1, ${(sy / sx || 1).toFixed(3)})">${marking.value}</text>`)
+    }
+
+    // ===== TEXTMARKIERUNGEN =====
+    for (const marking of markings) {
+      if (marking.type !== 'textMarking') continue
+
+      const roadWidth = outerRadius - innerRadius
+      let markingRadius: number
+      if (marking.xPercent !== undefined) {
+        markingRadius = innerRadius + (marking.xPercent / 100) * roadWidth
+      } else {
+        markingRadius = innerRadius + (marking.laneIndex + 0.5) * laneWidth
+      }
+      const positionAngle = (marking.positionPercent / 100) * angle
+      const posAngleRad = (positionAngle * Math.PI) / 180
+      const pos = this.tp(viewBoxSize - markingRadius * Math.sin(posAngleRad), viewBoxSize - markingRadius * Math.cos(posAngleRad))
+
+      const sx = marking.scaleX ?? marking.scale ?? 1
+      const sy = marking.scaleY ?? marking.scale ?? 1
+      const fontSize = laneWidth * 0.4
+
+      const tangentDeg = 90 - positionAngle
+      const mirrorOffset = this.mirrorX ? -180 : 0
+      const rotDeg = (this.rotRad * 180) / Math.PI
+      const totalRotDeg = tangentDeg + (marking.rotation || 0) + rotDeg + mirrorOffset
+
+      if (marking.orientation === 'vertical') {
+        const chars = marking.text.split('')
+        const charH = fontSize * 1.3
+        const totalH = chars.length * charH
+        for (let ci = 0; ci < chars.length; ci++) {
+          const yOff = -totalH / 2 + charH * 0.8 + ci * charH
+          parts.push(`<text x="${pos.x.toFixed(2)}" y="${pos.y.toFixed(2)}" text-anchor="middle" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="${(fontSize * sx).toFixed(1)}" transform="rotate(${totalRotDeg.toFixed(2)}, ${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}) translate(0, ${(yOff * sy).toFixed(2)})">${chars[ci]}</text>`)
+        }
+      } else {
+        parts.push(`<text x="${pos.x.toFixed(2)}" y="${pos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="central" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="${(fontSize * sx).toFixed(1)}" transform="rotate(${totalRotDeg.toFixed(2)}, ${pos.x.toFixed(2)}, ${pos.y.toFixed(2)}) scale(1, ${(sy / sx || 1).toFixed(3)})">${marking.text}</text>`)
+      }
+    }
+
+    // ===== SYMBOLMARKIERUNGEN =====
+    for (const marking of markings) {
+      if (marking.type !== 'symbolMarking') continue
+
+      const def = SYMBOL_DEFS[marking.symbolType]
+      if (!def) continue
+
+      const roadWidth = outerRadius - innerRadius
+      let markingRadius: number
+      if (marking.xPercent !== undefined) {
+        markingRadius = innerRadius + (marking.xPercent / 100) * roadWidth
+      } else {
+        markingRadius = innerRadius + (marking.laneIndex + 0.5) * laneWidth
+      }
+      const positionAngle = (marking.positionPercent / 100) * angle
+      const posAngleRad = (positionAngle * Math.PI) / 180
+
+      const rawX = viewBoxSize - markingRadius * Math.sin(posAngleRad)
+      const rawY = viewBoxSize - markingRadius * Math.cos(posAngleRad)
+      const pos = this.tp(rawX, rawY)
+
+      const userSx = marking.scaleX ?? marking.scale ?? 1
+      const userSy = marking.scaleY ?? marking.scale ?? 1
+      const targetH = laneWidth * 0.8
+      const baseScale = targetH / def.height
+      const sX = baseScale * userSx
+      const sY = baseScale * userSy
+
+      const tangentDeg = 90 - positionAngle
+      const mirrorOffset = this.mirrorX ? -180 : 0
+      const rotDeg = (this.rotRad * 180) / Math.PI
+      const totalRotDeg = tangentDeg + (marking.rotation || 0) + rotDeg + mirrorOffset
+
+      const cx = -(def.width / 2)
+      const cy = -(def.height / 2)
+      const matrix = buildMatrix(pos.x, pos.y, totalRotDeg, cx, cy, sX, this.mirrorX, sY)
+
+      // Render paths via transformPathData
+      for (const p of def.paths) {
+        const transformedD = transformPathData(p.d, matrix)
+        parts.push(`<path fill="${p.fill}" stroke="none" d="${transformedD}"/>`)
+      }
+
+      // Tempo 30: circle + text need special handling
+      if (marking.symbolType === 'tempo30') {
+        // Circle as arc path
+        const r = 90
+        const circleD = `M${100},${10} A${r},${r} 0 1,1 ${99.99},${10} Z`
+        const transformedCircle = transformPathData(circleD, matrix)
+        const avgScale = (Math.abs(sX) + Math.abs(sY)) / 2
+        parts.push(`<path d="${transformedCircle}" fill="none" stroke="#ffffff" stroke-width="${(12 * avgScale).toFixed(2)}"/>`)
+        // Text as positioned element
+        parts.push(`<text x="${pos.x.toFixed(2)}" y="${pos.y.toFixed(2)}" text-anchor="middle" dominant-baseline="central" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="${(80 * sX).toFixed(1)}" transform="rotate(${totalRotDeg.toFixed(2)}, ${pos.x.toFixed(2)}, ${pos.y.toFixed(2)})">30</text>`)
+      }
+    }
+
     return parts.join('')
   }
   
@@ -655,26 +776,64 @@ export class CurveRoadGenerator {
     const parts: string[] = []
     
     for (const marking of markings) {
-      if (marking.type !== 'stopLine' && marking.type !== 'waitLine' && marking.type !== 'sharkTeeth' && marking.type !== 'blockedArea') continue
-      
+      if (marking.type !== 'zebra' && marking.type !== 'stopLine' && marking.type !== 'waitLine' && marking.type !== 'sharkTeeth' && marking.type !== 'blockedArea') continue
+
       const positionAngle = (marking.positionPercent / 100) * angle
       const posAngleRad = (positionAngle * Math.PI) / 180
-      
-      // r1/r2 aus xPercent/widthPercent berechnen
       const roadWidth = outerRadius - innerRadius
+
+      // Zebra: Arc-Bänder radial getiled, konstante Breite pro Streifen
+      if (marking.type === 'zebra') {
+        const msx = marking.scaleX ?? marking.scale ?? 1
+        const msy = marking.scaleY ?? marking.scale ?? 1
+        const zebraWidth = (marking.width || 40) * msy
+        const stripeRadial = 5 * msx
+        const gapRadial = 5 * msx
+        // Edge-to-edge radial tiling
+        const totalRadial = outerRadius - innerRadius
+        const N = Math.max(1, Math.round((totalRadial + gapRadial) / (stripeRadial + gapRadial)))
+        const actualGap = N > 1 ? (totalRadial - N * stripeRadial) / (N - 1) : 0
+        const arcSteps = 8
+        for (let i = 0; i < N; i++) {
+          const rIn = innerRadius + i * (stripeRadial + actualGap)
+          const rOut = rIn + stripeRadial
+          // Per-stripe angular extent based on radius → constant visual width
+          const rMid = (rIn + rOut) / 2
+          const halfAngRad = (zebraWidth / 2) / rMid
+          const a1 = posAngleRad - halfAngRad
+          const a2 = posAngleRad + halfAngRad
+          const pts: string[] = []
+          for (let s = 0; s <= arcSteps; s++) {
+            const a = a1 + (a2 - a1) * (s / arcSteps)
+            const p = this.tp(viewBoxSize - rIn * Math.sin(a), viewBoxSize - rIn * Math.cos(a))
+            pts.push(`${p.x.toFixed(2)},${p.y.toFixed(2)}`)
+          }
+          for (let s = arcSteps; s >= 0; s--) {
+            const a = a1 + (a2 - a1) * (s / arcSteps)
+            const p = this.tp(viewBoxSize - rOut * Math.sin(a), viewBoxSize - rOut * Math.cos(a))
+            pts.push(`${p.x.toFixed(2)},${p.y.toFixed(2)}`)
+          }
+          parts.push(`<polygon points="${pts.join(' ')}" fill="#ffffff"/>`)
+        }
+        continue
+      }
+
+      // r1/r2 aus xPercent/widthPercent berechnen
       const centerPct = marking.xPercent ?? 50
       const widthPct = marking.widthPercent ?? 100
       const halfW = widthPct / 2
       const r1 = innerRadius + (Math.max(0, centerPct - halfW) / 100) * roadWidth
       const r2 = innerRadius + (Math.min(100, centerPct + halfW) / 100) * roadWidth
-      
+
       if (marking.type === 'stopLine') {
-        const thickness = 3
+        const msy = marking.scaleY ?? marking.scale ?? 1
+        const thickness = 3 * msy
         const p1 = this.tp(viewBoxSize - r1 * Math.sin(posAngleRad), viewBoxSize - r1 * Math.cos(posAngleRad))
         const p2 = this.tp(viewBoxSize - r2 * Math.sin(posAngleRad), viewBoxSize - r2 * Math.cos(posAngleRad))
         parts.push(`<line x1="${p1.x.toFixed(2)}" y1="${p1.y.toFixed(2)}" x2="${p2.x.toFixed(2)}" y2="${p2.y.toFixed(2)}" stroke="#ffffff" stroke-width="${thickness}" stroke-linecap="round"/>`)
       } else if (marking.type === 'waitLine') {
-        const thickness = 2
+        const msy = marking.scaleY ?? marking.scale ?? 1
+        const thickness = 2 * msy
         const dashLen = 4
         const gapLen = 4
         const totalLen = r2 - r1

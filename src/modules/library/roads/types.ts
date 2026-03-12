@@ -285,16 +285,37 @@ export interface LaneLineMarking extends MarkingBase {
  */
 export interface BlockedAreaMarking extends MarkingBase {
   type: 'blockedArea'
-  areaType: 'hatchRect' | 'hatchWedge' | 'hatchWedgeRounded' | 'hatchBogen'
+  areaType: 'hatchRect' | 'hatchWedge' | 'hatchWedgeRounded' | 'hatchBogen' | 'zigzagLine' | 'boundaryContinuous' | 'boundaryNShape' | 'noStoppingLine'
   xPercent?: number         // Zentrum (0-100%). Default: 50
   widthPercent?: number     // Breite (0-100%). Default: 100
   heightPercent?: number    // Höhe/Länge entlang Straße (0-100%). Default: 15
 }
 
 /**
+ * Textmarkierung auf der Fahrbahn (z.B. "Taxi", "Bus", "Polizei")
+ */
+export interface TextMarking extends MarkingBase {
+  type: 'textMarking'
+  text: 'TAXI' | 'BUS' | 'POLIZEI' | 'H' | 'P' | 'STOP'
+  orientation: 'horizontal' | 'vertical'
+  laneIndex: number
+  xPercent?: number
+}
+
+/**
+ * Symbolmarkierung auf der Fahrbahn (z.B. Behindertenparkplatz, Bus-Symbol)
+ */
+export interface SymbolMarking extends MarkingBase {
+  type: 'symbolMarking'
+  symbolType: 'accessible' | 'busSymbol' | 'tempo30' | 'pedestrian' | 'bicycle' | 'pedestrianZone'
+  laneIndex: number
+  xPercent?: number
+}
+
+/**
  * Union-Typ für alle Fahrbahnmarkierungen
  */
-export type RoadMarking = ArrowMarking | ZebraMarking | StopLineMarking | WaitLineMarking | SharkTeethMarking | SpeedNumberMarking | LaneLineMarking | BlockedAreaMarking
+export type RoadMarking = ArrowMarking | ZebraMarking | StopLineMarking | WaitLineMarking | SharkTeethMarking | SpeedNumberMarking | LaneLineMarking | BlockedAreaMarking | TextMarking | SymbolMarking
 
 /**
  * Markierungs-Typ als String-Union

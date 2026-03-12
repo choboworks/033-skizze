@@ -5,6 +5,7 @@ import type { SmartRoadConfig } from '../../types'
 import { getMarkingX } from '../../types'
 import { ARROW_DEFS } from '../../markings/arrowSvgs'
 import { BLOCKED_AREA_DEFS } from '../../markings/blockedAreaSvgs'
+import { SYMBOL_DEFS } from '../../markings/symbolSvgs'
 
 /**
  * MarkingModule - Fügt Fahrbahnmarkierungen (Pfeile etc.) zum SVG hinzu
@@ -28,6 +29,8 @@ export class MarkingModule {
     for (const marking of markings) {
       if (marking.type === 'arrow') {
         this.addArrowMarking(svgDoc, markingsGroup, marking, leftSideWidth, laneWidth)
+      } else if (marking.type === 'zebra') {
+        this.addZebraMarking(svgDoc, markingsGroup, marking, leftSideWidth)
       } else if (marking.type === 'stopLine' || marking.type === 'waitLine') {
         this.addLineMarking(svgDoc, markingsGroup, marking, leftSideWidth)
       } else if (marking.type === 'sharkTeeth') {
@@ -36,6 +39,12 @@ export class MarkingModule {
         this.addLaneLineMarking(svgDoc, markingsGroup, marking, leftSideWidth)
       } else if (marking.type === 'blockedArea') {
         this.addBlockedAreaMarking(svgDoc, markingsGroup, marking, leftSideWidth)
+      } else if (marking.type === 'speedNumber') {
+        this.addSpeedNumberMarking(svgDoc, markingsGroup, marking, leftSideWidth, laneWidth)
+      } else if (marking.type === 'textMarking') {
+        this.addTextMarking(svgDoc, markingsGroup, marking, leftSideWidth, laneWidth)
+      } else if (marking.type === 'symbolMarking') {
+        this.addSymbolMarking(svgDoc, markingsGroup, marking, leftSideWidth, laneWidth)
       }
     }
     
@@ -113,19 +122,20 @@ export class MarkingModule {
   private addLineMarking(
     svgDoc: Document,
     parent: Element,
-    marking: { type: 'stopLine' | 'waitLine'; positionPercent: number; xPercent?: number; widthPercent?: number; rotation?: number },
+    marking: { type: 'stopLine' | 'waitLine'; positionPercent: number; xPercent?: number; widthPercent?: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
     leftSideWidth: number
   ): void {
     const yPosition = (marking.positionPercent / 100) * this.config.length
+    const sy = marking.scaleY ?? marking.scale ?? 1
     const centerPct = marking.xPercent ?? 50
     const widthPct = marking.widthPercent ?? 100
     const halfW = widthPct / 2
-    
+
     const x1 = leftSideWidth + (Math.max(0, centerPct - halfW) / 100) * this.config.width
     const x2 = leftSideWidth + (Math.min(100, centerPct + halfW) / 100) * this.config.width
     const lineWidth = x2 - x1
-    const thickness = marking.type === 'stopLine' ? 3 : 2
-    
+    const thickness = (marking.type === 'stopLine' ? 3 : 2) * sy
+
     if (marking.type === 'stopLine') {
       // Durchgezogene dicke Linie
       const rect = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'rect')
@@ -153,7 +163,38 @@ export class MarkingModule {
       }
     }
   }
-  
+
+  private addZebraMarking(
+    svgDoc: Document,
+    parent: Element,
+    marking: { positionPercent: number; width?: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    leftSideWidth: number
+  ): void {
+    const yPosition = (marking.positionPercent / 100) * this.config.length
+    const sx = marking.scaleX ?? marking.scale ?? 1
+    const sy = marking.scaleY ?? marking.scale ?? 1
+    const zebraWidth = (marking.width || 40) * sy
+    const stripeW = 5 * sx
+    const gapW = 5 * sx
+    const x1 = leftSideWidth
+    const x2 = leftSideWidth + this.config.width
+    const totalWidth = x2 - x1
+    // Edge-to-edge: first stripe at x1, last stripe ends at x2
+    const N = Math.max(1, Math.round((totalWidth + gapW) / (stripeW + gapW)))
+    const actualGap = N > 1 ? (totalWidth - N * stripeW) / (N - 1) : 0
+
+    for (let i = 0; i < N; i++) {
+      const cx = x1 + i * (stripeW + actualGap)
+      const rect = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'rect')
+      rect.setAttribute('x', String(cx))
+      rect.setAttribute('y', String(yPosition - zebraWidth / 2))
+      rect.setAttribute('width', String(stripeW))
+      rect.setAttribute('height', String(zebraWidth))
+      rect.setAttribute('fill', '#ffffff')
+      parent.appendChild(rect)
+    }
+  }
+
   private addSharkTeethMarking(
     svgDoc: Document,
     parent: Element,
@@ -300,6 +341,156 @@ export class MarkingModule {
       g.appendChild(path)
     }
     
+    parent.appendChild(g)
+  }
+
+  private addSpeedNumberMarking(
+    svgDoc: Document,
+    parent: Element,
+    marking: { id: string; type: 'speedNumber'; value: number; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    leftSideWidth: number,
+    laneWidth: number
+  ): void {
+    const xPos = getMarkingX(marking, this.config.width, this.config.lanes, leftSideWidth)
+    const yPosition = (marking.positionPercent / 100) * this.config.length
+    const sx = marking.scaleX ?? marking.scale ?? 1
+    const sy = marking.scaleY ?? marking.scale ?? 1
+    const fontSize = laneWidth * 0.55
+
+    const g = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'g')
+    g.setAttribute('data-marking-id', marking.id)
+    g.setAttribute('transform', `translate(${xPos}, ${yPosition})${marking.rotation ? ` rotate(${marking.rotation})` : ''} scale(${sx}, ${sy})`)
+
+    const text = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'text')
+    text.setAttribute('x', '0')
+    text.setAttribute('y', String(fontSize * 0.35))
+    text.setAttribute('text-anchor', 'middle')
+    text.setAttribute('fill', '#ffffff')
+    text.setAttribute('font-family', 'Arial, sans-serif')
+    text.setAttribute('font-weight', 'bold')
+    text.setAttribute('font-size', String(fontSize))
+    text.textContent = String(marking.value)
+    g.appendChild(text)
+
+    parent.appendChild(g)
+  }
+
+  private addTextMarking(
+    svgDoc: Document,
+    parent: Element,
+    marking: { id: string; type: 'textMarking'; text: string; orientation: 'horizontal' | 'vertical'; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    leftSideWidth: number,
+    laneWidth: number
+  ): void {
+    const xPos = getMarkingX(marking, this.config.width, this.config.lanes, leftSideWidth)
+    const yPosition = (marking.positionPercent / 100) * this.config.length
+    const sx = marking.scaleX ?? marking.scale ?? 1
+    const sy = marking.scaleY ?? marking.scale ?? 1
+    const fontSize = laneWidth * 0.4
+
+    const g = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'g')
+    g.setAttribute('data-marking-id', marking.id)
+    g.setAttribute('transform', `translate(${xPos}, ${yPosition})${marking.rotation ? ` rotate(${marking.rotation})` : ''} scale(${sx}, ${sy})`)
+
+    if (marking.orientation === 'vertical') {
+      const chars = marking.text.split('')
+      const charH = fontSize * 1.3
+      const totalH = chars.length * charH
+      for (let i = 0; i < chars.length; i++) {
+        const text = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'text')
+        text.setAttribute('x', '0')
+        text.setAttribute('y', String(-totalH / 2 + charH * 0.8 + i * charH))
+        text.setAttribute('text-anchor', 'middle')
+        text.setAttribute('fill', '#ffffff')
+        text.setAttribute('font-family', 'Arial, sans-serif')
+        text.setAttribute('font-weight', 'bold')
+        text.setAttribute('font-size', String(fontSize))
+        text.textContent = chars[i]
+        g.appendChild(text)
+      }
+    } else {
+      const text = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'text')
+      text.setAttribute('x', '0')
+      text.setAttribute('y', String(fontSize * 0.35))
+      text.setAttribute('text-anchor', 'middle')
+      text.setAttribute('fill', '#ffffff')
+      text.setAttribute('font-family', 'Arial, sans-serif')
+      text.setAttribute('font-weight', 'bold')
+      text.setAttribute('font-size', String(fontSize))
+      text.textContent = marking.text
+      g.appendChild(text)
+    }
+
+    parent.appendChild(g)
+  }
+
+  private addSymbolMarking(
+    svgDoc: Document,
+    parent: Element,
+    marking: { id: string; type: 'symbolMarking'; symbolType: string; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    leftSideWidth: number,
+    laneWidth: number
+  ): void {
+    const def = SYMBOL_DEFS[marking.symbolType]
+    if (!def) {
+      console.warn(`[MarkingModule] Unknown symbol type: ${marking.symbolType}`)
+      return
+    }
+
+    const xPos = getMarkingX(marking, this.config.width, this.config.lanes, leftSideWidth)
+    const yPosition = (marking.positionPercent / 100) * this.config.length
+    const sx = marking.scaleX ?? marking.scale ?? 1
+    const sy = marking.scaleY ?? marking.scale ?? 1
+
+    const targetH = laneWidth * 0.8
+    const baseScale = targetH / def.height
+    const scaleX = baseScale * sx
+    const scaleY = baseScale * sy
+    const scaledW = def.width * scaleX
+    const scaledH = def.height * scaleY
+
+    const g = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'g')
+    g.setAttribute('data-marking-id', marking.id)
+
+    let transform: string
+    if (marking.rotation) {
+      transform = `translate(${xPos}, ${yPosition}) rotate(${marking.rotation}) translate(${-scaledW / 2}, ${-scaledH / 2}) scale(${scaleX}, ${scaleY})`
+    } else {
+      transform = `translate(${xPos - scaledW / 2}, ${yPosition - scaledH / 2}) scale(${scaleX}, ${scaleY})`
+    }
+    g.setAttribute('transform', transform)
+
+    // Render paths
+    for (const p of def.paths) {
+      const pathEl = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'path')
+      pathEl.setAttribute('d', p.d)
+      pathEl.setAttribute('fill', p.fill)
+      g.appendChild(pathEl)
+    }
+
+    // For tempo30: also render circle stroke
+    if (marking.symbolType === 'tempo30') {
+      const circle = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'circle')
+      circle.setAttribute('cx', '100')
+      circle.setAttribute('cy', '100')
+      circle.setAttribute('r', '90')
+      circle.setAttribute('fill', 'none')
+      circle.setAttribute('stroke', '#ffffff')
+      circle.setAttribute('stroke-width', '12')
+      g.appendChild(circle)
+
+      const text = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'text')
+      text.setAttribute('x', '100')
+      text.setAttribute('y', '118')
+      text.setAttribute('text-anchor', 'middle')
+      text.setAttribute('fill', '#ffffff')
+      text.setAttribute('font-family', 'Arial, sans-serif')
+      text.setAttribute('font-weight', 'bold')
+      text.setAttribute('font-size', '80')
+      text.textContent = '30'
+      g.appendChild(text)
+    }
+
     parent.appendChild(g)
   }
 }
