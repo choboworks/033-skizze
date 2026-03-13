@@ -595,14 +595,16 @@ export function InteractiveCurvePreview({ config, updatePartial, onZoneSelect }:
                 const gap = 4
                 const isHovered = hoveredZone?.type === 'tram'
                 
+                // Schwellenpositionen einmal basierend auf tramCenterRadius berechnen,
+                // damit bei zweigleisig die Schwellen synchron liegen
+                const tieSpacing = 20
+                const refArcLength = (angle * Math.PI / 180) * tramCenterRadius
+                const tieCount = Math.floor(refArcLength / tieSpacing)
+
                 const renderRailPair = (centerR: number, key: string) => {
                   const tieWidth = gaugeWidth + 6
                   const showTies = tram.trackType === 'embedded'
-                  // Schwellen: radiale Linien entlang der Kurve
-                  const tieSpacing = 20
-                  const arcLength = (angle * Math.PI / 180) * centerR
-                  const tieCount = Math.floor(arcLength / tieSpacing)
-                  
+
                   return (
                     <g key={key}>
                       {showTies && Array.from({ length: tieCount }, (_, idx) => {
@@ -1620,18 +1622,20 @@ function LaneMarkings({ config, innerRadius, outerRadius, angle, viewBoxSize, ho
     const gaugeWidth = 10
     const gap = 4
     const isHoveredTram = hoveredZone?.type === 'tram'
-    
+
+    // Schwellenpositionen einmal basierend auf tramCenterRadius berechnen
+    const tieSpacing2 = 20
+    const refArcLength2 = (angle * Math.PI / 180) * tramCenterRadius
+    const tieCount2 = Math.floor(refArcLength2 / tieSpacing2)
+
     const renderRailPair = (centerR: number, key: string) => {
       const tieWidth = gaugeWidth + 6
       const showTies = tram.trackType === 'embedded'
-      const tieSpacing = 20
-      const arcLength = (angle * Math.PI / 180) * centerR
-      const tieCount = Math.floor(arcLength / tieSpacing)
-      
+
       return (
         <g key={key}>
-          {showTies && Array.from({ length: tieCount }, (_, idx) => {
-            const tieAngle = ((idx + 0.5) / tieCount) * angle
+          {showTies && Array.from({ length: tieCount2 }, (_, idx) => {
+            const tieAngle = ((idx + 0.5) / tieCount2) * angle
             const tieAngleRad = (tieAngle * Math.PI) / 180
             const cos = Math.cos(tieAngleRad)
             const sin = Math.sin(tieAngleRad)

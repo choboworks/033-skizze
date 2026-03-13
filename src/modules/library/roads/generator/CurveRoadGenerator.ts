@@ -445,16 +445,21 @@ export class CurveRoadGenerator {
     const railColor = '#c0c0c0'
     const railWidth = 2
     
+    // Schwellenpositionen einmal berechnen (basierend auf tramCenterRadius),
+    // damit bei zweigleisig die Schwellen beider Gleise synchron liegen
+    const tieSpacing = 20
+    const refArcLength = (angle * Math.PI / 180) * tramCenterRadius
+    const tieCount = Math.floor(refArcLength / tieSpacing)
+    const tieAngles: number[] = []
+    for (let i = 0; i < tieCount; i++) {
+      tieAngles.push(((i + 0.5) / tieCount) * angle)
+    }
+
     const addRailPair = (centerR: number) => {
       // Schwellen bei embedded
       if (tram.trackType === 'embedded') {
         const tieWidth = gaugeWidth + 6
-        const tieSpacing = 20
-        const arcLength = (angle * Math.PI / 180) * centerR
-        const tieCount = Math.floor(arcLength / tieSpacing)
-        
-        for (let i = 0; i < tieCount; i++) {
-          const tieAngle = ((i + 0.5) / tieCount) * angle
+        for (const tieAngle of tieAngles) {
           const tieAngleRad = (tieAngle * Math.PI) / 180
           const cos = Math.cos(tieAngleRad)
           const sin = Math.sin(tieAngleRad)
@@ -465,12 +470,12 @@ export class CurveRoadGenerator {
           parts.push(`<line x1="${p1.x.toFixed(2)}" y1="${p1.y.toFixed(2)}" x2="${p2.x.toFixed(2)}" y2="${p2.y.toFixed(2)}" stroke="#8b7355" stroke-width="3" opacity="0.6" />`)
         }
       }
-      
+
       // Schienen
       parts.push(this.createArcStroke(centerR - gaugeWidth / 2, angle, railColor, railWidth, viewBoxSize))
       parts.push(this.createArcStroke(centerR + gaugeWidth / 2, angle, railColor, railWidth, viewBoxSize))
     }
-    
+
     if (tram.tracks === 1) {
       addRailPair(tramCenterRadius)
     } else {

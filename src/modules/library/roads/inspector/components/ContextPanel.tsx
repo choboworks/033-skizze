@@ -241,16 +241,56 @@ function ToggleChip({ active, onClick, label }: { active: boolean; onClick: () =
 }
 
 // ============================================================================
-// LINE PANEL
+// LINE PANEL — Accordion-Design (wie MarkingsPalette)
 // ============================================================================
+
+type LinePanelSection = 'marking' | 'physical' | 'crossings' | 'tram' | null
+
+function LineCategoryHeader({ label, color, icon, expanded, onToggle }: {
+  label: string; color: string; icon: React.ReactNode; expanded: boolean; onToggle: () => void
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className="w-full px-4 py-2.5 flex items-center gap-3 transition-all duration-150"
+      style={{
+        background: expanded ? `color-mix(in srgb, ${color} 5%, transparent)` : 'transparent',
+        borderBottom: expanded ? '1px solid var(--border)' : '1px solid transparent',
+      }}
+      onMouseEnter={(e) => { if (!expanded) e.currentTarget.style.background = 'var(--hover)' }}
+      onMouseLeave={(e) => { if (!expanded) e.currentTarget.style.background = 'transparent' }}
+    >
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{
+        background: `${color}15`,
+        color: color,
+      }}>
+        {icon}
+      </div>
+      <span className="text-[13px] font-medium flex-1 text-left" style={{ color: 'var(--text)' }}>
+        {label}
+      </span>
+      <svg
+        className="w-3.5 h-3.5 shrink-0 transition-transform duration-150"
+        style={{ color: 'var(--text-muted)', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+        viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+      >
+        <path d="M6 9l6 6 6-6" />
+      </svg>
+    </button>
+  )
+}
 
 function LinePanel({ config, lineIndex, updatePartial }: {
   config: SmartRoadConfig; lineIndex: number; updatePartial: (u: Partial<SmartRoadConfig>) => void
 }) {
+  const [expandedSection, setExpandedSection] = useState<LinePanelSection>('marking')
   const currentLine = config.lines?.[lineIndex]
   const currentType = currentLine?.type || config.defaultLineType || 'dashed'
   const tram = config.tram
-  
+  const isPhysical = currentType === 'green-strip' || currentType === 'barrier'
+
+  const toggleSection = (s: LinePanelSection) => setExpandedSection(prev => prev === s ? null : s)
+
   const handleLineChange = (type: LineType) => {
     const newLines = [...(config.lines || [])]
     while (newLines.length <= lineIndex) newLines.push({ type: config.defaultLineType || 'dashed' })
@@ -258,62 +298,142 @@ function LinePanel({ config, lineIndex, updatePartial }: {
     updatePartial({ lines: newLines })
   }
 
+  const markingIcon = (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 2v4M12 10v4M12 18v4" />
+    </svg>
+  )
+  const physicalIcon = (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M4 6h16M4 18h16M4 6v12M20 6v12" />
+    </svg>
+  )
+  const tramIcon = (
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="6" y="3" width="12" height="14" rx="2" /><path d="M9 21l-2-4h10l-2 4M12 3v-2M8 17h.01M16 17h.01" />
+    </svg>
+  )
+
   return (
     <>
-      <SectionDivider label="Markierung" />
-      {([
-        ['dashed', 'Gestrichelt'], ['solid', 'Durchgezogen'], ['double-solid', 'Doppelt durchgezogen'],
-        ['solid-dashed', 'Überholen rechts'], ['dashed-solid', 'Überholen links'], ['none', 'Keine'],
-      ] as [LineType, string][]).map(([type, label]) => (
-        <OptionButton key={type} selected={currentType === type} onClick={() => handleLineChange(type)}>
-          <LineIcon type={type} /><span>{label}</span>
-        </OptionButton>
-      ))}
-      
-      <SectionDivider label="Physische Trennung" />
-      {([
-        ['green-strip', 'Grünstreifen'], ['barrier', 'Leitplanke'],
-      ] as [LineType, string][]).map(([type, label]) => (
-        <OptionButton key={type} selected={currentType === type} onClick={() => handleLineChange(type)} accent="#22c55e">
-          <LineIcon type={type} /><span>{label}</span>
-        </OptionButton>
-      ))}
-      
+      <style>{`@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }`}</style>
+
+      {/* Markierung */}
+      <LineCategoryHeader
+        label="Markierung"
+        color="#3b82f6"
+        icon={markingIcon}
+        expanded={expandedSection === 'marking'}
+        onToggle={() => toggleSection('marking')}
+      />
+      {expandedSection === 'marking' && (
+        <div style={{ animation: 'fadeIn 0.1s ease-out' }}>
+          {([
+            ['dashed', 'Gestrichelt'], ['solid', 'Durchgezogen'], ['double-solid', 'Doppelt durchgezogen'],
+            ['solid-dashed', 'Überholen rechts'], ['dashed-solid', 'Überholen links'], ['none', 'Keine'],
+          ] as [LineType, string][]).map(([type, label]) => (
+            <OptionButton key={type} selected={!isPhysical && currentType === type} onClick={() => handleLineChange(type)}>
+              <LineIcon type={type} /><span>{label}</span>
+            </OptionButton>
+          ))}
+        </div>
+      )}
+
+      {/* Physische Trennung */}
+      <LineCategoryHeader
+        label="Physische Trennung"
+        color="#22c55e"
+        icon={physicalIcon}
+        expanded={expandedSection === 'physical'}
+        onToggle={() => toggleSection('physical')}
+      />
+      {expandedSection === 'physical' && (
+        <div style={{ animation: 'fadeIn 0.1s ease-out' }}>
+          {([
+            ['green-strip', 'Grünstreifen'], ['barrier', 'Leitplanke'],
+          ] as [LineType, string][]).map(([type, label]) => (
+            <OptionButton key={type} selected={currentType === type} onClick={() => handleLineChange(type)} accent="#22c55e">
+              <LineIcon type={type} /><span>{label}</span>
+            </OptionButton>
+          ))}
+        </div>
+      )}
+
+      {/* Übergänge + Verkehrsinseln */}
+      <LineCategoryHeader
+        label="Übergänge + Inseln"
+        color="#8b5cf6"
+        icon={
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M13 4a1 1 0 100-2 1 1 0 000 2zM7 21l3-4 2 2 4-5" />
+          </svg>
+        }
+        expanded={expandedSection === 'crossings'}
+        onToggle={() => toggleSection('crossings')}
+      />
+      {expandedSection === 'crossings' && (
+        <div style={{ animation: 'fadeIn 0.1s ease-out' }}>
+          <OptionButton selected={false} onClick={() => {/* TODO */}}>
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2">
+              <path d="M13 4a1 1 0 100-2 1 1 0 000 2zM7 21l3-4 2 2 4-5" />
+            </svg>
+            <span>Fußgängerübergang</span>
+          </OptionButton>
+          <OptionButton selected={false} onClick={() => {/* TODO */}}>
+            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2">
+              <path d="M12 2L6 8h12L12 2zM12 22l6-6H6l6 6z" />
+            </svg>
+            <span>Verkehrsinsel</span>
+          </OptionButton>
+        </div>
+      )}
+
+      {/* Straßenbahn */}
       {config.category === 'strasse' && (
         <>
-          <SectionDivider label="Straßenbahn" />
-          {!tram ? (
-            <div className="px-4 py-2">
-              <button onClick={() => updatePartial({ tram: { tracks: 1, trackType: 'embedded', position: 'center' } })}
-                className="w-full py-2.5 rounded-lg text-[13px] font-medium transition-all duration-150 flex items-center justify-center gap-2"
-                style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.2)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245, 158, 11, 0.15)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(245, 158, 11, 0.08)' }}
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-                Gleise hinzufügen
-              </button>
-            </div>
-          ) : (
-            <div className="px-4 py-3 space-y-3">
-              <div>
-                <div className="text-[11px] font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>Gleise</div>
-                <div className="flex gap-1.5">
-                  <TramChip active={tram.tracks === 1} onClick={() => updatePartial({ tram: { ...tram, tracks: 1 } })} label="Eingleisig" />
-                  <TramChip active={tram.tracks === 2} onClick={() => updatePartial({ tram: { ...tram, tracks: 2 } })} label="Zweigleisig" />
+          <LineCategoryHeader
+            label="Straßenbahn"
+            color="#f59e0b"
+            icon={tramIcon}
+            expanded={expandedSection === 'tram'}
+            onToggle={() => toggleSection('tram')}
+          />
+          {expandedSection === 'tram' && (
+            <div style={{ animation: 'fadeIn 0.1s ease-out' }}>
+              {!tram ? (
+                <div className="px-4 py-2">
+                  <button onClick={() => updatePartial({ tram: { tracks: 1, trackType: 'embedded', position: 'center' } })}
+                    className="w-full py-2.5 rounded-lg text-[13px] font-medium transition-all duration-150 flex items-center justify-center gap-2"
+                    style={{ background: 'rgba(245, 158, 11, 0.08)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.2)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245, 158, 11, 0.15)' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(245, 158, 11, 0.08)' }}
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    Gleise hinzufügen
+                  </button>
                 </div>
-              </div>
-              <div>
-                <div className="text-[11px] font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>Bauart</div>
-                <div className="flex gap-1.5">
-                  {([['embedded', 'Eingebettet', '#5a5a5a'], ['dedicated', 'Eigener Gleiskörper', '#888'], ['grass', 'Rasengleis', '#6a8f4e']] as [TramTrackType, string, string][]).map(([t, l, c]) => (
-                    <TramTypeChip key={t} active={tram.trackType === t} onClick={() => updatePartial({ tram: { ...tram, trackType: t } })} label={l} color={c} />
-                  ))}
+              ) : (
+                <div className="px-4 py-3 space-y-3">
+                  <div>
+                    <div className="text-[11px] font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>Gleise</div>
+                    <div className="flex gap-1.5">
+                      <TramChip active={tram.tracks === 1} onClick={() => updatePartial({ tram: { ...tram, tracks: 1 } })} label="Eingleisig" />
+                      <TramChip active={tram.tracks === 2} onClick={() => updatePartial({ tram: { ...tram, tracks: 2 } })} label="Zweigleisig" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[11px] font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>Bauart</div>
+                    <div className="flex gap-1.5">
+                      {([['embedded', 'Eingebettet', '#5a5a5a'], ['dedicated', 'Eigener Gleiskörper', '#888'], ['grass', 'Rasengleis', '#6a8f4e']] as [TramTrackType, string, string][]).map(([t, l, c]) => (
+                        <TramTypeChip key={t} active={tram.trackType === t} onClick={() => updatePartial({ tram: { ...tram, trackType: t } })} label={l} color={c} />
+                      ))}
+                    </div>
+                  </div>
+                  <RemoveBtn label="Gleise entfernen" onClick={() => updatePartial({ tram: undefined })} />
                 </div>
-              </div>
-              <RemoveBtn label="Gleise entfernen" onClick={() => updatePartial({ tram: undefined })} />
+              )}
             </div>
           )}
         </>
