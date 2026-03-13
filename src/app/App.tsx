@@ -346,7 +346,7 @@ const isTouchDevice = (): boolean => {
             className="fixed right-1 bottom-1 z-[80] text-[11px] text-[--text-muted] select-none pointer-events-none rounded-md border border-[--border] bg-[--panel] px-2 py-1 shadow-sm hidden sm:block"
             aria-label="App-Version"
           >
-            033-Skizze – Version: 0.8
+            033-Skizze – Version: 0.5.2
           </div>
         </div>
 

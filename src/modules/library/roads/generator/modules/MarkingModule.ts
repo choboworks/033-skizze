@@ -54,7 +54,7 @@ export class MarkingModule {
   private addArrowMarking(
     svgDoc: Document,
     parent: Element,
-    marking: { id: string; arrowType: string; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    marking: { id: string; arrowType: string; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number; color?: string },
     leftSideWidth: number,
     laneWidth: number
   ): void {
@@ -95,7 +95,7 @@ export class MarkingModule {
     arrowGroup.setAttribute('transform', transform)
     
     const innerGroup = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'g')
-    innerGroup.setAttribute('fill', '#ffffff')
+    innerGroup.setAttribute('fill', marking.color || '#ffffff')
     innerGroup.setAttribute('stroke', 'none')
     
     // SVG-Pfade extrahieren — robuste Regex für verschiedene Attribut-Reihenfolgen
@@ -122,7 +122,7 @@ export class MarkingModule {
   private addLineMarking(
     svgDoc: Document,
     parent: Element,
-    marking: { type: 'stopLine' | 'waitLine'; positionPercent: number; xPercent?: number; widthPercent?: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    marking: { type: 'stopLine' | 'waitLine'; positionPercent: number; xPercent?: number; widthPercent?: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number; color?: string },
     leftSideWidth: number
   ): void {
     const yPosition = (marking.positionPercent / 100) * this.config.length
@@ -136,6 +136,8 @@ export class MarkingModule {
     const lineWidth = x2 - x1
     const thickness = (marking.type === 'stopLine' ? 3 : 2) * sy
 
+    const fillColor = marking.color || '#ffffff'
+
     if (marking.type === 'stopLine') {
       // Durchgezogene dicke Linie
       const rect = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'rect')
@@ -143,7 +145,7 @@ export class MarkingModule {
       rect.setAttribute('y', String(yPosition - thickness / 2))
       rect.setAttribute('width', String(lineWidth))
       rect.setAttribute('height', String(thickness))
-      rect.setAttribute('fill', '#ffffff')
+      rect.setAttribute('fill', fillColor)
       parent.appendChild(rect)
     } else {
       // Gestrichelte Wartelinie
@@ -157,7 +159,7 @@ export class MarkingModule {
         rect.setAttribute('y', String(yPosition - thickness / 2))
         rect.setAttribute('width', String(w))
         rect.setAttribute('height', String(thickness))
-        rect.setAttribute('fill', '#ffffff')
+        rect.setAttribute('fill', fillColor)
         parent.appendChild(rect)
         cx += dashLen + gapLen
       }
@@ -167,7 +169,7 @@ export class MarkingModule {
   private addZebraMarking(
     svgDoc: Document,
     parent: Element,
-    marking: { positionPercent: number; width?: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    marking: { positionPercent: number; width?: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number; color?: string },
     leftSideWidth: number
   ): void {
     const yPosition = (marking.positionPercent / 100) * this.config.length
@@ -190,7 +192,7 @@ export class MarkingModule {
       rect.setAttribute('y', String(yPosition - zebraWidth / 2))
       rect.setAttribute('width', String(stripeW))
       rect.setAttribute('height', String(zebraWidth))
-      rect.setAttribute('fill', '#ffffff')
+      rect.setAttribute('fill', marking.color || '#ffffff')
       parent.appendChild(rect)
     }
   }
@@ -198,7 +200,7 @@ export class MarkingModule {
   private addSharkTeethMarking(
     svgDoc: Document,
     parent: Element,
-    marking: { positionPercent: number; xPercent?: number; widthPercent?: number; direction: string; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    marking: { positionPercent: number; xPercent?: number; widthPercent?: number; direction: string; rotation?: number; scale?: number; scaleX?: number; scaleY?: number; color?: string },
     leftSideWidth: number
   ): void {
     const yPosition = (marking.positionPercent / 100) * this.config.length
@@ -228,7 +230,7 @@ export class MarkingModule {
       const by = dir > 0 ? yPosition + toothH / 2 : yPosition - toothH / 2
       const polygon = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'polygon')
       polygon.setAttribute('points', `${cx},${by} ${cx + toothW / 2},${ty} ${cx + toothW},${by}`)
-      polygon.setAttribute('fill', '#ffffff')
+      polygon.setAttribute('fill', marking.color || '#ffffff')
       g.appendChild(polygon)
       cx += toothW + gap
     }
@@ -239,31 +241,39 @@ export class MarkingModule {
   private addLaneLineMarking(
     svgDoc: Document,
     parent: Element,
-    marking: { type: 'laneLine'; lineType: string; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    marking: { type: 'laneLine'; lineType: string; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number; color?: string; fullLength?: boolean },
     leftSideWidth: number
   ): void {
     const xPos = getMarkingX(marking, this.config.width, this.config.lanes, leftSideWidth)
     const yPosition = (marking.positionPercent / 100) * this.config.length
     const sx = marking.scaleX ?? marking.scale ?? 1
     const sy = marking.scaleY ?? marking.scale ?? 1
-    const lineH = this.config.length * 0.12 * sy
+    const isFullLength = !!marking.fullLength
+    const lineH = isFullLength ? this.config.length * sy : 15 * sy
     const halfH = lineH / 2
     const gap = 3 * sx
     const lt = marking.lineType
-    
+
     const g = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'g')
     g.setAttribute('transform', `translate(${xPos}, ${yPosition})${marking.rotation ? ` rotate(${marking.rotation})` : ''}`)
-    
+
     const makeLine = (x: number, dashed: boolean): Element => {
       const line = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'line')
       line.setAttribute('x1', String(x))
       line.setAttribute('y1', String(-halfH))
       line.setAttribute('x2', String(x))
       line.setAttribute('y2', String(halfH))
-      line.setAttribute('stroke', '#ffffff')
-      line.setAttribute('stroke-width', String((lt === 'solid' ? 2 : 1.5) * sx))
+      line.setAttribute('stroke', marking.color || '#ffffff')
+      line.setAttribute('stroke-width', String(2 * sx))
       if (dashed) {
-        line.setAttribute('stroke-dasharray', `${4 * sy} ${3 * sy}`)
+        line.setAttribute('stroke-dasharray', isFullLength ? `${24 * sy} ${48 * sy}` : `${3 * sy} ${3 * sy}`)
+        if (isFullLength) {
+          const dashCycle = 72 * sy
+          const roadCenter = lineH / 2
+          const idealStart = roadCenter - 12 * sy
+          const cycleNum = Math.floor(idealStart / dashCycle)
+          line.setAttribute('stroke-dashoffset', String(cycleNum * dashCycle - idealStart))
+        }
       }
       return line
     }
@@ -287,7 +297,7 @@ export class MarkingModule {
   private addBlockedAreaMarking(
     svgDoc: Document,
     parent: Element,
-    marking: { type: 'blockedArea'; areaType: string; positionPercent: number; xPercent?: number; widthPercent?: number; heightPercent?: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    marking: { type: 'blockedArea'; areaType: string; positionPercent: number; xPercent?: number; widthPercent?: number; heightPercent?: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number; color?: string },
     leftSideWidth: number
   ): void {
     const def = BLOCKED_AREA_DEFS[marking.areaType]
@@ -347,7 +357,7 @@ export class MarkingModule {
   private addSpeedNumberMarking(
     svgDoc: Document,
     parent: Element,
-    marking: { id: string; type: 'speedNumber'; value: number; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    marking: { id: string; type: 'speedNumber'; value: number; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number; color?: string },
     leftSideWidth: number,
     laneWidth: number
   ): void {
@@ -365,7 +375,7 @@ export class MarkingModule {
     text.setAttribute('x', '0')
     text.setAttribute('y', String(fontSize * 0.35))
     text.setAttribute('text-anchor', 'middle')
-    text.setAttribute('fill', '#ffffff')
+    text.setAttribute('fill', marking.color || '#ffffff')
     text.setAttribute('font-family', 'Arial, sans-serif')
     text.setAttribute('font-weight', 'bold')
     text.setAttribute('font-size', String(fontSize))
@@ -378,7 +388,7 @@ export class MarkingModule {
   private addTextMarking(
     svgDoc: Document,
     parent: Element,
-    marking: { id: string; type: 'textMarking'; text: string; orientation: 'horizontal' | 'vertical'; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    marking: { id: string; type: 'textMarking'; text: string; orientation: 'horizontal' | 'vertical'; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number; color?: string },
     leftSideWidth: number,
     laneWidth: number
   ): void {
@@ -401,7 +411,7 @@ export class MarkingModule {
         text.setAttribute('x', '0')
         text.setAttribute('y', String(-totalH / 2 + charH * 0.8 + i * charH))
         text.setAttribute('text-anchor', 'middle')
-        text.setAttribute('fill', '#ffffff')
+        text.setAttribute('fill', marking.color || '#ffffff')
         text.setAttribute('font-family', 'Arial, sans-serif')
         text.setAttribute('font-weight', 'bold')
         text.setAttribute('font-size', String(fontSize))
@@ -427,7 +437,7 @@ export class MarkingModule {
   private addSymbolMarking(
     svgDoc: Document,
     parent: Element,
-    marking: { id: string; type: 'symbolMarking'; symbolType: string; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number },
+    marking: { id: string; type: 'symbolMarking'; symbolType: string; laneIndex: number; xPercent?: number; positionPercent: number; rotation?: number; scale?: number; scaleX?: number; scaleY?: number; color?: string },
     leftSideWidth: number,
     laneWidth: number
   ): void {
@@ -461,10 +471,11 @@ export class MarkingModule {
     g.setAttribute('transform', transform)
 
     // Render paths
+    const symColor = marking.color || null
     for (const p of def.paths) {
       const pathEl = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'path')
       pathEl.setAttribute('d', p.d)
-      pathEl.setAttribute('fill', p.fill)
+      pathEl.setAttribute('fill', symColor && p.fill !== 'none' ? symColor : p.fill)
       g.appendChild(pathEl)
     }
 
@@ -475,7 +486,7 @@ export class MarkingModule {
       circle.setAttribute('cy', '100')
       circle.setAttribute('r', '90')
       circle.setAttribute('fill', 'none')
-      circle.setAttribute('stroke', '#ffffff')
+      circle.setAttribute('stroke', symColor || '#ffffff')
       circle.setAttribute('stroke-width', '12')
       g.appendChild(circle)
 
@@ -483,7 +494,7 @@ export class MarkingModule {
       text.setAttribute('x', '100')
       text.setAttribute('y', '118')
       text.setAttribute('text-anchor', 'middle')
-      text.setAttribute('fill', '#ffffff')
+      text.setAttribute('fill', symColor || '#ffffff')
       text.setAttribute('font-family', 'Arial, sans-serif')
       text.setAttribute('font-weight', 'bold')
       text.setAttribute('font-size', '80')

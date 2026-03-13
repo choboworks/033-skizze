@@ -70,18 +70,18 @@ const CATEGORY_INFO: Record<MarkingCategory, { label: string; color: string; ico
 // Mini-Preview Components
 // ============================================================================
 
-function ArrowMini({ type, size = 20 }: { type: ArrowType; size?: number }) {
+function ArrowMini({ type, size = 20, color }: { type: ArrowType; size?: number; color?: string }) {
   const def = ARROW_DEFS[type]
   if (!def) return null
   const aspect = def.width / def.height
   // SVG-Paths haben fill="#ffffff" inline — müssen wir für die Preview überschreiben
   const darkSvg = def.svg.replace(/fill="#ffffff"/g, 'fill="currentColor"').replace(/fill="#FFFFFF"/g, 'fill="currentColor"')
   return (
-    <svg 
+    <svg
       viewBox={def.viewBox}
-      width={size * aspect} 
+      width={size * aspect}
       height={size}
-      style={{ color: 'var(--text)' }}
+      style={{ color: color || 'var(--text)' }}
       dangerouslySetInnerHTML={{ __html: darkSvg }}
     />
   )
@@ -222,6 +222,11 @@ const LANE_LINE_LABELS: Record<LaneLineMarking['lineType'], string> = {
   'dashed-solid': 'Überh. rechts',
 }
 
+const LANE_LINE_FULL_LABELS: Record<string, string> = {
+  'solid-dashed': 'Überh. li. lang',
+  'dashed-solid': 'Überh. re. lang',
+}
+
 function BlockedAreaMini({ areaType, size = 20 }: { areaType: BlockedAreaMarking['areaType']; size?: number }) {
   const def = BLOCKED_AREA_DEFS[areaType]
   if (!def) return null
@@ -343,13 +348,14 @@ function PlacedMarkingItem({
       case 'waitLine': return `Wartelinie${(marking.widthPercent ?? 100) < 100 ? ' (halb)' : ''}`
       case 'sharkTeeth': return `Haifischzähne${(marking.widthPercent ?? 100) < 100 ? ' (halb)' : ''}`
       case 'speedNumber': return `${marking.value} km/h • Spur ${marking.laneIndex + 1}`
-      case 'laneLine': return `${LANE_LINE_LABELS[marking.lineType]} • Spur ${marking.laneIndex + 1}`
+      case 'laneLine': return `${marking.fullLength ? (LANE_LINE_FULL_LABELS[marking.lineType] || LANE_LINE_LABELS[marking.lineType]) : LANE_LINE_LABELS[marking.lineType]} • Spur ${marking.laneIndex + 1}`
       case 'blockedArea': return BLOCKED_AREA_LABELS[marking.areaType]
       case 'textMarking': return `${marking.text} ${marking.orientation === 'vertical' ? '(vert.)' : ''} • Spur ${marking.laneIndex + 1}`
       case 'symbolMarking': {
         const symLabels: Record<string, string> = {
           accessible: 'Behinderung', busSymbol: 'Bus-Symbol', tempo30: 'Tempo 30',
           pedestrian: 'Fußgänger', bicycle: 'Fahrrad', pedestrianZone: 'Fußgängerzone',
+          parkingRect: 'Parkfläche', parkingT: 'Parkfläche T', square: 'Quadrat',
         }
         return `${symLabels[marking.symbolType] || marking.symbolType} • Spur ${marking.laneIndex + 1}`
       }
@@ -358,7 +364,7 @@ function PlacedMarkingItem({
 
   const getIcon = () => {
     switch (marking.type) {
-      case 'arrow': return <ArrowMini type={marking.arrowType} size={14} />
+      case 'arrow': return <ArrowMini type={marking.arrowType} size={14} color={marking.color || undefined} />
       case 'zebra': return <ZebraMini size={18} />
       case 'stopLine': return <StopLineMini size={18} />
       case 'waitLine': return <WaitLineMini size={18} />
@@ -550,7 +556,7 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
     onUpdate({ ...config, markings: [...markings, newMarking] }, true)
   }
   
-  const addLaneLine = (lineType: LaneLineMarking['lineType']) => {
+  const addLaneLine = (lineType: LaneLineMarking['lineType'], fullLength?: boolean) => {
     const newMarking: LaneLineMarking = {
       id: generateMarkingId(),
       type: 'laneLine',
@@ -558,6 +564,7 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
       laneIndex: 0,
       positionPercent: findFreePosition(0),
       rotation: 0,
+      ...(fullLength ? { fullLength: true } : {}),
     }
     onUpdate({ ...config, markings: [...markings, newMarking] }, true)
   }
@@ -603,6 +610,70 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
     onUpdate({ ...config, markings: [...markings, newMarking] }, true)
   }
 
+  // ---- Baustellenmarkierungen (gelb) ----
+  const CONSTRUCTION_YELLOW = '#fbbf24'
+
+  const addConstructionArrow = (arrowType: ArrowType) => {
+    const newMarking: ArrowMarking = {
+      id: generateMarkingId(),
+      type: 'arrow',
+      arrowType: arrowType as ArrowMarking['arrowType'],
+      laneIndex: 0,
+      positionPercent: findFreePosition(0),
+      rotation: 0,
+      color: CONSTRUCTION_YELLOW,
+    }
+    onUpdate({ ...config, markings: [...markings, newMarking] }, true)
+  }
+
+  const addConstructionLaneLine = (lineType: LaneLineMarking['lineType'], fullLength?: boolean) => {
+    const newMarking: LaneLineMarking = {
+      id: generateMarkingId(),
+      type: 'laneLine',
+      lineType,
+      laneIndex: 0,
+      positionPercent: findFreePosition(0),
+      rotation: 0,
+      color: CONSTRUCTION_YELLOW,
+      ...(fullLength ? { fullLength: true } : {}),
+    }
+    onUpdate({ ...config, markings: [...markings, newMarking] }, true)
+  }
+
+  const addConstructionStopLine = () => {
+    const newMarking: StopLineMarking = {
+      id: generateMarkingId(),
+      type: 'stopLine',
+      positionPercent: findFreeCrossPosition(),
+      widthPercent: 100,
+      color: CONSTRUCTION_YELLOW,
+    }
+    onUpdate({ ...config, markings: [...markings, newMarking] }, true)
+  }
+
+  const addConstructionWaitLine = () => {
+    const newMarking: WaitLineMarking = {
+      id: generateMarkingId(),
+      type: 'waitLine',
+      positionPercent: findFreeCrossPosition(),
+      widthPercent: 100,
+      color: CONSTRUCTION_YELLOW,
+    }
+    onUpdate({ ...config, markings: [...markings, newMarking] }, true)
+  }
+
+  const addConstructionSharkTeeth = () => {
+    const newMarking: SharkTeethMarking = {
+      id: generateMarkingId(),
+      type: 'sharkTeeth',
+      positionPercent: findFreeCrossPosition(),
+      widthPercent: 100,
+      direction: 'inward',
+      color: CONSTRUCTION_YELLOW,
+    }
+    onUpdate({ ...config, markings: [...markings, newMarking] }, true)
+  }
+
   const removeMarking = (id: string) => {
     onUpdate({ ...config, markings: markings.filter(m => m.id !== id) }, true)
   }
@@ -615,13 +686,15 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
     setExpandedCategory(expandedCategory === cat ? null : cat)
   }
   
-  // Zähle Markierungen pro Kategorie
-  const laneLineCount = markings.filter(m => m.type === 'laneLine').length
-  const arrowCount = markings.filter(m => m.type === 'arrow').length
-  const stopLineCount = markings.filter(m => m.type === 'stopLine' || m.type === 'waitLine' || m.type === 'sharkTeeth').length
-  const textSymbolCount = markings.filter(m => m.type === 'speedNumber' || m.type === 'textMarking' || m.type === 'symbolMarking').length
+  // Zähle Markierungen pro Kategorie (Baustellenmarkierungen separat unter misc)
+  const MISC_SYMBOL_TYPES = ['parkingRect', 'parkingT', 'square']
+  const laneLineCount = markings.filter(m => m.type === 'laneLine' && !m.color).length
+  const arrowCount = markings.filter(m => m.type === 'arrow' && !m.color).length
+  const stopLineCount = markings.filter(m => (m.type === 'stopLine' || m.type === 'waitLine' || m.type === 'sharkTeeth') && !m.color).length
+  const textSymbolCount = markings.filter(m => m.type === 'speedNumber' || m.type === 'textMarking' || (m.type === 'symbolMarking' && !MISC_SYMBOL_TYPES.includes(m.symbolType))).length
   const zebraCount = markings.filter(m => m.type === 'zebra' || (m.type === 'symbolMarking' && ['pedestrian', 'bicycle', 'pedestrianZone'].includes(m.symbolType))).length
   const blockedAreaCount = markings.filter(m => m.type === 'blockedArea').length
+  const miscCount = markings.filter(m => (m.type === 'symbolMarking' && MISC_SYMBOL_TYPES.includes(m.symbolType)) || !!m.color).length
 
   const arrowTypes: ArrowType[] = ['straight', 'left', 'right', 'straight-left', 'straight-right', 'all', 'half-left', 'half-right']
   const speedValues: SpeedNumberMarking['value'][] = [30, 50, 70, 100]
@@ -678,6 +751,15 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
                   icon={<LaneLineMini lineType={lt} size={16} />}
                   label={LANE_LINE_LABELS[lt]}
                   onAdd={() => addLaneLine(lt)}
+                  color="#06b6d4"
+                />
+              ))}
+              {(['solid-dashed', 'dashed-solid'] as const).map((lt) => (
+                <GridTile
+                  key={`full-${lt}`}
+                  icon={<LaneLineMini lineType={lt} size={16} />}
+                  label={LANE_LINE_FULL_LABELS[lt]}
+                  onAdd={() => addLaneLine(lt, true)}
                   color="#06b6d4"
                 />
               ))}
@@ -814,15 +896,58 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
         )}
         
         {/* ========== 6. SONSTIGES ========== */}
-        <CategoryHeader 
-          info={CATEGORY_INFO.misc} 
-          count={0}
-          expanded={expandedCategory === 'misc'} 
-          onToggle={() => toggleCategory('misc')} 
+        <CategoryHeader
+          info={CATEGORY_INFO.misc}
+          count={miscCount}
+          expanded={expandedCategory === 'misc'}
+          onToggle={() => toggleCategory('misc')}
         />
         {expandedCategory === 'misc' && (
-          <div className="px-4 py-3 text-[11px]" style={{ color: 'var(--text-muted)', animation: 'fadeIn 0.1s ease-out' }}>
-            Demnächst verfügbar
+          <div className="px-3 pb-2" style={{ animation: 'fadeIn 0.1s ease-out' }}>
+            {/* Parkflächenbegrenzung */}
+            <div className="text-[10px] font-medium uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Parkflächenbegrenzung</div>
+            <div className="grid grid-cols-3 gap-1.5 mb-2">
+              <GridTile icon={<SymbolMini symbolType="parkingRect" size={18} />} label="Parkfläche" onAdd={() => addSymbolMarking('parkingRect')} color="#6b7280" />
+              <GridTile icon={<SymbolMini symbolType="parkingT" size={18} />} label="Parkfläche T" onAdd={() => addSymbolMarking('parkingT')} color="#6b7280" />
+              <GridTile icon={<SymbolMini symbolType="square" size={18} />} label="Quadrat" onAdd={() => addSymbolMarking('square')} color="#6b7280" />
+            </div>
+            {/* Baustellenmarkierungen */}
+            <div className="text-[10px] font-medium uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Baustelle — Pfeile</div>
+            <div className="grid grid-cols-3 gap-1.5 mb-2">
+              {arrowTypes.map((type) => (
+                <GridTile
+                  key={`constr-${type}`}
+                  icon={<ArrowMini type={type} size={16} color="#fbbf24" />}
+                  label={ARROW_LABELS[type]}
+                  onAdd={() => addConstructionArrow(type)}
+                  color="#6b7280"
+                />
+              ))}
+            </div>
+            <div className="text-[10px] font-medium uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Baustelle — Linien</div>
+            <div className="grid grid-cols-3 gap-1.5 mb-2">
+              {(['solid', 'double-solid', 'solid-dashed', 'dashed-solid'] as const).map((lt) => (
+                <GridTile
+                  key={`constr-${lt}`}
+                  icon={<div style={{ color: '#fbbf24' }}><LaneLineMini lineType={lt} size={16} /></div>}
+                  label={LANE_LINE_LABELS[lt]}
+                  onAdd={() => addConstructionLaneLine(lt)}
+                  color="#6b7280"
+                />
+              ))}
+              {(['solid-dashed', 'dashed-solid'] as const).map((lt) => (
+                <GridTile
+                  key={`constr-full-${lt}`}
+                  icon={<div style={{ color: '#fbbf24' }}><LaneLineMini lineType={lt} size={16} /></div>}
+                  label={LANE_LINE_FULL_LABELS[lt]}
+                  onAdd={() => addConstructionLaneLine(lt, true)}
+                  color="#6b7280"
+                />
+              ))}
+              <GridTile icon={<div style={{ color: '#fbbf24' }}><StopLineMini size={18} /></div>} label="Haltelinie" onAdd={addConstructionStopLine} color="#6b7280" />
+              <GridTile icon={<div style={{ color: '#fbbf24' }}><WaitLineMini size={18} /></div>} label="Wartelinie" onAdd={addConstructionWaitLine} color="#6b7280" />
+              <GridTile icon={<div style={{ color: '#fbbf24' }}><SharkTeethMini size={18} /></div>} label="Haifischzähne" onAdd={addConstructionSharkTeeth} color="#6b7280" />
+            </div>
           </div>
         )}
         
@@ -833,7 +958,10 @@ export function MarkingsPanel({ config, onUpdate }: Props) {
             
             <div className="py-1">
               {markings.map((marking) => {
-                const accent = marking.type === 'arrow' ? '#3b82f6'
+                const accent = marking.color
+                  ? marking.color
+                  : marking.type === 'symbolMarking' && ['parkingRect', 'parkingT', 'square'].includes(marking.symbolType) ? '#6b7280'
+                  : marking.type === 'arrow' ? '#3b82f6'
                   : marking.type === 'stopLine' || marking.type === 'waitLine' || marking.type === 'sharkTeeth' ? '#ef4444'
                   : marking.type === 'zebra' ? '#8b5cf6'
                   : marking.type === 'symbolMarking' && ['pedestrian', 'bicycle', 'pedestrianZone'].includes(marking.symbolType) ? '#8b5cf6'

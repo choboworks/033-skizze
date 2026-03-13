@@ -204,6 +204,7 @@ interface MarkingBase {
   scale?: number            // Einheitliche Skalierung (legacy, Fallback für scaleX/scaleY)
   scaleX?: number           // Horizontale Skalierung (1 = Standard)
   scaleY?: number           // Vertikale Skalierung (1 = Standard)
+  color?: string            // Markierungsfarbe (Default: weiß, z.B. gelb für Baustellenmarkierungen)
 }
 
 /**
@@ -273,6 +274,7 @@ export interface LaneLineMarking extends MarkingBase {
   lineType: 'solid' | 'double-solid' | 'solid-dashed' | 'dashed-solid'
   laneIndex: number
   xPercent?: number         // Freie X-Position (0-100% der Fahrbahnbreite). Überschreibt laneIndex wenn gesetzt.
+  fullLength?: boolean      // Gesamte Straßen-/Kurvenlänge statt kurzes Segment
 }
 
 /**
@@ -307,7 +309,7 @@ export interface TextMarking extends MarkingBase {
  */
 export interface SymbolMarking extends MarkingBase {
   type: 'symbolMarking'
-  symbolType: 'accessible' | 'busSymbol' | 'tempo30' | 'pedestrian' | 'bicycle' | 'pedestrianZone'
+  symbolType: 'accessible' | 'busSymbol' | 'tempo30' | 'pedestrian' | 'bicycle' | 'pedestrianZone' | 'parkingRect' | 'parkingT' | 'square'
   laneIndex: number
   xPercent?: number
 }

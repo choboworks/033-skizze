@@ -97,6 +97,45 @@ const PEDESTRIAN_ZONE: SymbolDef = {
 }
 
 // ============================================================================
+// Parkflächenbegrenzung — Rechteck
+// ============================================================================
+const PARKING_RECT: SymbolDef = {
+  viewBox: '0 0 50 80',
+  width: 50,
+  height: 80,
+  svgBody: `<rect x="0" y="0" width="50" height="80" fill="#fff"/>`,
+  paths: [
+    { d: 'M0,0 L50,0 L50,80 L0,80 Z', fill: '#ffffff' },
+  ],
+}
+
+// ============================================================================
+// Parkflächenbegrenzung — T-Form
+// ============================================================================
+const PARKING_T: SymbolDef = {
+  viewBox: '0 0 60 80',
+  width: 60,
+  height: 80,
+  svgBody: `<path d="M0,0 H60 V12 H36 V80 H24 V12 H0 Z" fill="#fff"/>`,
+  paths: [
+    { d: 'M0,0 L60,0 L60,12 L36,12 L36,80 L24,80 L24,12 L0,12 Z', fill: '#ffffff' },
+  ],
+}
+
+// ============================================================================
+// Quadrat
+// ============================================================================
+const SQUARE: SymbolDef = {
+  viewBox: '0 0 60 60',
+  width: 60,
+  height: 60,
+  svgBody: `<rect x="0" y="0" width="60" height="60" fill="#fff"/>`,
+  paths: [
+    { d: 'M0,0 L60,0 L60,60 L0,60 Z', fill: '#ffffff' },
+  ],
+}
+
+// ============================================================================
 // Export-Map
 // ============================================================================
 // ============================================================================
@@ -121,4 +160,7 @@ export const SYMBOL_DEFS: Record<string, SymbolDef> = {
   pedestrian: PEDESTRIAN,
   bicycle: BICYCLE,
   pedestrianZone: PEDESTRIAN_ZONE,
+  parkingRect: PARKING_RECT,
+  parkingT: PARKING_T,
+  square: SQUARE,
 }

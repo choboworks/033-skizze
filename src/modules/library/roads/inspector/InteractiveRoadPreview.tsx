@@ -551,7 +551,7 @@ export function InteractiveRoadPreview({
               >
                 <g transform={`rotate(${rotation})`}>
                   <g transform={`translate(${-scaledCenterX}, ${-scaledCenterY}) scale(${totalScaleX}, ${totalScaleY})`}>
-                    <g dangerouslySetInnerHTML={{ __html: ARROW_SVGS[marking.arrowType] }} />
+                    <g dangerouslySetInnerHTML={{ __html: marking.color ? ARROW_SVGS[marking.arrowType].replace(/fill="#ffffff"/g, `fill="${marking.color}"`).replace(/fill="#FFFFFF"/g, `fill="${marking.color}"`) : ARROW_SVGS[marking.arrowType] }} />
                   </g>
                 </g>
                 {/* Hitbox */}
@@ -574,46 +574,57 @@ export function InteractiveRoadPreview({
             )
           }
           
-          // ===== FAHRSTREIFENBEGRENZUNG (senkrecht, wie Spurlinie) =====
+          // ===== FAHRSTREIFENBEGRENZUNG (eine Leitlinie, ~15px) =====
           if (marking.type === 'laneLine') {
             const xPos = getMarkingX(marking, config.width, config.lanes, calc.leftSideWidth)
             const rotation = marking.rotation || 0
             const sx = marking.scaleX ?? marking.scale ?? 1
             const sy = marking.scaleY ?? marking.scale ?? 1
             const lt = marking.lineType
-            const lineH = config.length * 0.12 * sy  // Höhe des Liniensegments
+            const isFullLength = !!marking.fullLength
+            const lineH = isFullLength ? config.length * sy : 15 * sy
             const gap = 3 * sx
             const halfH = lineH / 2
+            const da = isFullLength ? `${24 * sy} ${48 * sy}` : `${3 * sy} ${3 * sy}`
+            // Dash-Offset für fullLength: Striche mittig ausrichten (wie LaneModule)
+            const dOff = isFullLength ? (() => {
+              const dashCycle = 72 * sy
+              const roadCenter = lineH / 2
+              const idealStart = roadCenter - 12 * sy
+              const cycleNum = Math.floor(idealStart / dashCycle)
+              return cycleNum * dashCycle - idealStart
+            })() : undefined
 
+            const lineColor = marking.color || '#ffffff'
             const lineContent = (() => {
               if (lt === 'solid') {
-                return <line x1={0} y1={-halfH} x2={0} y2={halfH} stroke="#ffffff" strokeWidth={2 * sx} />
+                return <line x1={0} y1={-halfH} x2={0} y2={halfH} stroke={lineColor} strokeWidth={2 * sx} />
               } else if (lt === 'double-solid') {
                 return (
                   <>
-                    <line x1={-gap/2} y1={-halfH} x2={-gap/2} y2={halfH} stroke="#ffffff" strokeWidth={1.5 * sx} />
-                    <line x1={gap/2} y1={-halfH} x2={gap/2} y2={halfH} stroke="#ffffff" strokeWidth={1.5 * sx} />
+                    <line x1={-gap/2} y1={-halfH} x2={-gap/2} y2={halfH} stroke={lineColor} strokeWidth={2 * sx} />
+                    <line x1={gap/2} y1={-halfH} x2={gap/2} y2={halfH} stroke={lineColor} strokeWidth={2 * sx} />
                   </>
                 )
               } else if (lt === 'solid-dashed') {
                 return (
                   <>
-                    <line x1={-gap/2} y1={-halfH} x2={-gap/2} y2={halfH} stroke="#ffffff" strokeWidth={1.5 * sx} />
-                    <line x1={gap/2} y1={-halfH} x2={gap/2} y2={halfH} stroke="#ffffff" strokeWidth={1.5 * sx} strokeDasharray={`${4 * sy} ${3 * sy}`} />
+                    <line x1={-gap/2} y1={-halfH} x2={-gap/2} y2={halfH} stroke={lineColor} strokeWidth={2 * sx} />
+                    <line x1={gap/2} y1={-halfH} x2={gap/2} y2={halfH} stroke={lineColor} strokeWidth={2 * sx} strokeDasharray={da} strokeDashoffset={dOff} />
                   </>
                 )
               } else {
                 return (
                   <>
-                    <line x1={-gap/2} y1={-halfH} x2={-gap/2} y2={halfH} stroke="#ffffff" strokeWidth={1.5 * sx} strokeDasharray={`${4 * sy} ${3 * sy}`} />
-                    <line x1={gap/2} y1={-halfH} x2={gap/2} y2={halfH} stroke="#ffffff" strokeWidth={1.5 * sx} />
+                    <line x1={-gap/2} y1={-halfH} x2={-gap/2} y2={halfH} stroke={lineColor} strokeWidth={2 * sx} strokeDasharray={da} strokeDashoffset={dOff} />
+                    <line x1={gap/2} y1={-halfH} x2={gap/2} y2={halfH} stroke={lineColor} strokeWidth={2 * sx} />
                   </>
                 )
               }
             })()
 
             const hitW = 12 * sx
-            
+
             return (
               <g key={marking.id} transform={`translate(${xPos}, ${yPosition})`}
                 style={{
@@ -656,7 +667,7 @@ export function InteractiveRoadPreview({
             const stripes: React.ReactElement[] = []
             for (let idx = 0; idx < N; idx++) {
               const cx = x1 + idx * (stripeW + actualGap)
-              stripes.push(<rect key={idx} x={cx} y={yPosition - zebraWidth / 2} width={stripeW} height={zebraWidth} fill="#ffffff" />)
+              stripes.push(<rect key={idx} x={cx} y={yPosition - zebraWidth / 2} width={stripeW} height={zebraWidth} fill={marking.color || '#ffffff'} />)
             }
             const rotation = marking.rotation || 0
             return (
@@ -686,9 +697,10 @@ export function InteractiveRoadPreview({
             const sy = marking.scaleY ?? marking.scale ?? 1
             const thickness = marking.type === 'stopLine' ? 3 : 2
 
+            const crossColor = marking.color || '#ffffff'
             const lineContent = (() => {
               if (marking.type === 'stopLine') {
-                return <rect x={x1} y={yPosition - thickness * sy / 2} width={lineWidth} height={thickness * sy} fill="#ffffff" />
+                return <rect x={x1} y={yPosition - thickness * sy / 2} width={lineWidth} height={thickness * sy} fill={crossColor} />
               } else if (marking.type === 'waitLine') {
                 const dashLen = 4
                 const gapLen = 4
@@ -697,7 +709,7 @@ export function InteractiveRoadPreview({
                 let i = 0
                 while (cx < x2) {
                   const w = Math.min(dashLen, x2 - cx)
-                  segments.push(<rect key={i} x={cx} y={yPosition - thickness * sy / 2} width={w} height={thickness * sy} fill="#ffffff" />)
+                  segments.push(<rect key={i} x={cx} y={yPosition - thickness * sy / 2} width={w} height={thickness * sy} fill={crossColor} />)
                   cx += dashLen + gapLen
                   i++
                 }
@@ -714,7 +726,7 @@ export function InteractiveRoadPreview({
                   const ty = dir > 0 ? yPosition - toothH / 2 : yPosition + toothH / 2
                   const by = dir > 0 ? yPosition + toothH / 2 : yPosition - toothH / 2
                   triangles.push(
-                    <polygon key={i} points={`${cx},${by} ${cx + toothW / 2},${ty} ${cx + toothW},${by}`} fill="#ffffff" />
+                    <polygon key={i} points={`${cx},${by} ${cx + toothW / 2},${ty} ${cx + toothW},${by}`} fill={crossColor} />
                   )
                   cx += toothW + gap
                   i++
@@ -826,7 +838,7 @@ export function InteractiveRoadPreview({
                     <text
                       x={0} y={fontSize * 0.35 * sy}
                       textAnchor="middle"
-                      fill="#ffffff"
+                      fill={marking.color || '#ffffff'}
                       fontFamily="Arial, sans-serif"
                       fontWeight="bold"
                       fontSize={fontSize}
@@ -874,7 +886,7 @@ export function InteractiveRoadPreview({
                       {chars.map((c, i) => (
                         <text key={i}
                           x={0} y={(-totalH / 2 + charH * 0.8 + i * charH) / (sy || 1)}
-                          textAnchor="middle" fill="#ffffff"
+                          textAnchor="middle" fill={marking.color || '#ffffff'}
                           fontFamily="Arial, sans-serif" fontWeight="bold" fontSize={fontSize}
                           transform={`scale(${sx}, ${sy})`}
                           style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}
@@ -905,7 +917,7 @@ export function InteractiveRoadPreview({
                   <g transform={`rotate(${rotation})`}>
                     <text
                       x={0} y={fontSize * 0.35 * sy}
-                      textAnchor="middle" fill="#ffffff"
+                      textAnchor="middle" fill={marking.color || '#ffffff'}
                       fontFamily="Arial, sans-serif" fontWeight="bold" fontSize={fontSize}
                       transform={`scale(${sx}, ${sy})`}
                       style={{
@@ -956,7 +968,7 @@ export function InteractiveRoadPreview({
                           cursor: isDragging ? 'grabbing' : 'pointer',
                           filter: isDragging ? 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' : 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))',
                         }}
-                        dangerouslySetInnerHTML={{ __html: def.svgBody }}
+                        dangerouslySetInnerHTML={{ __html: marking.color ? def.svgBody.replace(/fill="#fff(?:fff)?"/g, `fill="${marking.color}"`).replace(/fill="white"/g, `fill="${marking.color}"`) : def.svgBody }}
                       />
                     ) : (
                       <g transform={`translate(${-scaledW / 2}, ${-scaledH / 2}) scale(${scaleX}, ${scaleY})`}
@@ -966,7 +978,7 @@ export function InteractiveRoadPreview({
                         }}
                       >
                         {def.paths.map((p, i) => (
-                          <path key={i} d={p.d} fill={p.fill} />
+                          <path key={i} d={p.d} fill={marking.color && p.fill !== 'none' ? marking.color : p.fill} />
                         ))}
                       </g>
                     )}
@@ -1252,7 +1264,7 @@ export function InteractiveRoadPreview({
             } else if (marking.type === 'laneLine') {
               centerSvgX = getMarkingX(marking, config.width, config.lanes, calc.leftSideWidth)
               centerSvgY = yPos
-              const lineH = config.length * 0.12 * msy
+              const lineH = marking.fullLength ? config.length * msy : 15 * msy
               hwSvg = 8 * msx
               hhSvg = lineH / 2 + 4
             } else if (marking.type === 'zebra') {

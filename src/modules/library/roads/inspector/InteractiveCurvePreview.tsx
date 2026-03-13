@@ -703,22 +703,19 @@ export function InteractiveCurvePreview({ config, updatePartial, onZoneSelect }:
                   for (let idx = 0; idx < N; idx++) {
                     const rIn = r1Full + idx * (stripeRadial + actualGap)
                     const rOut = rIn + stripeRadial
-                    // Per-stripe angular extent based on radius → constant visual width
-                    const rMid = (rIn + rOut) / 2
-                    const halfAngRad = (zebraWidth / 2) / rMid
-                    const a1 = posAngleRad2 - halfAngRad
-                    const a2 = posAngleRad2 + halfAngRad
-                    // Arc-band with constant-width angular extent
-                    const ix1 = viewBoxSize - rIn * Math.sin(a1)
-                    const iy1 = viewBoxSize - rIn * Math.cos(a1)
-                    const ix2 = viewBoxSize - rIn * Math.sin(a2)
-                    const iy2 = viewBoxSize - rIn * Math.cos(a2)
-                    const ox1 = viewBoxSize - rOut * Math.sin(a1)
-                    const oy1 = viewBoxSize - rOut * Math.cos(a1)
-                    const ox2 = viewBoxSize - rOut * Math.sin(a2)
-                    const oy2 = viewBoxSize - rOut * Math.cos(a2)
-                    const d = `M ${ix1},${iy1} L ${ox1},${oy1} A ${rOut},${rOut} 0 0,0 ${ox2},${oy2} L ${ix2},${iy2} A ${rIn},${rIn} 0 0,1 ${ix1},${iy1} Z`
-                    stripes.push(<path key={idx} d={d} fill="#ffffff" />)
+                    // Pro Radius eigener Winkel → gleiche Bogenlänge (rechteckige Streifen)
+                    const halfAngIn = (zebraWidth / 2) / rIn
+                    const halfAngOut = (zebraWidth / 2) / rOut
+                    const ix1 = viewBoxSize - rIn * Math.sin(posAngleRad2 - halfAngIn)
+                    const iy1 = viewBoxSize - rIn * Math.cos(posAngleRad2 - halfAngIn)
+                    const ix2 = viewBoxSize - rIn * Math.sin(posAngleRad2 + halfAngIn)
+                    const iy2 = viewBoxSize - rIn * Math.cos(posAngleRad2 + halfAngIn)
+                    const ox1 = viewBoxSize - rOut * Math.sin(posAngleRad2 - halfAngOut)
+                    const oy1 = viewBoxSize - rOut * Math.cos(posAngleRad2 - halfAngOut)
+                    const ox2 = viewBoxSize - rOut * Math.sin(posAngleRad2 + halfAngOut)
+                    const oy2 = viewBoxSize - rOut * Math.cos(posAngleRad2 + halfAngOut)
+                    const d = `M ${ix1},${iy1} L ${ox1},${oy1} L ${ox2},${oy2} L ${ix2},${iy2} Z`
+                    stripes.push(<path key={idx} d={d} fill={marking.color || '#ffffff'} />)
                   }
                   return (
                     <g key={marking.id} style={{ filter: undefined }}>
@@ -766,7 +763,7 @@ export function InteractiveCurvePreview({ config, updatePartial, onZoneSelect }:
                     const tx = viewBoxSize - rMid * Math.sin(tipAngle)
                     const ty = viewBoxSize - rMid * Math.cos(tipAngle)
                     triangles.push(
-                      <polygon key={i} points={`${bx1},${by1} ${tx},${ty} ${bx2},${by2}`} fill="#ffffff" />
+                      <polygon key={i} points={`${bx1},${by1} ${tx},${ty} ${bx2},${by2}`} fill={marking.color || '#ffffff'} />
                     )
                     pos += toothLen + gap
                     i++
@@ -897,10 +894,11 @@ export function InteractiveCurvePreview({ config, updatePartial, onZoneSelect }:
                 
                 // Render line content based on type
                 const lineContent = (() => {
+                  const cLineColor = marking.color || '#ffffff'
                   if (marking.type === 'stopLine') {
-                    return <line x1={p1x} y1={p1y} x2={p2x} y2={p2y} stroke="#ffffff" strokeWidth={thickness} strokeLinecap="round" />
+                    return <line x1={p1x} y1={p1y} x2={p2x} y2={p2y} stroke={cLineColor} strokeWidth={thickness} />
                   } else {
-                    return <line x1={p1x} y1={p1y} x2={p2x} y2={p2y} stroke="#ffffff" strokeWidth={thickness} strokeLinecap="round" strokeDasharray="4 4" />
+                    return <line x1={p1x} y1={p1y} x2={p2x} y2={p2y} stroke={cLineColor} strokeWidth={thickness} strokeDasharray="4 4" />
                   }
                 })()
                 
@@ -1041,6 +1039,23 @@ export function InteractiveCurvePreview({ config, updatePartial, onZoneSelect }:
                 hhScreen = (sDef.height * baseScale * msy / 2 + 6) * svgScale
               } else {
                 hwScreen = 15 * svgScale; hhScreen = 15 * svgScale
+              }
+            } else if (marking.type === 'laneLine') {
+              if (marking.fullLength) {
+                // Gesamte Kurve — große Bounding-Box
+                const rw = calc.outerRadius - calc.innerRadius
+                const mr = marking.xPercent !== undefined
+                  ? calc.innerRadius + (marking.xPercent / 100) * rw
+                  : calc.innerRadius + (marking.laneIndex + 0.5) * laneWidth
+                const aRad = (calc.angle * Math.PI) / 180
+                const chordW = 2 * mr * Math.sin(aRad / 2)
+                const sagitta = mr * (1 - Math.cos(aRad / 2))
+                hwScreen = (Math.max(chordW, sagitta) / 2 + 6) * svgScale
+                hhScreen = (Math.max(chordW, sagitta) / 2 + 6) * svgScale
+              } else {
+                const segSize = 15 * msy
+                hwScreen = (segSize / 2 + 6) * svgScale
+                hhScreen = (segSize / 2 + 6) * svgScale
               }
             } else {
               hwScreen = 15 * svgScale; hhScreen = 15 * svgScale
@@ -1913,7 +1928,7 @@ function CurveArrowMarkings({
             onDoubleClick={(e) => handleDoubleClick(e, marking.id)}
             onWheel={(e) => handleWheel(e, marking.id)}
           >
-            <g dangerouslySetInnerHTML={{ __html: def.svg }} />
+            <g dangerouslySetInnerHTML={{ __html: marking.color ? def.svg.replace(/fill="#ffffff"/g, `fill="${marking.color}"`).replace(/fill="#FFFFFF"/g, `fill="${marking.color}"`) : def.svg }} />
             {/* Hitbox */}
             {(() => {
               const avgScale = (totalScaleX + totalScaleY) / 2
@@ -1927,40 +1942,121 @@ function CurveArrowMarkings({
           const msx = marking.scaleX ?? marking.scale ?? 1
           const msy = marking.scaleY ?? marking.scale ?? 1
           const lt = marking.lineType
-          // Länge an Default-Dash-Größe koppeln (15px Dash in der gestrichelten Mittellinie)
-          const lineH = 15 * msy
-          const halfH = lineH / 2
-          const gap = 3 * msx
-
-          const { x, y, tangentRotation } = getArrowPosition(marking.laneIndex, marking.positionPercent, marking.xPercent)
-          const totalRotation = tangentRotation + (marking.rotation || 0)
+          const cllColor = marking.color || '#ffffff'
           const isDragging = draggingId === marking.id
-          const lineContent = (() => {
-            if (lt === 'solid') {
-              return <line x1={0} y1={-halfH} x2={0} y2={halfH} stroke="#ffffff" strokeWidth={2 * msx} />
-            } else if (lt === 'double-solid') {
-              return (<><line x1={-gap/2} y1={-halfH} x2={-gap/2} y2={halfH} stroke="#ffffff" strokeWidth={1.5*msx} /><line x1={gap/2} y1={-halfH} x2={gap/2} y2={halfH} stroke="#ffffff" strokeWidth={1.5*msx} /></>)
-            } else if (lt === 'solid-dashed') {
-              return (<><line x1={-gap/2} y1={-halfH} x2={-gap/2} y2={halfH} stroke="#ffffff" strokeWidth={1.5*msx} /><line x1={gap/2} y1={-halfH} x2={gap/2} y2={halfH} stroke="#ffffff" strokeWidth={1.5*msx} strokeDasharray={`${4*msy} ${3*msy}`} /></>)
-            } else {
-              return (<><line x1={-gap/2} y1={-halfH} x2={-gap/2} y2={halfH} stroke="#ffffff" strokeWidth={1.5*msx} strokeDasharray={`${4*msy} ${3*msy}`} /><line x1={gap/2} y1={-halfH} x2={gap/2} y2={halfH} stroke="#ffffff" strokeWidth={1.5*msx} /></>)
+          const isFullLength = !!marking.fullLength
+
+          // Radius: xPercent → freie Position, sonst Spurmitte
+          const roadWidth = outerRadius - innerRadius
+          const markRadius = marking.xPercent !== undefined
+            ? innerRadius + (marking.xPercent / 100) * roadWidth
+            : innerRadius + (marking.laneIndex + 0.5) * laneWidth
+
+          const posAngle = (marking.positionPercent / 100) * angle
+          const posAngRad = (posAngle * Math.PI) / 180
+          const gap = 3 * msx
+          const angleRad = (angle * Math.PI) / 180
+
+          if (isFullLength) {
+            // Gesamte Kurvenlänge — Dashes winkelsynchron mit Spurlinien
+            const GAP_REF = 14
+            // Nächste Spurlinie als Referenz-Radius für Dash-Ausrichtung
+            const numLanes = config.lanes || 2
+            let refR = innerRadius + laneWidth
+            for (let i = 2; i < numLanes; i++) {
+              const sepR = innerRadius + i * laneWidth
+              if (Math.abs(sepR - markRadius) < Math.abs(refR - markRadius)) refR = sepR
             }
-          })()
+            // Einzelne Dash-Segmente an exakten Winkelpositionen der Referenz-Spurlinie
+            const refArcLen = ((angle * Math.PI) / 180) * refR - 2 * GAP_REF
+            const nRef = refArcLen > 0 ? Math.floor((refArcLen + 25) / 40) : 0
+            const refHalfGap = nRef > 0 ? (refArcLen - (nRef * 15 + (nRef - 1) * 25)) / 2 : 0
+            const mkFullArc = (r: number, dashed: boolean) => {
+              if (dashed) {
+                // Jeder Strich wird als eigener Bogen an der exakten Winkelposition gerendert
+                const segs: React.ReactElement[] = []
+                for (let i = 0; i < nRef; i++) {
+                  const dashStart = GAP_REF + refHalfGap + i * 40
+                  const dashEnd = dashStart + 15
+                  const a1 = dashStart / refR
+                  const a2 = dashEnd / refR
+                  const x1 = viewBoxSize - r * Math.sin(a1)
+                  const y1 = viewBoxSize - r * Math.cos(a1)
+                  const x2 = viewBoxSize - r * Math.sin(a2)
+                  const y2 = viewBoxSize - r * Math.cos(a2)
+                  const span = (a2 - a1) * (180 / Math.PI)
+                  const la = span > 180 ? 1 : 0
+                  segs.push(<path key={`${r}-${i}`} d={`M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r.toFixed(2)} ${r.toFixed(2)} 0 ${la} 0 ${x2.toFixed(2)} ${y2.toFixed(2)}`} fill="none" stroke={cllColor} strokeWidth={2 * msx} />)
+                }
+                return <>{segs}</>
+              }
+              return <path key={r} d={createArcPath(r, angle, viewBoxSize)} fill="none" stroke={cllColor} strokeWidth={2 * msx} />
+            }
+            const lineContent = (() => {
+              if (lt === 'solid') return mkFullArc(markRadius, false)
+              else if (lt === 'double-solid') return <>{mkFullArc(markRadius - gap / 2, false)}{mkFullArc(markRadius + gap / 2, false)}</>
+              else if (lt === 'solid-dashed') return <>{mkFullArc(markRadius - gap / 2, false)}{mkFullArc(markRadius + gap / 2, true)}</>
+              else return <>{mkFullArc(markRadius - gap / 2, true)}{mkFullArc(markRadius + gap / 2, false)}</>
+            })()
 
-          const hitW = 12 * msx
+            // Hitbox am Mittelpunkt der Kurve
+            const midAngRad = angleRad / 2
+            const hx = viewBoxSize - markRadius * Math.sin(midAngRad)
+            const hy = viewBoxSize - markRadius * Math.cos(midAngRad)
 
-          return (
-            <g key={marking.id}
-              transform={`translate(${x}, ${y}) rotate(${totalRotation})`}
-              style={{ cursor: isDragging ? 'grabbing' : 'pointer', opacity: isDragging ? 0.7 : 1, filter: undefined }}
-              onMouseDown={(e) => handleMouseDown(e, marking.id)}
-              onDoubleClick={(e) => handleDoubleClick(e, marking.id)}
-              onWheel={(e) => handleWheel(e, marking.id)}
-            >
-              {lineContent}
-              <rect x={-hitW/2-5} y={-halfH-5} width={hitW+10} height={lineH+10} fill="transparent" data-marking-hitbox="true" />
-            </g>
-          )
+            return (
+              <g key={marking.id}
+                style={{ cursor: isDragging ? 'grabbing' : 'pointer', opacity: isDragging ? 0.7 : 1, filter: undefined }}
+                onMouseDown={(e) => handleMouseDown(e, marking.id)}
+                onDoubleClick={(e) => handleDoubleClick(e, marking.id)}
+                onWheel={(e) => handleWheel(e, marking.id)}
+              >
+                {lineContent}
+                <circle cx={hx} cy={hy} r={20} fill="transparent" data-marking-hitbox="true" />
+              </g>
+            )
+          } else {
+            // Kurzes Segment (~15px)
+            const segLen = 15 * msy
+            const halfAngRad = (segLen / 2) / markRadius
+            const da = `${3 * msy} ${3 * msy}`
+
+            const mkArcSeg = (r: number, dashed: boolean) => {
+              const a1 = posAngRad - halfAngRad
+              const a2 = posAngRad + halfAngRad
+              const steps = 8
+              const pts: string[] = []
+              for (let s = 0; s <= steps; s++) {
+                const a = a1 + (a2 - a1) * (s / steps)
+                const px = viewBoxSize - r * Math.sin(a)
+                const py = viewBoxSize - r * Math.cos(a)
+                pts.push(`${s === 0 ? 'M' : 'L'} ${px.toFixed(2)} ${py.toFixed(2)}`)
+              }
+              return <path key={r} d={pts.join(' ')} fill="none" stroke={cllColor} strokeWidth={2 * msx} strokeDasharray={dashed ? da : undefined} />
+            }
+
+            const lineContent = (() => {
+              if (lt === 'solid') return mkArcSeg(markRadius, false)
+              else if (lt === 'double-solid') return <>{mkArcSeg(markRadius - gap / 2, false)}{mkArcSeg(markRadius + gap / 2, false)}</>
+              else if (lt === 'solid-dashed') return <>{mkArcSeg(markRadius - gap / 2, false)}{mkArcSeg(markRadius + gap / 2, true)}</>
+              else return <>{mkArcSeg(markRadius - gap / 2, true)}{mkArcSeg(markRadius + gap / 2, false)}</>
+            })()
+
+            const hx = viewBoxSize - markRadius * Math.sin(posAngRad)
+            const hy = viewBoxSize - markRadius * Math.cos(posAngRad)
+
+            return (
+              <g key={marking.id}
+                style={{ cursor: isDragging ? 'grabbing' : 'pointer', opacity: isDragging ? 0.7 : 1, filter: undefined }}
+                onMouseDown={(e) => handleMouseDown(e, marking.id)}
+                onDoubleClick={(e) => handleDoubleClick(e, marking.id)}
+                onWheel={(e) => handleWheel(e, marking.id)}
+              >
+                {lineContent}
+                <circle cx={hx} cy={hy} r={segLen} fill="transparent" data-marking-hitbox="true" />
+              </g>
+            )
+          }
         }
 
         // ===== GESCHWINDIGKEITSZAHLEN =====
@@ -1984,7 +2080,7 @@ function CurveArrowMarkings({
             >
               <text
                 x={0} y={fontSize * 0.35 * sy}
-                textAnchor="middle" fill="#ffffff"
+                textAnchor="middle" fill={marking.color || '#ffffff'}
                 fontFamily="Arial, sans-serif" fontWeight="bold" fontSize={fontSize}
                 transform={`scale(${sx}, ${sy})`}
                 style={{ filter: undefined }}
@@ -2021,7 +2117,7 @@ function CurveArrowMarkings({
                 {chars.map((c, i) => (
                   <text key={i}
                     x={0} y={(-totalH / 2 + charH * 0.8 + i * charH) / (sy || 1)}
-                    textAnchor="middle" fill="#ffffff"
+                    textAnchor="middle" fill={marking.color || '#ffffff'}
                     fontFamily="Arial, sans-serif" fontWeight="bold" fontSize={fontSize}
                     transform={`scale(${sx}, ${sy})`}
                     style={{ filter: undefined }}
@@ -2046,7 +2142,7 @@ function CurveArrowMarkings({
             >
               <text
                 x={0} y={fontSize * 0.35 * sy}
-                textAnchor="middle" fill="#ffffff"
+                textAnchor="middle" fill={marking.color || '#ffffff'}
                 fontFamily="Arial, sans-serif" fontWeight="bold" fontSize={fontSize}
                 transform={`scale(${sx}, ${sy})`}
                 style={{ filter: undefined }}
@@ -2087,12 +2183,12 @@ function CurveArrowMarkings({
             >
               {useBody ? (
                 <g transform={`translate(${-scaledW / 2}, ${-scaledH / 2}) scale(${scaleX}, ${scaleY})`}
-                  dangerouslySetInnerHTML={{ __html: def.svgBody }}
+                  dangerouslySetInnerHTML={{ __html: marking.color ? def.svgBody.replace(/fill="#fff(?:fff)?"/g, `fill="${marking.color}"`).replace(/fill="white"/g, `fill="${marking.color}"`) : def.svgBody }}
                 />
               ) : (
                 <g transform={`translate(${-scaledW / 2}, ${-scaledH / 2}) scale(${scaleX}, ${scaleY})`}>
                   {def.paths.map((p, i) => (
-                    <path key={i} d={p.d} fill={p.fill} />
+                    <path key={i} d={p.d} fill={marking.color && p.fill !== 'none' ? marking.color : p.fill} />
                   ))}
                 </g>
               )}
