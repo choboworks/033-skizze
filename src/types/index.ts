@@ -5,15 +5,16 @@
 // --- Tool Types ---
 export type ToolType =
   | 'select'
-  | 'direct-select'
-  | 'hand'
   | 'freehand'
   | 'line'
   | 'arrow'
   | 'rect'
+  | 'rounded-rect'
   | 'ellipse'
+  | 'triangle'
   | 'polygon'
   | 'path'
+  | 'star'
   | 'text'
   | 'dimension'
   | 'brake-trail'
@@ -60,7 +61,19 @@ export type ObjectCategory =
   | 'environment'
   | 'markings'
 
-export type ShapeType = 'rect' | 'ellipse' | 'line' | 'arrow' | 'freehand' | 'text' | 'image'
+export type ShapeType =
+  | 'rect'
+  | 'rounded-rect'
+  | 'ellipse'
+  | 'triangle'
+  | 'line'
+  | 'arrow'
+  | 'polygon'
+  | 'path'
+  | 'star'
+  | 'freehand'
+  | 'text'
+  | 'image'
 
 export interface CanvasObject {
   id: string
@@ -81,6 +94,13 @@ export interface CanvasObject {
   opacity: number
   // Line-specific: array of [x,y] pairs relative to object origin
   points?: number[]
+  // Shape-specific
+  cornerRadius?: number     // for rounded-rect
+  numPoints?: number        // for star (number of outer points)
+  innerRadius?: number      // for star (inner radius ratio 0-1)
+  // Freehand-specific
+  tension?: number          // 0-1 smoothing factor (Konva Line tension)
+  lineDash?: number[]       // dash pattern e.g. [10,5] for dashed
   // State
   visible: boolean
   locked: boolean
@@ -122,6 +142,8 @@ export interface ToolOptions {
   strokeColor: string
   strokeWidth: number
   fillColor: string
+  lineStyle: 'solid' | 'dashed' | 'dotted'
+  smoothing: number  // 0-1
 }
 
 // --- App State (full Zustand store shape) ---
@@ -151,6 +173,7 @@ export interface AppState {
   panels: PanelStates
   theme: Theme
   propertiesPanelId: string | null
+  activeLibraryCategory: string | null
 
   // Actions – Viewport
   setViewport: (viewport: Partial<ViewportState>) => void
@@ -160,6 +183,7 @@ export interface AppState {
 
   // Actions – Tools
   setActiveTool: (tool: ToolType) => void
+  setToolOptions: (options: Partial<ToolOptions>) => void
 
   // Actions – Selection
   select: (ids: string[]) => void
@@ -188,6 +212,9 @@ export interface AppState {
   // Actions – Properties Panel
   openProperties: (id: string) => void
   closeProperties: () => void
+
+  // Actions – Library
+  setLibraryCategory: (category: string | null) => void
 
   // Actions – Theme
   toggleTheme: () => void

@@ -115,10 +115,9 @@ export function SketchCanvas() {
       const stage = stageRef.current
       if (!stage) return
 
-      // Pan mode: middle mouse, hand tool, or spacebar+click
+      // Pan mode: middle mouse or spacebar+click
       const canPan =
         e.evt.button === 1 ||
-        activeTool === 'hand' ||
         (e.evt.button === 0 && spaceRef.current)
 
       if (canPan) {
@@ -174,7 +173,7 @@ export function SketchCanvas() {
   }, [isDrawing, onDrawEnd, removeObject])
 
   // Cursor
-  const isPanMode = spaceHeld || activeTool === 'hand'
+  const isPanMode = spaceHeld
   const isDrawMode = isDrawingTool(activeTool)
   const cursor = isPanMode
     ? isDragging.current ? 'grabbing' : 'grab'

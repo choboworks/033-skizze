@@ -11,7 +11,6 @@ import { StatusBar } from '@/components/StatusBar/StatusBar'
 
 export default function App() {
   const theme = useAppStore((s) => s.theme)
-  const panels = useAppStore((s) => s.panels)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
@@ -24,19 +23,15 @@ export default function App() {
       <TopBar />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Toolbar + Library */}
-        {!panels.leftSidebarCollapsed && (
-          <div className="flex flex-col shrink-0">
-            <Toolbar />
-            <LibrarySidebar />
-          </div>
-        )}
+        {/* Left: Toolbar (48px) + Library Drawer (slides out next to it) */}
+        <Toolbar />
+        <LibrarySidebar />
 
         {/* Canvas */}
         <SketchCanvas />
 
-        {/* Right: Layer Manager (self-sizing) */}
-        {!panels.rightSidebarCollapsed && <LayerManager />}
+        {/* Right: Layer Manager (collapsible, 48px / 300px) */}
+        <LayerManager />
       </div>
 
       <StatusBar />

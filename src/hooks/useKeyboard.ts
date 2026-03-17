@@ -2,17 +2,19 @@ import { useEffect } from 'react'
 import { useAppStore } from '@/store'
 import type { ToolType } from '@/types'
 
+// Maps shortcut key → tool to activate
 const TOOL_SHORTCUTS: Record<string, ToolType> = {
   v: 'select',
-  a: 'direct-select',
-  h: 'hand',
-  b: 'freehand',
-  l: 'line',
-  r: 'rect',
-  o: 'ellipse',
-  p: 'polygon',
+  p: 'freehand',
+  o: 'rect',
   t: 'text',
   m: 'dimension',
+}
+
+// Which tools belong to the same group (for toggle behavior)
+const TOOL_GROUPS: Record<string, ToolType[]> = {
+  p: ['freehand'],
+  o: ['rect', 'rounded-rect', 'ellipse', 'triangle', 'polygon', 'star', 'line', 'arrow', 'path'],
 }
 
 export function useKeyboard() {
@@ -23,7 +25,6 @@ export function useKeyboard() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't handle shortcuts when typing in inputs
       const target = e.target as HTMLElement
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
         return
@@ -32,23 +33,19 @@ export function useKeyboard() {
       const key = e.key.toLowerCase()
 
       // Tool shortcuts (single key, no modifiers)
-      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
-        // Shift+L = Arrow
-        if (e.shiftKey && key === 'l') {
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+        const targetTool = TOOL_SHORTCUTS[key]
+        if (targetTool) {
           e.preventDefault()
-          setActiveTool('arrow')
-          return
-        }
-        // Shift+P = Path
-        if (e.shiftKey && key === 'p') {
-          e.preventDefault()
-          setActiveTool('path')
-          return
-        }
+          const currentTool = useAppStore.getState().activeTool
 
-        if (!e.shiftKey && TOOL_SHORTCUTS[key]) {
-          e.preventDefault()
-          setActiveTool(TOOL_SHORTCUTS[key])
+          // If already in this tool's group → toggle back to select
+          const group = TOOL_GROUPS[key]
+          if (group && group.includes(currentTool)) {
+            setActiveTool('select')
+          } else {
+            setActiveTool(targetTool)
+          }
           return
         }
 
@@ -62,7 +59,7 @@ export function useKeyboard() {
           return
         }
 
-        // Escape → deselect
+        // Escape → deselect + back to select tool
         if (key === 'escape') {
           e.preventDefault()
           clearSelection()
@@ -73,18 +70,15 @@ export function useKeyboard() {
 
       // Ctrl shortcuts
       if (e.ctrlKey || e.metaKey) {
-        // Ctrl+A = select all (not yet implemented, placeholder)
         if (key === 'a') {
           e.preventDefault()
           return
         }
-        // Ctrl+0 = fit to page
         if (key === '0') {
           e.preventDefault()
           useAppStore.getState().resetView()
           return
         }
-        // Ctrl+1 = zoom 100%
         if (key === '1') {
           e.preventDefault()
           useAppStore.getState().zoomTo(1)

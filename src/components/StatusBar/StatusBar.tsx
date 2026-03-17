@@ -66,8 +66,8 @@ export function StatusBar() {
       {/* Right: Scale */}
       <div className="flex items-center gap-1.5 flex-1 justify-end">
         <Scaling size={13} />
-        <span>
-          <span style={{ color: 'var(--text)' }} className="font-medium">1:{scale.currentScale}</span>
+        <span className="font-medium" style={{ color: 'var(--text)' }}>
+          1:{scale.currentScale}
         </span>
       </div>
     </div>

@@ -1,167 +1,208 @@
 import { useAppStore } from '@/store'
-import {
-  Route,
-  Car,
-  Building,
-  TrafficCone,
-  Trees,
-  Ruler,
-  ChevronRight,
-  Search,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { LIBRARY_CATEGORIES } from '@/constants/library'
+import { useState } from 'react'
+import { X } from 'lucide-react'
 
-interface CategoryDef {
-  id: string
-  label: string
-  icon: LucideIcon
+const SUB_CATEGORIES: Record<string, string[]> = {
+  smartroads: ['Alle', 'Geraden', 'Kurven', 'Kreuzungen', 'Kreisverkehr'],
+  vehicles: ['Alle', 'PKW', 'LKW', 'Zweirad', 'Bus', 'Sonder'],
+  infrastructure: ['Alle', 'Gebäude', 'Absperrung', 'Brücken'],
+  'traffic-regulation': ['Alle', 'Ampeln', 'Schilder', 'Zusatzzeichen'],
+  environment: ['Alle', 'Bäume', 'Zäune', 'Möblierung'],
+  markings: ['Alle', 'Spuren', 'Felder', 'Symbole'],
 }
 
-const CATEGORIES: CategoryDef[] = [
-  { id: 'smartroads', label: 'SmartRoads', icon: Route },
-  { id: 'vehicles', label: 'Fahrzeuge', icon: Car },
-  { id: 'infrastructure', label: 'Infrastruktur', icon: Building },
-  { id: 'traffic-regulation', label: 'Verkehrsregelung', icon: TrafficCone },
-  { id: 'environment', label: 'Umgebung', icon: Trees },
-  { id: 'markings', label: 'Markierungen', icon: Ruler },
-]
+const LIBRARY_ITEMS: Record<string, { name: string; sub: string }[]> = {
+  smartroads: [
+    { name: 'Gerade Straße', sub: 'Geraden' },
+    { name: 'Kurve Straße', sub: 'Kurven' },
+    { name: 'T-Kreuzung', sub: 'Kreuzungen' },
+    { name: 'Kreuzung 4-Arm', sub: 'Kreuzungen' },
+    { name: 'Kreisverkehr', sub: 'Kreisverkehr' },
+  ],
+  vehicles: [
+    { name: 'PKW Limousine', sub: 'PKW' },
+    { name: 'PKW Kombi', sub: 'PKW' },
+    { name: 'PKW SUV', sub: 'PKW' },
+    { name: 'Kleinwagen', sub: 'PKW' },
+    { name: 'LKW Solo', sub: 'LKW' },
+    { name: 'Sattelzug', sub: 'LKW' },
+    { name: 'Kleintransporter', sub: 'LKW' },
+    { name: 'Motorrad', sub: 'Zweirad' },
+    { name: 'Fahrrad', sub: 'Zweirad' },
+    { name: 'E-Scooter', sub: 'Zweirad' },
+    { name: 'Linienbus', sub: 'Bus' },
+    { name: 'Streifenwagen', sub: 'Sonder' },
+    { name: 'RTW', sub: 'Sonder' },
+  ],
+  infrastructure: [
+    { name: 'Gebäude', sub: 'Gebäude' },
+    { name: 'Bordstein', sub: 'Absperrung' },
+    { name: 'Leitplanke', sub: 'Absperrung' },
+    { name: 'Poller', sub: 'Absperrung' },
+    { name: 'Absperrung', sub: 'Absperrung' },
+    { name: 'Brücke', sub: 'Brücken' },
+    { name: 'Bake', sub: 'Absperrung' },
+  ],
+  'traffic-regulation': [
+    { name: 'Ampel', sub: 'Ampeln' },
+    { name: 'Stoppschild', sub: 'Schilder' },
+    { name: 'Vorfahrt gewähren', sub: 'Schilder' },
+    { name: 'Tempo 30', sub: 'Schilder' },
+    { name: 'Tempo 50', sub: 'Schilder' },
+    { name: 'Einbahnstraße', sub: 'Schilder' },
+    { name: 'Fußgängerüberweg', sub: 'Zusatzzeichen' },
+  ],
+  environment: [
+    { name: 'Laubbaum', sub: 'Bäume' },
+    { name: 'Nadelbaum', sub: 'Bäume' },
+    { name: 'Hecke', sub: 'Zäune' },
+    { name: 'Zaun', sub: 'Zäune' },
+    { name: 'Mauer', sub: 'Zäune' },
+    { name: 'Laterne', sub: 'Möblierung' },
+    { name: 'Mast', sub: 'Möblierung' },
+    { name: 'Bushaltestelle', sub: 'Möblierung' },
+  ],
+  markings: [
+    { name: 'Bremsspur', sub: 'Spuren' },
+    { name: 'Splitterfeld', sub: 'Felder' },
+    { name: 'Ölspur', sub: 'Spuren' },
+    { name: 'Kollisionspunkt', sub: 'Symbole' },
+    { name: 'Endlage', sub: 'Symbole' },
+    { name: 'N-Pfeil', sub: 'Symbole' },
+    { name: 'Foto-Marker', sub: 'Symbole' },
+  ],
+}
 
 export function LibrarySidebar() {
-  const libraryExpanded = useAppStore((s) => s.panels.libraryExpanded)
-  const setPanels = useAppStore((s) => s.setPanels)
+  const activeCategory = useAppStore((s) => s.activeLibraryCategory)
+  const setLibraryCategory = useAppStore((s) => s.setLibraryCategory)
+  const [activeFilter, setActiveFilter] = useState('Alle')
 
-  const toggleExpand = () => setPanels({ libraryExpanded: !libraryExpanded })
+  if (!activeCategory) return null
 
-  if (!libraryExpanded) {
-    // Collapsed: only category icons
-    return (
-      <div
-        className="flex flex-col items-center py-2 gap-1 w-12 shrink-0"
-        style={{
-          background: 'var(--surface)',
-          borderRight: '1px solid var(--border)',
-          borderTop: '1px solid var(--border)',
-        }}
-      >
-        {CATEGORIES.map((cat) => {
-          const Icon = cat.icon
-          return (
-            <button
-              key={cat.id}
-              onClick={toggleExpand}
-              className="w-9 h-9 flex items-center justify-center rounded transition-colors relative group"
-              style={{ color: 'var(--text-muted)' }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = 'var(--surface-hover)')
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = 'transparent')
-              }
-              title={cat.label}
-            >
-              <Icon size={18} />
-              {/* Tooltip */}
-              <div
-                className="absolute left-full ml-2 px-2 py-1 rounded text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-                style={{
-                  background: 'var(--surface)',
-                  color: 'var(--text)',
-                  border: '1px solid var(--border)',
-                  boxShadow: 'var(--shadow-panel)',
-                }}
-              >
-                {cat.label}
-              </div>
-            </button>
-          )
-        })}
-      </div>
-    )
-  }
+  const category = LIBRARY_CATEGORIES.find((c) => c.id === activeCategory)
+  if (!category) return null
 
-  // Expanded: full sidebar
+  const CategoryIcon = category.icon
+  const chips = SUB_CATEGORIES[activeCategory] || ['Alle']
+  const allItems = LIBRARY_ITEMS[activeCategory] || []
+  const filteredItems = activeFilter === 'Alle'
+    ? allItems
+    : allItems.filter((item) => item.sub === activeFilter)
+
   return (
     <div
-      className="flex flex-col w-56 shrink-0"
+      className="flex flex-col absolute z-40"
       style={{
+        width: 320,
+        left: 'var(--toolbar-width)',
+        top: 'var(--topbar-height)',
+        bottom: 'var(--statusbar-height)',
         background: 'var(--surface)',
         borderRight: '1px solid var(--border)',
-        borderTop: '1px solid var(--border)',
+        boxShadow: 'var(--shadow-lg)',
       }}
     >
       {/* Header */}
       <div
-        className="px-3 py-2 flex items-center justify-between shrink-0"
-        style={{ borderBottom: '1px solid var(--border)' }}
+        className="flex items-center justify-between px-4 shrink-0"
+        style={{
+          height: 'var(--topbar-height)',
+          borderBottom: '1px solid var(--border)',
+        }}
       >
-        <span
-          className="text-[11px] font-semibold uppercase tracking-wider"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          Bibliothek
-        </span>
+        <div className="flex items-center gap-2.5">
+          <CategoryIcon size={16} style={{ color: 'var(--accent)' }} />
+          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
+            {category.label}
+          </span>
+        </div>
         <button
-          onClick={toggleExpand}
-          className="p-0.5 rounded transition-colors"
-          style={{ color: 'var(--text-muted)' }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = 'var(--surface-hover)')
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = 'transparent')
-          }
+          className="icon-btn"
+          style={{ padding: 5 }}
+          onClick={() => setLibraryCategory(null)}
+          title="Schließen"
         >
-          <ChevronRight size={14} className="rotate-180" />
+          <X size={15} />
         </button>
       </div>
 
-      {/* Search */}
-      <div className="px-3 py-2">
-        <div
-          className="flex items-center gap-2 px-2 py-1.5 rounded"
-          style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
-        >
-          <Search size={14} style={{ color: 'var(--text-muted)' }} />
-          <input
-            type="text"
-            placeholder="Suchen..."
-            className="bg-transparent text-xs outline-none flex-1"
-            style={{ color: 'var(--text)' }}
-          />
-        </div>
-      </div>
-
-      {/* Categories */}
-      <div className="flex-1 overflow-y-auto px-2 py-1">
-        {CATEGORIES.map((cat) => {
-          const Icon = cat.icon
+      {/* Filter chips */}
+      <div
+        className="px-4 py-3 flex flex-wrap gap-2 shrink-0"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
+        {chips.map((chip) => {
+          const isActive = activeFilter === chip
           return (
-            <div key={cat.id} className="mb-1">
-              <button
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs transition-colors"
-                style={{ color: 'var(--text)' }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = 'var(--surface-hover)')
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = 'transparent')
-                }
-              >
-                <Icon size={16} style={{ color: 'var(--text-muted)' }} />
-                <span>{cat.label}</span>
-                <ChevronRight size={12} className="ml-auto" style={{ color: 'var(--text-muted)' }} />
-              </button>
-            </div>
+            <button
+              key={chip}
+              onClick={() => setActiveFilter(chip)}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              style={{
+                background: isActive ? 'var(--accent)' : 'var(--bg)',
+                color: isActive ? '#fff' : 'var(--text-muted)',
+                border: isActive ? '1px solid var(--accent)' : '1px solid var(--border)',
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) e.currentTarget.style.background = 'var(--surface-hover)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = isActive ? 'var(--accent)' : 'var(--bg)'
+              }}
+            >
+              {chip}
+            </button>
           )
         })}
       </div>
 
-      {/* Placeholder for Phase 2 */}
-      <div
-        className="px-3 py-2 text-[11px]"
-        style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border)' }}
-      >
-        Drag & Drop (Phase 2)
+      {/* Grid of items */}
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="grid grid-cols-2 gap-3">
+          {filteredItems.map((item) => (
+            <button
+              key={item.name}
+              className="flex flex-col items-center gap-2 p-3 rounded-lg transition-all cursor-grab"
+              style={{
+                background: 'var(--bg)',
+                border: '1px solid var(--border)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent)'
+                e.currentTarget.style.background = 'var(--accent-muted)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border)'
+                e.currentTarget.style.background = 'var(--bg)'
+              }}
+            >
+              {/* Thumbnail */}
+              <div
+                className="w-full aspect-4/3 rounded-md flex items-center justify-center"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)' }}
+              >
+                <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>SVG</span>
+              </div>
+              {/* Label */}
+              <span
+                className="text-xs text-center leading-tight w-full truncate"
+                style={{ color: 'var(--text)' }}
+              >
+                {item.name}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {filteredItems.length === 0 && (
+          <div className="flex items-center justify-center py-8">
+            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+              Keine Elemente
+            </span>
+          </div>
+        )}
       </div>
     </div>
   )

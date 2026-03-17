@@ -1,8 +1,16 @@
 import { useAppStore } from '@/store'
-import { X, GripHorizontal, Paintbrush, Droplets, PenLine } from 'lucide-react'
+import { X, GripHorizontal } from 'lucide-react'
 import { ColorPicker } from './ColorPicker'
 import { useState, useRef, useCallback, useEffect } from 'react'
-import type { ShapeType } from '@/types'
+import type { CanvasObject, ShapeType } from '@/types'
+import {
+  PanelSection,
+  PanelSlider,
+  PanelSpacer,
+  PanelSliderEnd,
+  PanelSegmented,
+  PanelColorLabel,
+} from '@/components/ui/PanelPrimitives'
 
 const TYPE_NAMES: Record<string, string> = {
   rect: 'Rechteck',
@@ -14,8 +22,28 @@ const TYPE_NAMES: Record<string, string> = {
   image: 'Bild',
 }
 
+const LINE_STYLES = [
+  { id: 'solid' as const, label: 'Linie' },
+  { id: 'dashed' as const, label: 'Striche' },
+  { id: 'dotted' as const, label: 'Punkte' },
+]
+
 function typeLabel(type: ShapeType): string {
   return TYPE_NAMES[type] || type
+}
+
+function getLineStyleFromDash(dash?: number[]): 'solid' | 'dashed' | 'dotted' {
+  if (!dash || dash.length === 0) return 'solid'
+  if (dash[0] < 1) return 'dotted'
+  return 'dashed'
+}
+
+function lineStyleToDash(style: string, strokeWidth: number): number[] | undefined {
+  switch (style) {
+    case 'dashed': return [strokeWidth * 5, strokeWidth * 4]
+    case 'dotted': return [0.1, strokeWidth * 3]
+    default: return undefined
+  }
 }
 
 export function FloatingProperties() {
@@ -25,7 +53,7 @@ export function FloatingProperties() {
   const closeProperties = useAppStore((s) => s.closeProperties)
 
   const [pos, setPos] = useState(() => ({
-    x: Math.max(60, (window.innerWidth - 400) / 2),
+    x: Math.max(60, (window.innerWidth - 360) / 2),
     y: Math.max(80, (window.innerHeight - 520) / 2),
   }))
   const dragging = useRef(false)
@@ -63,25 +91,25 @@ export function FloatingProperties() {
 
   return (
     <div
-      className="fixed z-50 rounded-xl select-none"
+      className="fixed z-50 rounded-2xl select-none overflow-hidden"
       style={{
         left: pos.x,
         top: pos.y,
-        width: 400,
+        width: 320,
         background: 'var(--surface)',
         border: '1px solid var(--border)',
-        boxShadow: '0 16px 48px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.05)',
+        boxShadow: '0 16px 48px rgba(0,0,0,0.45)',
       }}
     >
-      {/* ─── Title Bar ─── */}
+      {/* Title Bar */}
       <div
-        className="flex items-center gap-3 px-5 py-5 cursor-grab active:cursor-grabbing"
+        className="flex items-center gap-3 px-7 py-5 cursor-grab active:cursor-grabbing"
         style={{ borderBottom: '1px solid var(--border)' }}
         onMouseDown={onDragStart}
       >
         <GripHorizontal size={16} style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
         <div className="flex-1 min-w-0">
-          <div className="text-base font-semibold truncate" style={{ color: 'var(--text)' }}>
+          <div className="text-[16px] font-semibold truncate" style={{ color: 'var(--text)' }}>
             {displayName}
           </div>
           <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
@@ -93,112 +121,147 @@ export function FloatingProperties() {
         </button>
       </div>
 
-      {/* ─── Content ─── */}
+      {/* Content */}
       <div className="max-h-[65vh] overflow-y-auto">
-
         {/* Bezeichnung */}
-        <div className="px-5 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
-          <label className="text-xs font-medium block mb-2" style={{ color: 'var(--text-muted)' }}>
-            Bezeichnung
-          </label>
+        <PanelSection title="Bezeichnung">
           <input
             type="text"
             value={obj.label}
             onChange={(e) => update({ label: e.target.value })}
             placeholder={typeLabel(obj.type)}
             className="field-input w-full"
-            style={{ padding: '8px 12px', fontSize: 'var(--font-size-base)' }}
+            style={{ padding: '10px 14px', fontSize: '14px' }}
             onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
             onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
           />
-        </div>
+        </PanelSection>
+
+        {/* Type-specific properties */}
+        {obj.type === 'freehand' ? (
+          <FreehandProperties obj={obj} update={update} />
+        ) : (
+          <ShapeProperties obj={obj} update={update} />
+        )}
 
         {/* Deckkraft */}
-        <div className="px-5 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
-          <div className="flex items-center gap-2 mb-3">
-            <Droplets size={15} style={{ color: 'var(--text-muted)' }} />
-            <span className="text-xs font-medium flex-1" style={{ color: 'var(--text-muted)' }}>
-              Deckkraft
-            </span>
-            <span
-              className="text-sm font-semibold font-mono px-2 py-0.5 rounded"
-              style={{ color: 'var(--text)', background: 'var(--bg)' }}
-            >
-              {Math.round(obj.opacity * 100)}%
-            </span>
-          </div>
-          <input
-            type="range"
+        <PanelSection title="Deckkraft">
+          <PanelSlider
+            label="Deckkraft"
+            value={Math.round(obj.opacity * 100)}
             min={0}
             max={100}
-            value={Math.round(obj.opacity * 100)}
-            onChange={(e) => update({ opacity: parseInt(e.target.value) / 100 })}
-            className="w-full accent-accent cursor-pointer"
+            unit="%"
+            onChange={(v) => update({ opacity: v / 100 })}
           />
-        </div>
-
-        {/* Kontur */}
-        <div className="px-5 py-5" style={{ borderBottom: '1px solid var(--border)' }}>
-          <div className="flex items-center gap-2 mb-3">
-            <PenLine size={15} style={{ color: 'var(--text-muted)' }} />
-            <span className="text-xs font-medium flex-1" style={{ color: 'var(--text-muted)' }}>
-              Kontur
-            </span>
-            <span
-              className="text-sm font-semibold font-mono px-2 py-0.5 rounded"
-              style={{ color: 'var(--text)', background: 'var(--bg)' }}
-            >
-              {obj.strokeWidth}px
-            </span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={20}
-            step={0.5}
-            value={obj.strokeWidth}
-            onChange={(e) => update({ strokeWidth: parseFloat(e.target.value) })}
-            className="w-full accent-accent cursor-pointer mb-4"
-          />
-          <ColorPicker
-            value={obj.strokeColor}
-            onChange={(v) => update({ strokeColor: v })}
-          />
-        </div>
-
-        {/* Füllung */}
-        <div className="px-5 py-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Paintbrush size={15} style={{ color: 'var(--text-muted)' }} />
-            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-              Füllung
-            </span>
-          </div>
-
-          {/* Quick color bar */}
-          <div className="flex gap-1.5 mb-3">
-            {['transparent', '#000000', '#ffffff', '#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#8b5cf6'].map((c) => (
-              <button
-                key={c}
-                className="w-8 h-8 rounded-md transition-transform hover:scale-110 shrink-0"
-                style={{
-                  background: c === 'transparent'
-                    ? 'repeating-conic-gradient(#808080 0% 25%, #c0c0c0 0% 50%) 0 0 / 6px 6px'
-                    : c,
-                  border: obj.fillColor === c ? '2px solid var(--accent)' : '1px solid var(--border)',
-                  boxShadow: obj.fillColor === c ? '0 0 0 2px var(--accent-muted)' : 'none',
-                }}
-                onClick={() => update({ fillColor: c })}
-              />
-            ))}
-          </div>
-
-          <ColorPicker
-            value={obj.fillColor}
-            onChange={(v) => update({ fillColor: v })}
-          />
-        </div>
+          <PanelSliderEnd />
+        </PanelSection>
       </div>
     </div>
+  )
+}
+
+// ─── Freehand Properties ───
+
+function FreehandProperties({
+  obj,
+  update,
+}: {
+  obj: CanvasObject
+  update: (changes: Record<string, unknown>) => void
+}) {
+  const lineStyle = getLineStyleFromDash(obj.lineDash)
+
+  return (
+    <>
+      <PanelSection title="Strich">
+        <PanelSlider
+          label="Stärke"
+          value={obj.strokeWidth}
+          min={1}
+          max={10}
+          unit="px"
+          onChange={(v) => update({ strokeWidth: v })}
+        />
+        <PanelSpacer />
+        <PanelSegmented
+          label="Strichart"
+          options={LINE_STYLES}
+          value={lineStyle}
+          onChange={(v) => update({ lineDash: lineStyleToDash(v, obj.strokeWidth) })}
+        />
+        <PanelSpacer />
+        <PanelSlider
+          label="Glättung"
+          value={Math.round((obj.tension ?? 0.25) * 200)}
+          min={0}
+          max={100}
+          unit="%"
+          onChange={(v) => update({ tension: v / 200 })}
+        />
+        <PanelSliderEnd />
+      </PanelSection>
+
+      <PanelSection title="Farbe">
+        <PanelColorLabel label="Strichfarbe" />
+        <ColorPicker
+          value={obj.strokeColor}
+          onChange={(c) => update({ strokeColor: c })}
+        />
+      </PanelSection>
+    </>
+  )
+}
+
+// ─── Shape Properties ───
+
+const OPEN_SHAPES: Set<string> = new Set(['line', 'arrow', 'path'])
+
+function ShapeProperties({
+  obj,
+  update,
+}: {
+  obj: CanvasObject
+  update: (changes: Record<string, unknown>) => void
+}) {
+  const lineStyle = getLineStyleFromDash(obj.lineDash)
+  const hasFill = !OPEN_SHAPES.has(obj.type)
+
+  return (
+    <>
+      <PanelSection title="Kontur">
+        <PanelSlider
+          label="Stärke"
+          value={obj.strokeWidth}
+          min={0}
+          max={10}
+          unit="px"
+          onChange={(v) => update({ strokeWidth: v })}
+        />
+        <PanelSpacer />
+        <PanelSegmented
+          label="Konturart"
+          options={LINE_STYLES}
+          value={lineStyle}
+          onChange={(v) => update({ lineDash: lineStyleToDash(v, obj.strokeWidth) })}
+        />
+        <PanelSpacer />
+        <PanelColorLabel label="Konturfarbe" />
+        <ColorPicker
+          value={obj.strokeColor}
+          onChange={(c) => update({ strokeColor: c })}
+        />
+      </PanelSection>
+
+      {hasFill && (
+        <PanelSection title="Füllung">
+          <PanelColorLabel label="Füllfarbe" />
+          <ColorPicker
+            value={obj.fillColor}
+            onChange={(c) => update({ fillColor: c })}
+          />
+        </PanelSection>
+      )}
+    </>
   )
 }

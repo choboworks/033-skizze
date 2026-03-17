@@ -59,6 +59,8 @@ export const useAppStore = create<AppState>()(
         strokeColor: '#000000',
         strokeWidth: 2,
         fillColor: 'transparent',
+        lineStyle: 'solid' as const,
+        smoothing: 0.5,
       },
 
       // SmartRoads
@@ -74,6 +76,7 @@ export const useAppStore = create<AppState>()(
       },
       theme: getInitialTheme(),
       propertiesPanelId: null,
+      activeLibraryCategory: null,
 
       // --- Actions ---
 
@@ -100,6 +103,8 @@ export const useAppStore = create<AppState>()(
 
       // Tools
       setActiveTool: (tool: ToolType) => set({ activeTool: tool }),
+      setToolOptions: (options: Partial<import('@/types').ToolOptions>) =>
+        set((state) => ({ toolOptions: { ...state.toolOptions, ...options } })),
 
       // Selection
       select: (ids: string[]) => set({ selection: ids }),
@@ -192,6 +197,12 @@ export const useAppStore = create<AppState>()(
       // Properties Panel
       openProperties: (id: string) => set({ propertiesPanelId: id }),
       closeProperties: () => set({ propertiesPanelId: null }),
+
+      // Library
+      setLibraryCategory: (category: string | null) =>
+        set((state) => ({
+          activeLibraryCategory: state.activeLibraryCategory === category ? null : category,
+        })),
 
       // Theme
       toggleTheme: () =>

@@ -5,8 +5,15 @@ import {
   Trash2,
   Layers,
   Square,
+  RectangleHorizontal,
   CircleIcon,
+  Triangle,
   Minus,
+  ArrowUpRight,
+  Hexagon,
+  Spline,
+  Star,
+  Pencil,
   Lock,
   Unlock,
   Settings2,
@@ -20,8 +27,15 @@ import type { CanvasObject, ShapeType } from '@/types'
 function ObjectIcon({ type }: { type: ShapeType }) {
   switch (type) {
     case 'rect': return <Square size={18} />
+    case 'rounded-rect': return <RectangleHorizontal size={18} />
     case 'ellipse': return <CircleIcon size={18} />
+    case 'triangle': return <Triangle size={18} />
     case 'line': return <Minus size={18} />
+    case 'arrow': return <ArrowUpRight size={18} />
+    case 'polygon': return <Hexagon size={18} />
+    case 'path': return <Spline size={18} />
+    case 'star': return <Star size={18} />
+    case 'freehand': return <Pencil size={18} />
     default: return <Square size={18} />
   }
 }
@@ -30,9 +44,14 @@ function objectDisplayName(obj: CanvasObject, index: number): string {
   if (obj.label) return obj.label
   const typeNames: Record<string, string> = {
     rect: 'Rechteck',
+    'rounded-rect': 'Abgerundet',
     ellipse: 'Ellipse',
+    triangle: 'Dreieck',
     line: 'Linie',
     arrow: 'Pfeil',
+    polygon: 'Polygon',
+    path: 'Pfad',
+    star: 'Stern',
     freehand: 'Freihand',
     text: 'Text',
     image: 'Bild',

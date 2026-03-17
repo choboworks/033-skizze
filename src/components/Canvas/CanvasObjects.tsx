@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback } from 'react'
-import { Rect, Ellipse, Line, Transformer } from 'react-konva'
+import { Rect, Ellipse, Line, Arrow, RegularPolygon, Star, Transformer } from 'react-konva'
 import { useAppStore } from '@/store'
 import type { CanvasObject } from '@/types'
 import type Konva from 'konva'
@@ -15,9 +15,11 @@ const shapeRefs = new Map<string, Konva.Node>()
 function ShapeRenderer({
   obj,
   onSelect,
+  onDoubleClick,
 }: {
   obj: CanvasObject
   onSelect: (id: string, e: Konva.KonvaEventObject<MouseEvent>) => void
+  onDoubleClick: (id: string) => void
 }) {
   const updateObject = useAppStore((s) => s.updateObject)
 
@@ -40,6 +42,8 @@ function ShapeRenderer({
     opacity: obj.opacity,
     draggable: !obj.locked,
     onClick: (e: Konva.KonvaEventObject<MouseEvent>) => onSelect(obj.id, e),
+    onDblClick: () => onDoubleClick(obj.id),
+    onDblTap: () => onDoubleClick(obj.id),
     onTap: (e: Konva.KonvaEventObject<Event>) =>
       onSelect(obj.id, e as Konva.KonvaEventObject<MouseEvent>),
     onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => {
@@ -72,6 +76,21 @@ function ShapeRenderer({
           fill={obj.fillColor}
           stroke={obj.strokeColor}
           strokeWidth={obj.strokeWidth}
+          dash={obj.lineDash}
+        />
+      )
+
+    case 'rounded-rect':
+      return (
+        <Rect
+          {...commonProps}
+          width={obj.width}
+          height={obj.height}
+          cornerRadius={obj.cornerRadius ?? 12}
+          fill={obj.fillColor}
+          stroke={obj.strokeColor}
+          strokeWidth={obj.strokeWidth}
+          dash={obj.lineDash}
         />
       )
 
@@ -84,17 +103,90 @@ function ShapeRenderer({
           fill={obj.fillColor}
           stroke={obj.strokeColor}
           strokeWidth={obj.strokeWidth}
+          dash={obj.lineDash}
+        />
+      )
+
+    case 'triangle':
+      return (
+        <RegularPolygon
+          {...commonProps}
+          sides={3}
+          radius={Math.max(obj.width, obj.height) / 2}
+          fill={obj.fillColor}
+          stroke={obj.strokeColor}
+          strokeWidth={obj.strokeWidth}
+          dash={obj.lineDash}
+        />
+      )
+
+    case 'polygon':
+      return (
+        <RegularPolygon
+          {...commonProps}
+          sides={6}
+          radius={Math.max(obj.width, obj.height) / 2}
+          fill={obj.fillColor}
+          stroke={obj.strokeColor}
+          strokeWidth={obj.strokeWidth}
+          dash={obj.lineDash}
+        />
+      )
+
+    case 'star':
+      return (
+        <Star
+          {...commonProps}
+          numPoints={obj.numPoints ?? 5}
+          innerRadius={(Math.max(obj.width, obj.height) / 2) * (obj.innerRadius ?? 0.4)}
+          outerRadius={Math.max(obj.width, obj.height) / 2}
+          fill={obj.fillColor}
+          stroke={obj.strokeColor}
+          strokeWidth={obj.strokeWidth}
+          dash={obj.lineDash}
+        />
+      )
+
+    case 'freehand':
+      return (
+        <Line
+          {...commonProps}
+          points={obj.points || []}
+          stroke={obj.strokeColor}
+          strokeWidth={obj.strokeWidth}
+          tension={obj.tension ?? 0.25}
+          lineCap="round"
+          lineJoin="round"
+          dash={obj.lineDash}
+          hitStrokeWidth={Math.max(12, obj.strokeWidth + 8)}
         />
       )
 
     case 'line':
-    case 'arrow':
       return (
         <Line
           {...commonProps}
           points={obj.points || [0, 0, obj.width, obj.height]}
           stroke={obj.strokeColor}
           strokeWidth={obj.strokeWidth}
+          lineCap="round"
+          dash={obj.lineDash}
+          hitStrokeWidth={12}
+        />
+      )
+
+    case 'arrow':
+      return (
+        <Arrow
+          {...commonProps}
+          points={obj.points || [0, 0, obj.width, obj.height]}
+          stroke={obj.strokeColor}
+          strokeWidth={obj.strokeWidth}
+          fill={obj.strokeColor}
+          pointerLength={obj.strokeWidth * 4}
+          pointerWidth={obj.strokeWidth * 3}
+          lineCap="round"
+          dash={obj.lineDash}
           hitStrokeWidth={12}
         />
       )
@@ -184,6 +276,7 @@ export function CanvasObjects() {
   const objectOrder = useAppStore((s) => s.objectOrder)
   const select = useAppStore((s) => s.select)
   const addToSelection = useAppStore((s) => s.addToSelection)
+  const openProperties = useAppStore((s) => s.openProperties)
 
   const handleSelect = (id: string, e: Konva.KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
@@ -203,7 +296,15 @@ export function CanvasObjects() {
   return (
     <>
       {orderedObjects.map((obj) => (
-        <ShapeRenderer key={obj.id} obj={obj} onSelect={handleSelect} />
+        <ShapeRenderer
+          key={obj.id}
+          obj={obj}
+          onSelect={handleSelect}
+          onDoubleClick={(id) => {
+            select([id])
+            openProperties(id)
+          }}
+        />
       ))}
       <SelectionTransformer />
     </>
