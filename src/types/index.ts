@@ -73,6 +73,7 @@ export type ShapeType =
   | 'star'
   | 'freehand'
   | 'text'
+  | 'dimension'
   | 'image'
 
 export interface CanvasObject {
@@ -101,6 +102,16 @@ export interface CanvasObject {
   // Freehand-specific
   tension?: number          // 0-1 smoothing factor (Konva Line tension)
   lineDash?: number[]       // dash pattern e.g. [10,5] for dashed
+  // Text-specific
+  text?: string
+  fontSize?: number
+  fontStyle?: string        // 'normal' | 'bold' | 'italic' | 'bold italic'
+  textDecoration?: string   // '' | 'underline'
+  textAlign?: string        // 'left' | 'center' | 'right'
+  textBackground?: string
+  // Dimension-specific
+  dimensionStart?: { x: number; y: number }  // start point in page coords
+  dimensionEnd?: { x: number; y: number }    // end point in page coords
   // State
   visible: boolean
   locked: boolean
@@ -144,6 +155,13 @@ export interface ToolOptions {
   fillColor: string
   lineStyle: 'solid' | 'dashed' | 'dotted'
   smoothing: number  // 0-1
+  // Text
+  fontSize: number
+  fontStyle: string   // 'normal' | 'bold' | 'italic' | 'bold italic'
+  textDecoration: string  // '' | 'underline'
+  textAlign: string   // 'left' | 'center' | 'right'
+  textColor: string
+  textBackground: string
 }
 
 // --- App State (full Zustand store shape) ---
@@ -224,4 +242,8 @@ export interface AppState {
 
   // Actions – Scale
   updateScale: (scale: ScaleState) => void
+
+  // Editing text
+  editingTextId: string | null
+  setEditingTextId: (id: string | null) => void
 }

@@ -61,6 +61,12 @@ export const useAppStore = create<AppState>()(
         fillColor: 'transparent',
         lineStyle: 'solid' as const,
         smoothing: 0.5,
+        fontSize: 24,
+        fontStyle: 'normal',
+        textDecoration: '',
+        textAlign: 'left',
+        textColor: '#000000',
+        textBackground: 'transparent',
       },
 
       // SmartRoads
@@ -77,6 +83,7 @@ export const useAppStore = create<AppState>()(
       theme: getInitialTheme(),
       propertiesPanelId: null,
       activeLibraryCategory: null,
+      editingTextId: null,
 
       // --- Actions ---
 
@@ -92,7 +99,11 @@ export const useAppStore = create<AppState>()(
       resetView: () =>
         set((state) => {
           const { width, height } = state.canvasSize
-          const zoom = 1
+          const padding = 40
+          const zoom = Math.min(
+            (width - padding * 2) / PAGE_WIDTH_PX,
+            (height - padding * 2) / PAGE_HEIGHT_PX
+          )
           const x = (width - PAGE_WIDTH_PX * zoom) / 2
           const y = (height - PAGE_HEIGHT_PX * zoom) / 2
           return { viewport: { x, y, zoom } }
@@ -220,6 +231,9 @@ export const useAppStore = create<AppState>()(
 
       // Scale
       updateScale: (scale: ScaleState) => set({ scale }),
+
+      // Editing text
+      setEditingTextId: (id: string | null) => set({ editingTextId: id }),
     }),
     {
       // zundo config: exclude UI-only state from undo history

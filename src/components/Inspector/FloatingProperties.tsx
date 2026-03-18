@@ -1,5 +1,5 @@
 import { useAppStore } from '@/store'
-import { X, GripHorizontal } from 'lucide-react'
+import { X, GripHorizontal, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline } from 'lucide-react'
 import { ColorPicker } from './ColorPicker'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { CanvasObject, ShapeType } from '@/types'
@@ -20,6 +20,7 @@ const TYPE_NAMES: Record<string, string> = {
   freehand: 'Freihand',
   text: 'Text',
   image: 'Bild',
+  dimension: 'Bemaßung',
 }
 
 const LINE_STYLES = [
@@ -52,10 +53,12 @@ export function FloatingProperties() {
   const updateObject = useAppStore((s) => s.updateObject)
   const closeProperties = useAppStore((s) => s.closeProperties)
 
-  const [pos, setPos] = useState(() => ({
-    x: Math.max(60, (window.innerWidth - 360) / 2),
-    y: Math.max(80, (window.innerHeight - 520) / 2),
-  }))
+  const PANEL_W = 320
+
+  const [pos, setPos] = useState(() => {
+    const { rightSidebarCollapsed } = useAppStore.getState().panels
+    return { x: window.innerWidth - (rightSidebarCollapsed ? 48 : 180) - PANEL_W - 12, y: 80 }
+  })
   const dragging = useRef(false)
   const dragOffset = useRef({ x: 0, y: 0 })
 
@@ -64,6 +67,15 @@ export function FloatingProperties() {
     dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y }
     e.preventDefault()
   }, [pos])
+
+  const [prevPanelId, setPrevPanelId] = useState(propertiesPanelId)
+  if (propertiesPanelId !== prevPanelId) {
+    setPrevPanelId(propertiesPanelId)
+    if (propertiesPanelId) {
+      const { rightSidebarCollapsed } = useAppStore.getState().panels
+      setPos({ x: window.innerWidth - (rightSidebarCollapsed ? 48 : 180) - PANEL_W - 12, y: 80 })
+    }
+  }
 
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
@@ -91,7 +103,7 @@ export function FloatingProperties() {
 
   return (
     <div
-      className="fixed z-50 rounded-2xl select-none overflow-hidden"
+      className="fixed z-50 rounded-2xl select-none overflow-hidden anim-pop-in"
       style={{
         left: pos.x,
         top: pos.y,
@@ -107,17 +119,17 @@ export function FloatingProperties() {
         style={{ borderBottom: '1px solid var(--border)' }}
         onMouseDown={onDragStart}
       >
-        <GripHorizontal size={16} style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+        <GripHorizontal size={16} style={{ color: 'var(--text-muted)' }} />
         <div className="flex-1 min-w-0">
           <div className="text-[16px] font-semibold truncate" style={{ color: 'var(--text)' }}>
             {displayName}
           </div>
-          <div className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+          <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
             {typeLabel(obj.type)} – Eigenschaften
           </div>
         </div>
         <button className="icon-btn" style={{ padding: 5 }} onClick={closeProperties}>
-          <X size={18} />
+          <X size={16} />
         </button>
       </div>
 
@@ -131,15 +143,19 @@ export function FloatingProperties() {
             onChange={(e) => update({ label: e.target.value })}
             placeholder={typeLabel(obj.type)}
             className="field-input w-full"
-            style={{ padding: '10px 14px', fontSize: '14px' }}
+            style={{ padding: '10px 14px', fontSize: '13px' }}
             onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
             onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
           />
         </PanelSection>
 
         {/* Type-specific properties */}
-        {obj.type === 'freehand' ? (
+        {obj.type === 'text' ? (
+          <TextProperties obj={obj} update={update} />
+        ) : obj.type === 'freehand' ? (
           <FreehandProperties obj={obj} update={update} />
+        ) : obj.type === 'dimension' ? (
+          <DimensionProperties obj={obj} update={update} />
         ) : (
           <ShapeProperties obj={obj} update={update} />
         )}
@@ -158,6 +174,121 @@ export function FloatingProperties() {
         </PanelSection>
       </div>
     </div>
+  )
+}
+
+// ─── Text Properties ───
+
+function TextProperties({
+  obj,
+  update,
+}: {
+  obj: CanvasObject
+  update: (changes: Record<string, unknown>) => void
+}) {
+  const isBold = (obj.fontStyle ?? '').includes('bold')
+  const isItalic = (obj.fontStyle ?? '').includes('italic')
+  const isUnderline = (obj.textDecoration ?? '') === 'underline'
+
+  const toggleBold = () => {
+    const bold = !isBold
+    const italic = isItalic
+    update({ fontStyle: bold && italic ? 'bold italic' : bold ? 'bold' : italic ? 'italic' : 'normal' })
+  }
+
+  const toggleItalic = () => {
+    const italic = !isItalic
+    const bold = isBold
+    update({ fontStyle: bold && italic ? 'bold italic' : bold ? 'bold' : italic ? 'italic' : 'normal' })
+  }
+
+  const toggleUnderline = () => {
+    update({ textDecoration: isUnderline ? '' : 'underline' })
+  }
+
+  const ALIGN_ICONS = { left: AlignLeft, center: AlignCenter, right: AlignRight } as const
+
+  return (
+    <>
+      <PanelSection title="Schrift">
+        <PanelSlider
+          label="Größe"
+          value={obj.fontSize ?? 24}
+          min={6}
+          max={72}
+          unit="px"
+          onChange={(v) => update({ fontSize: v })}
+        />
+        <PanelSliderEnd />
+
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-[13px]" style={{ color: 'var(--text)' }}>Stil</span>
+          <div className="flex gap-1.5">
+            {[
+              { active: isBold, onClick: toggleBold, Icon: Bold },
+              { active: isItalic, onClick: toggleItalic, Icon: Italic },
+              { active: isUnderline, onClick: toggleUnderline, Icon: Underline },
+            ].map(({ active, onClick, Icon }, i) => (
+              <button
+                key={i}
+                onClick={onClick}
+                className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+                style={{
+                  background: active ? 'var(--accent-muted)' : 'var(--bg)',
+                  color: active ? 'var(--accent)' : 'var(--text-muted)',
+                  border: active ? '1px solid var(--accent)' : '1px solid var(--border)',
+                }}
+                onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--surface-hover)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = active ? 'var(--accent-muted)' : 'var(--bg)' }}
+              >
+                <Icon size={14} />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-[13px]" style={{ color: 'var(--text)' }}>Ausrichtung</span>
+          <div className="flex gap-1.5">
+            {(['left', 'center', 'right'] as const).map((align) => {
+              const Icon = ALIGN_ICONS[align]
+              const isActive = (obj.textAlign ?? 'left') === align
+              return (
+                <button
+                  key={align}
+                  onClick={() => update({ textAlign: align })}
+                  className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+                  style={{
+                    background: isActive ? 'var(--accent-muted)' : 'var(--bg)',
+                    color: isActive ? 'var(--accent)' : 'var(--text-muted)',
+                    border: isActive ? '1px solid var(--accent)' : '1px solid var(--border)',
+                  }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'var(--surface-hover)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = isActive ? 'var(--accent-muted)' : 'var(--bg)' }}
+                >
+                  <Icon size={14} />
+                </button>
+              )
+            })}
+          </div>
+        </div>
+        <PanelSliderEnd />
+      </PanelSection>
+
+      <PanelSection title="Farbe">
+        <PanelColorLabel label="Textfarbe" />
+        <ColorPicker
+          value={obj.fillColor !== 'transparent' ? obj.fillColor : '#000000'}
+          onChange={(c) => update({ fillColor: c })}
+        />
+        <PanelSpacer />
+        <PanelColorLabel label="Hintergrund" />
+        <ColorPicker
+          value={obj.textBackground || 'transparent'}
+          onChange={(c) => update({ textBackground: c })}
+        />
+      </PanelSection>
+    </>
   )
 }
 
@@ -204,6 +335,50 @@ function FreehandProperties({
 
       <PanelSection title="Farbe">
         <PanelColorLabel label="Strichfarbe" />
+        <ColorPicker
+          value={obj.strokeColor}
+          onChange={(c) => update({ strokeColor: c })}
+        />
+      </PanelSection>
+    </>
+  )
+}
+
+// ─── Dimension Properties ───
+
+function DimensionProperties({
+  obj,
+  update,
+}: {
+  obj: CanvasObject
+  update: (changes: Record<string, unknown>) => void
+}) {
+  return (
+    <>
+      <PanelSection title="Darstellung">
+        <PanelSlider
+          label="Linienstärke"
+          value={obj.strokeWidth}
+          min={1}
+          max={5}
+          unit="px"
+          onChange={(v) => update({ strokeWidth: v })}
+        />
+        <PanelSliderEnd />
+
+        <PanelSlider
+          label="Schriftgröße"
+          value={obj.fontSize ?? 14}
+          min={10}
+          max={36}
+          unit="px"
+          onChange={(v) => update({ fontSize: v })}
+        />
+        <PanelSliderEnd />
+      </PanelSection>
+
+      <PanelSection title="Farbe">
+        <PanelColorLabel label="Linienfarbe" />
         <ColorPicker
           value={obj.strokeColor}
           onChange={(c) => update({ strokeColor: c })}

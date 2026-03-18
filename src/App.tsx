@@ -11,10 +11,18 @@ import { StatusBar } from '@/components/StatusBar/StatusBar'
 
 export default function App() {
   const theme = useAppStore((s) => s.theme)
+  const leftSidebarCollapsed = useAppStore((s) => s.panels.leftSidebarCollapsed)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      '--toolbar-width',
+      leftSidebarCollapsed ? '48px' : '180px'
+    )
+  }, [leftSidebarCollapsed])
 
   useKeyboard()
 
@@ -23,15 +31,23 @@ export default function App() {
       <TopBar />
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Toolbar (48px) + Library Drawer (slides out next to it) */}
-        <Toolbar />
+        {/* Left: fixed 48px in flex flow, Toolbar overlays as absolute when expanded */}
+        <div className="relative shrink-0 z-40" style={{ width: 48 }}>
+          <div className="absolute top-0 left-0 h-full">
+            <Toolbar />
+          </div>
+        </div>
         <LibrarySidebar />
 
         {/* Canvas */}
         <SketchCanvas />
 
-        {/* Right: Layer Manager (collapsible, 48px / 300px) */}
-        <LayerManager />
+        {/* Right: fixed 48px in flex flow, LayerManager overlays as absolute when expanded */}
+        <div className="relative shrink-0 z-40" style={{ width: 48 }}>
+          <div className="absolute top-0 right-0 h-full">
+            <LayerManager />
+          </div>
+        </div>
       </div>
 
       <StatusBar />

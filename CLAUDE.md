@@ -193,16 +193,76 @@
 
 9. **Zielgruppe bedenken**: Polizisten, keine Designer. Library (Fahrzeuge, Schilder) ist wichtiger als Zeichentools. Einfachheit vor Funktionalität. Keine Ankerpunkt-Bearbeitung, kein Direktauswahl-Tool.
 
-#### Offene Punkte / Nächste Schritte:
+---
 
-- SVG-Fahrzeuge + Drag & Drop aus Library auf Canvas (Kernfunktionalität!)
-- SmartRoads: Parametrischer Straßengenerator
-- Undo/Redo UI-Anbindung (zundo ist ready)
-- Text-Tool implementieren
-- Export (PDF, PNG, SVG)
-- Speichern/Laden (.033sketch Format)
-- Auto-Save in IndexedDB
-- Touch-Support
+### Session 3 – 2026-03-18
+
+**Teilnehmer**: User (Alex) + Claude Opus 4.6
+
+#### Was wurde gemacht:
+
+**1. Bemaßung (Dimension) Tool — komplett implementiert**
+- `DimensionShape` Komponente in CanvasObjects.tsx: DIN-Style Bemaßungslinie mit Pfeilspitzen an beiden Enden, senkrechte Verlängerungsstriche, Maßzahl zentriert über der Linie
+- Zwei-Klick-Muster in SketchCanvas.tsx: Erster Klick = Startpunkt, Zweiter Klick = Endpunkt
+- Vorschau während des Zeichnens (gestrichelte Linie + Kreise)
+- Distanz automatisch in Metern via `pixelsToMeters()`
+- `DimensionToolPopover` (Linienstärke, Schriftgröße, Farbe)
+- Dimension Properties im FloatingProperties Panel
+- Ruler-Icon im LayerManager
+- Popover in Toolbar verdrahtet (`hasPopover: true`, case 'measure')
+
+**2. Bemaßungslinie draggable gemacht**
+- Problem: Group hatte `x={0} y={0}` mit absoluten Koordinaten → nicht verschiebbar
+- Fix: Alle Koordinaten relativ zum Startpunkt, Group origin = `dimensionStart`
+- `onDragEnd`: Verschiebt sowohl `dimensionStart` als auch `dimensionEnd` um gleiches Delta
+- Hauptlinie hat `hitStrokeWidth={20}` für klickbaren Bereich (andere Children = `listening={false}`)
+
+**3. Shift-constrained Rotation (90°-Snap)**
+- `SelectionTransformer`: Shift-Key-State via `useState` + keydown/keyup Listener
+- `rotationSnaps={shiftHeld ? [0, 90, 180, 270] : []}`
+- `rotationSnapTolerance={shiftHeld ? 45 : 0}` — 45° Toleranz = lückenlose Abdeckung, NUR 90°-Winkel möglich bei Shift
+- Gilt für ALLE Objekte (Shapes, Text, Bemaßung)
+
+**4. Shift-constrained Drawing (45°-Snap)**
+- Neue Utility: `src/utils/snapAngle.ts` mit `snapTo45()` Funktion
+- Berechnung: Winkel zum nächsten 45°-Vielfachen snappen, Endpunkt auf diesem Winkel bei gleicher Distanz
+- In `useDrawing.ts`: `onDrawMove()` nimmt jetzt `shiftKey` Parameter, wendet 45°-Snap bei Linien/Pfeilen an
+- In `SketchCanvas.tsx`: Dimension-Vorschau UND finaler Klick nutzen 45°-Snap bei Shift
+- `e.evt.shiftKey` wird von Konva-Events durchgereicht
+
+**5. Spec-Datei komplett überarbeitet (033-skizze-spec.md v2.0)**
+- Tech Stack aktualisiert (React 19, Vite 8, TS 5.9, Tailwind 4, keine Radix UI/Immer)
+- Layout-Diagramm an tatsächliche Architektur angepasst (kein Inspector rechts, Floating Properties, keine Menüleiste)
+- Werkzeuge: 5 Gruppen mit korrekten Shortcuts (P/O/T/M statt B/L/R), 9 Shapes dokumentiert
+- **Zwei Objekt-Welten definiert**: Zeichenobjekte (Pixel, frei skalierbar) vs. Reale Objekte (Meter, parametrisch, kein freier Resize)
+- **Dynamischer Auto-Maßstab**: User wählt nie den Maßstab, wird automatisch berechnet
+- Maßstab-System mit `metersToPixels()`/`pixelsToMeters()` Formeln dokumentiert
+- Ebenen-Manager: Flache Objektliste (keine Layer-Gruppierung) dokumentiert
+- Farbpalette aktualisiert (echte Werte aus index.css)
+
+**6. Phasen-Plan neu strukturiert**
+- Phase 3 = **SmartRoads MVP** (Gerade Straße) — detaillierter Plan mit 7 Teilschritten (3a–3g)
+- Phase 4 = SmartRoads Editor & erweiterte Segmente
+- Phase 5 = Objekte & Library (vorher Phase 3)
+- Phase 6 = Polish & Export (vorher Phase 5)
+
+#### Architektur-Entscheidungen (Session 3):
+
+10. **Zwei Objekt-Welten**: Zeichenobjekte (Pixel-basiert, frei skalierbar) vs. Reale Objekte (Meter-basiert, parametrisch). SmartRoads und Fahrzeuge sind NICHT frei skalierbar.
+
+11. **Dynamischer Auto-Maßstab**: User wählt NIE den Maßstab. System berechnet ihn automatisch basierend auf Bounding Box aller realen Objekte. `recalculateScale()` wird bei jeder Road-Mutation aufgerufen.
+
+12. **Getrennte Store-Collections**: `roads` + `roadOrder` (Meter-basiert) neben `objects` + `objectOrder` (Pixel-basiert). SmartRoads haben eigenes Datenmodell, eigenes Rendering, eigene Interaktion.
+
+13. **SmartRoads vor Library**: Straßen sind das Herzstück (Alleinstellungsmerkmal), nicht die SVG-Bibliothek. Phase 3 = SmartRoads, Phase 5 = Library.
+
+14. **Konva Shapes für Roads (nicht SVG)**: Direkte Konva Rects/Lines für performantes parametrisches Rendering. SVG-Generierung erst beim Export.
+
+#### Nächster Schritt (Session 4):
+
+**Phase 3: SmartRoads — Gerade Straße (MVP)**
+- Detaillierter Plan in `033-skizze-spec.md` Kapitel "Phase 3"
+- Schritte 3a–3g: Datenmodell → Rendering → Auto-Maßstab → Library-Drop → Canvas-Interaktion → Quick-Properties → Ebenen-Manager
 
 ---
 
@@ -211,24 +271,29 @@
 | Datei | Zweck |
 |-------|-------|
 | `src/store/index.ts` | Zustand Store, alle Actions, setToolOptions |
-| `src/types/index.ts` | TypeScript Definitionen (CanvasObject, ShapeType inkl. triangle/star/rounded-rect, ToolType, ToolOptions mit lineStyle+smoothing) |
-| `src/components/Canvas/SketchCanvas.tsx` | Konva Stage, Pan/Zoom, Drawing-Integration |
-| `src/components/Canvas/CanvasObjects.tsx` | Shape-Rendering (Rect, RoundedRect, Ellipse, Triangle, Polygon, Star, Line, Arrow, Freehand) + Shared Transformer + Doppelklick→Properties |
-| `src/components/LayerManager/LayerManager.tsx` | Ebenen-Panel mit Drag&Drop, Icons für alle Shape-Types |
-| `src/components/Inspector/FloatingProperties.tsx` | Tool-spezifisches Draggable Properties-Modal (Freehand vs Shape) |
+| `src/types/index.ts` | TypeScript Definitionen (CanvasObject, ShapeType inkl. dimension, ToolType, ToolOptions) |
+| `src/components/Canvas/SketchCanvas.tsx` | Konva Stage, Pan/Zoom, Drawing-Integration, Dimension-Tool (2-Klick), Text Inline-Editor |
+| `src/components/Canvas/CanvasObjects.tsx` | Shape-Rendering (alle Typen inkl. TextShape, DimensionShape) + SelectionTransformer (90°-Snap) |
+| `src/components/Canvas/shapeRefs.ts` | Globale Map für Konva Node-Referenzen (extrahiert für ESLint) |
+| `src/components/LayerManager/LayerManager.tsx` | Ebenen-Panel mit Drag&Drop Z-Order, Icons für alle Typen inkl. Text/Dimension |
+| `src/components/Inspector/FloatingProperties.tsx` | Typ-spezifisches Properties-Modal (Freehand, Shape, Text, Dimension) |
 | `src/components/Inspector/ColorPicker.tsx` | Custom HSV Color Picker |
-| `src/components/Toolbar/Toolbar.tsx` | Hauptkomponente: Tool-Gruppen, Library-Icons, Popover-Management, Store-Subscribe für Auto-Open |
-| `src/components/Toolbar/FreehandTool.tsx` | Freihand-Popover (Strichstärke, Strichart, Glättung, Farbe) |
-| `src/components/Toolbar/ShapesTool.tsx` | Formen-Popover (3x3 Grid, Kontur, Konturart, Farbe, Füllung) |
-| `src/components/Sidebar/LibrarySidebar.tsx` | Library-Drawer (absolut positioniert, Grid-Layout, Filter-Chips, Placeholder-Items) |
+| `src/components/Toolbar/Toolbar.tsx` | Tool-Gruppen, Library-Icons, Popover-Management inkl. Dimension |
+| `src/components/Toolbar/FreehandTool.tsx` | Freihand-Popover |
+| `src/components/Toolbar/ShapesTool.tsx` | Formen-Popover (3x3 Grid) |
+| `src/components/Toolbar/TextTool.tsx` | Text-Popover (Größe, Bold/Italic/Underline, Ausrichtung, Farbe) |
+| `src/components/Toolbar/DimensionTool.tsx` | Bemaßung-Popover (Linienstärke, Schriftgröße, Farbe) |
+| `src/components/Sidebar/LibrarySidebar.tsx` | Library-Drawer (Overlay, Grid-Layout, Placeholder) |
 | `src/components/ui/PanelPrimitives.tsx` | Shared UI: PanelSection, PanelSlider, PanelSpacer, PanelSliderEnd, PanelSegmented, PanelColorLabel |
 | `src/components/TopBar/TopBar.tsx` | Header mit Logo, Dateiname-Dropdown, Dokument-Properties |
 | `src/components/StatusBar/StatusBar.tsx` | Canvas-Info, Zoom-Controls, Scale-Anzeige |
-| `src/constants/library.ts` | Library-Kategorie-Definitionen (SmartRoads, Fahrzeuge, etc.) |
-| `src/hooks/useDrawing.ts` | Drawing-Logik (Klick+Drag, Freehand mit Ramer-Douglas-Peucker, lineDash Berechnung) |
-| `src/hooks/useKeyboard.ts` | Keyboard Shortcuts (V/P/O/T/M + Toggle-Verhalten) |
-| `src/utils/scale.ts` | DIN A4 Maßstab-Berechnungen, PAGE_WIDTH_PX/PAGE_HEIGHT_PX |
-| `src/index.css` | Design-Tokens, CSS Custom Properties, Base Styles |
+| `src/constants/library.ts` | Library-Kategorie-Definitionen |
+| `src/hooks/useDrawing.ts` | Drawing-Logik (Klick+Drag, Freehand mit RDP, Shift 45°-Snap für Linien/Pfeile) |
+| `src/hooks/useKeyboard.ts` | Keyboard Shortcuts (V/P/O/T/M + Toggle) |
+| `src/utils/scale.ts` | DIN A4 Maßstab-Berechnungen, metersToPixels/pixelsToMeters |
+| `src/utils/snapAngle.ts` | `snapTo45()` — Endpunkt auf nächsten 45°-Winkel snappen |
+| `src/index.css` | Design-Tokens, CSS Custom Properties, Animationen (anim-slide-left etc.) |
+| `033-skizze-spec.md` | Verbindliche Spezifikation v2.0 (aktualisiert Session 3) |
 
 ---
 
@@ -236,10 +301,13 @@
 
 - **Sprache UI**: Deutsch (Labels, Tooltips, Platzhalter)
 - **Sprache Code**: Englisch (Variablen, Kommentare, Commits)
-- **Styling**: Tailwind CSS Klassen + inline styles mit CSS-Variablen (var(--xxx))
-- **State**: Zustand mit flachen Actions, kein Immer (trotz Import)
+- **Styling**: Tailwind CSS 4 Klassen + inline styles mit CSS-Variablen (var(--xxx))
+- **State**: Zustand mit flachen Actions, kein Immer
 - **Komponenten**: Funktionale Components, keine Klassen
-- **Icons**: Lucide React, immer
+- **Icons**: Lucide React, immer (einzige Icon-Library)
 - **Tool-Panels**: Jedes Tool hat eigene Datei, shared Design via PanelPrimitives
 - **Popovers**: Eigenständige rounded-2xl Panels, 320px breit, absolut positioniert
 - **Spacing-Standard**: PanelSection (px-7, pt-7, pb-8), PanelSpacer (h-10), Labels (15px), Buttons (py-3.5)
+- **Animationen**: CSS Keyframes mit `cubic-bezier(0.16, 1, 0.3, 1)` Easing
+- **Zwei Objekt-Welten**: Zeichenobjekte (Pixel, frei skalierbar) vs. Reale Objekte (Meter, parametrisch, kein freier Resize)
+- **Maßstab**: Dynamisch, automatisch berechnet, User wählt nie

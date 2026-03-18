@@ -22,7 +22,7 @@
   --color-accent: #4a9eff;
   --color-border: #2e2e2e;
   --color-text: #f0f0f0;
-  --color-text-muted: #808080;
+  --color-text-muted: #a0a0a0;
   --color-canvas-bg: #363636;
   --color-paper: #ffffff;
   --color-danger: #ef4444;
@@ -44,8 +44,8 @@
   --border: #2e2e2e;
   --border-subtle: #262626;
   --text: #f0f0f0;
-  --text-secondary: #b0b0b0;
-  --text-muted: #707070;
+  --text-secondary: #c0c0c0;
+  --text-muted: #a0a0a0;
   --canvas-bg: #363636;
   --paper: #ffffff;
   --danger: #ef4444;
@@ -153,6 +153,64 @@ html, body, #root {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+/* ============================================================
+   Animations
+   ============================================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.94) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.anim-slide-left {
+  animation: slideInLeft 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.anim-slide-right {
+  animation: slideInRight 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.anim-slide-down {
+  animation: slideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.anim-scale-in {
+  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.anim-pop-in {
+  animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.anim-fade-in {
+  animation: fadeIn 0.2s ease both;
 }
 
 /* ============================================================

@@ -18,25 +18,29 @@ import {
   Unlock,
   Settings2,
   GripVertical,
-  ChevronLeft,
-  ChevronRight,
+  PanelRightClose,
+  PanelRightOpen,
+  Ruler,
+  Type,
 } from 'lucide-react'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { CanvasObject, ShapeType } from '@/types'
 
 function ObjectIcon({ type }: { type: ShapeType }) {
   switch (type) {
-    case 'rect': return <Square size={18} />
-    case 'rounded-rect': return <RectangleHorizontal size={18} />
-    case 'ellipse': return <CircleIcon size={18} />
-    case 'triangle': return <Triangle size={18} />
-    case 'line': return <Minus size={18} />
-    case 'arrow': return <ArrowUpRight size={18} />
-    case 'polygon': return <Hexagon size={18} />
-    case 'path': return <Spline size={18} />
-    case 'star': return <Star size={18} />
-    case 'freehand': return <Pencil size={18} />
-    default: return <Square size={18} />
+    case 'rect': return <Square size={16} />
+    case 'rounded-rect': return <RectangleHorizontal size={16} />
+    case 'ellipse': return <CircleIcon size={16} />
+    case 'triangle': return <Triangle size={16} />
+    case 'line': return <Minus size={16} />
+    case 'arrow': return <ArrowUpRight size={16} />
+    case 'polygon': return <Hexagon size={16} />
+    case 'path': return <Spline size={16} />
+    case 'star': return <Star size={16} />
+    case 'freehand': return <Pencil size={16} />
+    case 'text': return <Type size={16} />
+    case 'dimension': return <Ruler size={16} />
+    default: return <Square size={16} />
   }
 }
 
@@ -55,6 +59,7 @@ function objectDisplayName(obj: CanvasObject, index: number): string {
     freehand: 'Freihand',
     text: 'Text',
     image: 'Bild',
+    dimension: 'Bemaßung',
   }
   return `${typeNames[obj.type] || obj.type} ${index + 1}`
 }
@@ -149,83 +154,70 @@ export function LayerManager() {
     setDropPosition(null)
   }, [])
 
-  // ─── Collapsed view (same width as toolbar) ───
-  if (collapsed) {
-    return (
-      <div
-        className="flex flex-col items-center shrink-0 h-full"
-        style={{
-          width: 'var(--toolbar-width)',
-          background: 'var(--surface)',
-          borderLeft: '1px solid var(--border)',
-        }}
-      >
-        {/* Icon + expand */}
-        <button
-          className="icon-btn mt-3"
-          style={{ padding: 6 }}
-          onClick={() => setCollapsed(false)}
-          title="Ebenen einblenden"
-        >
-          <Layers size={18} style={{ color: 'var(--text-muted)' }} />
-        </button>
-
-        {/* Vertical label */}
-        <div
-          className="flex items-center justify-center flex-1 cursor-pointer"
-          style={{ writingMode: 'vertical-rl', color: 'var(--text-muted)' }}
-          onClick={() => setCollapsed(false)}
-        >
-          <span className="text-xs font-semibold uppercase tracking-widest">
-            Ebenen{hasObjects ? ` (${displayOrder.length})` : ''}
-          </span>
-        </div>
-
-        {hasObjects && (
-          <button
-            className="icon-btn mb-3"
-            style={{ padding: 6 }}
-            onClick={() => setCollapsed(false)}
-            title="Ebenen einblenden"
-          >
-            <ChevronLeft size={14} />
-          </button>
-        )}
-      </div>
-    )
-  }
-
-  // ─── Expanded view ───
+  // ─── Single wrapper with animated width ───
   return (
     <div
-      className="flex flex-col shrink-0 h-full"
+      className="flex flex-col h-full shrink-0 overflow-hidden"
       style={{
-        width: 'var(--sidebar-width)',
+        width: collapsed ? 48 : 180,
         background: 'var(--surface)',
         borderLeft: '1px solid var(--border)',
+        transition: 'width 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
-      {/* Header */}
-      <div className="panel-header">
-        <div className="flex items-center gap-2">
-          <Layers size={14} style={{ color: 'var(--text-muted)' }} />
-          <span className="panel-header-title">Ebenen</span>
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            ({displayOrder.length})
-          </span>
+      {collapsed ? (
+        /* ─── Collapsed view ─── */
+        <div className="flex flex-col items-center anim-fade-in">
+          <button
+            className="icon-btn mt-3"
+            style={{ padding: 6 }}
+            onClick={() => setCollapsed(false)}
+            title={`Ebenen${hasObjects ? ` (${displayOrder.length})` : ''} einblenden`}
+          >
+            <Layers size={18} style={{ color: hasObjects ? 'var(--text-secondary)' : 'var(--text-muted)' }} />
+          </button>
+          {hasObjects && (
+            <div
+              className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-1"
+              style={{ background: 'var(--accent)', color: '#fff' }}
+            >
+              {displayOrder.length}
+            </div>
+          )}
         </div>
+      ) : (
+        /* ─── Expanded view ─── */
+        <div className="flex flex-col h-full min-w-45 anim-fade-in">
+
+      {/* Toggle button — mirrors toolbar toggle */}
+      <div className="flex shrink-0 mb-1" style={{ justifyContent: 'flex-start', paddingLeft: 6 }}>
         <button
-          className="icon-btn"
-          style={{ padding: 4 }}
+          className="w-8 h-8 flex items-center justify-center rounded transition-colors mt-2"
+          style={{ color: 'var(--text-muted)' }}
           onClick={() => setCollapsed(true)}
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           title="Ebenen einklappen"
         >
-          <ChevronRight size={14} />
+          <PanelRightClose size={16} />
         </button>
+      </div>
+
+      {/* Section label */}
+      <div
+        className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest shrink-0"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        Ebenen {hasObjects && <span style={{ color: 'var(--accent)' }}>({displayOrder.length})</span>}
       </div>
 
       {/* Object list */}
       <div className="flex-1 overflow-y-auto" ref={listRef}>
+        {!hasObjects && (
+          <div className="px-3 py-2 text-[13px]" style={{ color: 'var(--text-muted)' }}>
+            Keine Objekte
+          </div>
+        )}
         {displayOrder.map((objId, idx) => {
           const obj = objects[objId]
           if (!obj) return null
@@ -243,12 +235,10 @@ export function LayerManager() {
               onDragOver={(e) => handleDragOver(e, obj.id)}
               onDrop={handleDrop}
               onDragEnd={handleDragEnd}
-              className="flex items-center gap-2 px-1 pr-2 group cursor-pointer transition-colors relative"
+              className="relative group cursor-pointer transition-colors"
               style={{
-                height: 56,
                 background: isSelected ? 'var(--accent-muted)' : 'transparent',
-                borderLeft: isSelected ? '3px solid var(--accent)' : '3px solid transparent',
-                borderBottom: '1px solid var(--border-subtle)',
+                borderLeft: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
                 opacity: isDragging ? 0.4 : 1,
               }}
               onClick={(e) => {
@@ -276,41 +266,34 @@ export function LayerManager() {
                 <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: 'var(--accent)', zIndex: 10 }} />
               )}
 
-              {/* Drag handle */}
-              <div className="p-1 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-60 transition-opacity shrink-0">
-                <GripVertical size={14} style={{ color: 'var(--text-muted)' }} />
-              </div>
-
-              {/* Thumbnail */}
-              <div
-                className="w-10 h-10 rounded-md flex items-center justify-center shrink-0"
-                style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
-              >
-                <span style={{ color: isSelected ? 'var(--accent)' : 'var(--text-muted)' }}>
+              {/* Main row */}
+              <div className="flex items-center gap-2 px-2.5" style={{ height: 36 }}>
+                <GripVertical
+                  size={13}
+                  className="shrink-0 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-60 transition-opacity"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+                <span className="shrink-0" style={{ color: isSelected ? 'var(--accent)' : 'var(--text-muted)' }}>
                   <ObjectIcon type={obj.type} />
                 </span>
-              </div>
-
-              {/* Name + meta */}
-              <div className="flex-1 min-w-0">
-                {editingId === obj.id ? (
-                  <input
-                    autoFocus
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onBlur={finishRename}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') finishRename()
-                      if (e.key === 'Escape') setEditingId(null)
-                    }}
-                    className="field-input w-full"
-                    style={{ padding: '3px 6px', fontSize: 'var(--font-size-sm)' }}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                ) : (
-                  <>
-                    <div
-                      className="text-sm truncate leading-snug"
+                <div className="flex-1 min-w-0">
+                  {editingId === obj.id ? (
+                    <input
+                      autoFocus
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={finishRename}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') finishRename()
+                        if (e.key === 'Escape') setEditingId(null)
+                      }}
+                      className="field-input w-full"
+                      style={{ padding: '2px 5px', fontSize: 13 }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <span
+                      className="text-[13px] truncate block"
                       style={{
                         color: isSelected ? 'var(--text)' : 'var(--text-secondary)',
                         fontWeight: isSelected ? 600 : 400,
@@ -322,38 +305,36 @@ export function LayerManager() {
                       }}
                     >
                       {displayName}
-                    </div>
-                    <div className="text-xs mt-0.5 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-                      <span>{obj.type.charAt(0).toUpperCase() + obj.type.slice(1)}</span>
-                      <span style={{ opacity: 0.4 }}>·</span>
-                      <span
-                        className="inline-block w-2.5 h-2.5 rounded-sm"
-                        style={{ background: obj.strokeColor, border: '1px solid var(--border)' }}
-                      />
-                    </div>
-                  </>
-                )}
+                    </span>
+                  )}
+                </div>
+                <span
+                  className="shrink-0 w-2.5 h-2.5 rounded-sm"
+                  style={{ background: obj.strokeColor, border: '1px solid var(--border)' }}
+                />
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="icon-btn" style={{ padding: 5 }} onClick={(e) => { e.stopPropagation(); openProperties(obj.id) }} title="Eigenschaften">
-                  <Settings2 size={15} />
+              {/* Hover actions */}
+              <div className="flex items-center gap-0.5 px-1.5 pb-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button className="icon-btn" style={{ padding: 4 }} onClick={(e) => { e.stopPropagation(); openProperties(obj.id) }} title="Eigenschaften">
+                  <Settings2 size={14} />
                 </button>
-                <button className="icon-btn" style={{ padding: 5 }} onClick={(e) => { e.stopPropagation(); updateObject(obj.id, { visible: !obj.visible }) }} title={obj.visible ? 'Ausblenden' : 'Einblenden'}>
-                  {obj.visible ? <Eye size={15} /> : <EyeOff size={15} />}
+                <button className="icon-btn" style={{ padding: 4 }} onClick={(e) => { e.stopPropagation(); updateObject(obj.id, { visible: !obj.visible }) }} title={obj.visible ? 'Ausblenden' : 'Einblenden'}>
+                  {obj.visible ? <Eye size={14} /> : <EyeOff size={14} />}
                 </button>
-                <button className="icon-btn" style={{ padding: 5 }} onClick={(e) => { e.stopPropagation(); updateObject(obj.id, { locked: !obj.locked }) }} title={obj.locked ? 'Entsperren' : 'Sperren'}>
-                  {obj.locked ? <Lock size={15} /> : <Unlock size={15} />}
+                <button className="icon-btn" style={{ padding: 4 }} onClick={(e) => { e.stopPropagation(); updateObject(obj.id, { locked: !obj.locked }) }} title={obj.locked ? 'Entsperren' : 'Sperren'}>
+                  {obj.locked ? <Lock size={14} /> : <Unlock size={14} />}
                 </button>
-                <button className="icon-btn" style={{ padding: 5, color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); removeObject(obj.id) }} title="Löschen">
-                  <Trash2 size={15} />
+                <button className="icon-btn" style={{ padding: 4, color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); removeObject(obj.id) }} title="Löschen">
+                  <Trash2 size={14} />
                 </button>
               </div>
             </div>
           )
         })}
       </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -59,9 +59,13 @@ export function useKeyboard() {
           return
         }
 
-        // Escape → deselect + back to select tool
+        // Escape → close properties panel, deselect, back to select tool
         if (key === 'escape') {
           e.preventDefault()
+          const state = useAppStore.getState()
+          if (state.propertiesPanelId) {
+            state.closeProperties()
+          }
           clearSelection()
           setActiveTool('select')
           return
@@ -72,6 +76,9 @@ export function useKeyboard() {
       if (e.ctrlKey || e.metaKey) {
         if (key === 'a') {
           e.preventDefault()
+          const state = useAppStore.getState()
+          const allIds = state.objectOrder.filter((id) => state.objects[id]?.visible && !state.objects[id]?.locked)
+          if (allIds.length > 0) state.select(allIds)
           return
         }
         if (key === '0') {

@@ -87,7 +87,7 @@ export function TopBar() {
                   setEditing(false)
                 }
               }}
-              className="bg-transparent border rounded px-2 py-1 text-sm outline-none min-w-30"
+              className="bg-transparent border rounded px-2 py-1 text-[13px] outline-none min-w-30"
               style={{
                 borderColor: 'var(--accent)',
                 color: 'var(--text)',
@@ -106,7 +106,7 @@ export function TopBar() {
                 (e.currentTarget.style.background = 'transparent')
               }
             >
-              <span className="text-sm font-medium truncate">{documentName}</span>
+              <span className="text-[13px] font-medium truncate">{documentName}</span>
               <ChevronDown
                 size={14}
                 style={{
@@ -121,17 +121,18 @@ export function TopBar() {
           {/* Document Properties Dropdown */}
           {showDocPanel && (
             <div
-              className="absolute top-full left-0 mt-1 rounded-lg z-50"
+              className="absolute top-full left-0 mt-1 rounded-lg z-50 anim-slide-down"
               style={{
                 width: 320,
                 background: 'var(--surface)',
                 border: '1px solid var(--border)',
                 boxShadow: 'var(--shadow-lg)',
+                transformOrigin: 'top left',
               }}
             >
               {/* Panel header */}
               <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: '1px solid var(--border)' }}>
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
                   Dokument-Eigenschaften
                 </span>
                 <button
@@ -182,7 +183,7 @@ export function TopBar() {
           className="text-xs font-bold tracking-[0.15em] uppercase"
           style={{ color: 'var(--text-muted)' }}
         >
-          033 Skizze
+          033 Skizze - V.0.5
         </span>
       </div>
 
@@ -195,12 +196,12 @@ export function TopBar() {
           {isOnline ? (
             <>
               <Check size={14} style={{ color: 'var(--success)' }} />
-              <span className="text-xs">Lokal gespeichert</span>
+              <span className="text-[11px]">Lokal gespeichert</span>
             </>
           ) : (
             <>
               <WifiOff size={14} />
-              <span className="text-xs">Offline</span>
+              <span className="text-[11px]">Offline</span>
             </>
           )}
         </div>

@@ -46,7 +46,7 @@ export function StatusBar() {
         </button>
         <button
           onClick={resetView}
-          className="min-w-12 text-center px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer"
+          className="min-w-12 text-center px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer"
           style={{ color: 'var(--text)' }}
           onMouseEnter={(e) =>
             (e.currentTarget.style.background = 'var(--surface-hover)')
@@ -54,7 +54,7 @@ export function StatusBar() {
           onMouseLeave={(e) =>
             (e.currentTarget.style.background = 'transparent')
           }
-          title="Auf 100% zurücksetzen"
+          title="Seite einpassen"
         >
           {zoomPercent}%
         </button>

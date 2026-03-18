@@ -63,7 +63,7 @@ export function ShapesToolPopover({
   return (
     <div
       data-toolbar-popover
-      className="absolute z-40 rounded-2xl overflow-hidden"
+      className="absolute z-40 rounded-2xl overflow-hidden anim-slide-left"
       style={{
         width: 320,
         left: 'calc(var(--toolbar-width) + 10px)',
@@ -101,10 +101,9 @@ export function ShapesToolPopover({
                 onClick={() => onSelectTool(shape.id)}
                 className="flex items-center justify-center aspect-square rounded-xl transition-all relative group"
                 style={{
-                  background: isActive ? 'var(--accent)' : 'var(--bg)',
-                  color: isActive ? '#fff' : 'var(--text-muted)',
+                  background: isActive ? 'var(--accent-muted)' : 'var(--bg)',
+                  color: isActive ? 'var(--accent)' : 'var(--text-muted)',
                   border: isActive ? '1px solid var(--accent)' : '1px solid var(--border)',
-                  boxShadow: isActive ? '0 2px 8px rgba(74,158,255,0.35)' : 'none',
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) {

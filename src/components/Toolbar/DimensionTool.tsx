@@ -1,25 +1,16 @@
 import { useAppStore } from '@/store'
-import { Pencil, X } from 'lucide-react'
+import { Ruler, X } from 'lucide-react'
 import { ColorPicker } from '@/components/Inspector/ColorPicker'
 import {
   PanelSection,
   PanelSlider,
-  PanelSpacer,
   PanelSliderEnd,
-  PanelSegmented,
   PanelColorLabel,
 } from '@/components/ui/PanelPrimitives'
 
-const LINE_STYLES = [
-  { id: 'solid' as const, label: 'Linie' },
-  { id: 'dashed' as const, label: 'Striche' },
-  { id: 'dotted' as const, label: 'Punkte' },
-]
-
-export function FreehandToolPopover({
+export function DimensionToolPopover({
   onClose,
 }: {
-  onSelectTool?: (id: string) => void
   onClose: () => void
 }) {
   const toolOptions = useAppStore((s) => s.toolOptions)
@@ -44,9 +35,9 @@ export function FreehandToolPopover({
         style={{ borderBottom: '1px solid var(--border)' }}
       >
         <div className="flex items-center gap-3">
-          <Pencil size={18} style={{ color: 'var(--accent)' }} />
+          <Ruler size={18} style={{ color: 'var(--accent)' }} />
           <span className="text-[16px] font-semibold" style={{ color: 'var(--text)' }}>
-            Freihand
+            Bemaßung
           </span>
         </div>
         <button className="icon-btn" style={{ padding: 6 }} onClick={onClose}>
@@ -54,38 +45,40 @@ export function FreehandToolPopover({
         </button>
       </div>
 
-      {/* STRICH */}
-      <PanelSection title="Strich">
+      {/* Info */}
+      <div className="px-7 pt-5 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
+        <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+          Klicke zwei Punkte auf dem Canvas, um eine Bemaßungslinie zu erstellen.
+          Die Distanz wird automatisch in Metern berechnet.
+        </p>
+      </div>
+
+      {/* Strich */}
+      <PanelSection title="Darstellung">
         <PanelSlider
-          label="Stärke"
+          label="Linienstärke"
           value={toolOptions.strokeWidth}
           min={1}
-          max={10}
+          max={5}
           unit="px"
           onChange={(v) => setToolOptions({ strokeWidth: v })}
         />
-        <PanelSpacer />
-        <PanelSegmented
-          label="Strichart"
-          options={LINE_STYLES}
-          value={toolOptions.lineStyle}
-          onChange={(v) => setToolOptions({ lineStyle: v })}
-        />
-        <PanelSpacer />
+        <PanelSliderEnd />
+
         <PanelSlider
-          label="Glättung"
-          value={Math.round(toolOptions.smoothing * 100)}
-          min={0}
-          max={100}
-          unit="%"
-          onChange={(v) => setToolOptions({ smoothing: v / 100 })}
+          label="Schriftgröße"
+          value={toolOptions.fontSize}
+          min={10}
+          max={36}
+          unit="px"
+          onChange={(v) => setToolOptions({ fontSize: v })}
         />
         <PanelSliderEnd />
       </PanelSection>
 
-      {/* FARBE */}
+      {/* Farbe */}
       <PanelSection title="Farbe">
-        <PanelColorLabel label="Strichfarbe" />
+        <PanelColorLabel label="Linienfarbe" />
         <ColorPicker
           value={toolOptions.strokeColor}
           onChange={(c) => setToolOptions({ strokeColor: c })}

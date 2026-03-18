@@ -1,8 +1,8 @@
-# 033-Skizze – Technische Spezifikation v1.0
+# 033-Skizze – Technische Spezifikation v2.0
 
 ## Projektübersicht
 
-**Name:** 033-Skizze
+**Name:** 033-Skizze V2
 **Typ:** Webbasierte Progressive Web App (PWA)
 **Zweck:** Erstellung professioneller Verkehrsunfallskizzen für den polizeilichen Einsatz
 **Zielgruppe:** Polizeivollzugsbeamte (PVB) im Innen- und Außendienst, Polizeidirektion Hannover
@@ -39,19 +39,21 @@ Null externe Verbindungen im Betrieb. Keine Telemetrie, keine externen Fonts, ke
 
 | Komponente | Technologie | Begründung |
 |---|---|---|
-| Framework | React 18+ | Komponentenbasierte UI, riesiges Ökosystem |
-| Sprache | TypeScript (strict) | Pflicht bei der Komplexität der Datenstrukturen |
-| Bundler | Vite | Schneller Dev-Server, optimierte Builds |
+| Framework | React 19 | Komponentenbasierte UI, riesiges Ökosystem |
+| Sprache | TypeScript 5.9 (strict) | Pflicht bei der Komplexität der Datenstrukturen |
+| Bundler | Vite 8 | Schneller Dev-Server, optimierte Builds |
 | Canvas-Engine | Konva.js + react-konva | Deklarative React-Integration, Canvas-Performance |
-| State Management | Zustand + Immer | Leichtgewichtig, immutable Updates, kein Boilerplate |
+| State Management | Zustand | Leichtgewichtig, kein Boilerplate |
 | Undo/Redo | zundo (Zustand-Middleware) | Automatische History über State-Snapshots |
 | Offline/PWA | vite-plugin-pwa + Workbox | Precaching aller App-Assets |
 | Lokale DB | Dexie.js (IndexedDB) | Auto-Save, Dokumentenverwaltung |
 | Dateiformat | JSZip | .033sketch als JSON-in-ZIP |
-| Styling | Tailwind CSS | Schnelles, konsistentes Styling |
-| UI-Primitives | Radix UI | Barrierefreie Basis (Dialoge, Dropdowns, Tooltips) |
-| Icons | Lucide React | Konsistente, moderne Ikonografie |
-| Typografie | Inter (lokal gebundelt) | Open Source, professionell, nie extern geladen |
+| Styling | Tailwind CSS 4 + CSS Custom Properties | Design-Tokens, Runtime Theme-Switching |
+| Icons | Lucide React | Konsistente, moderne Ikonografie (einzige Icon-Library) |
+| Typografie | Inter Variable (lokal gebundelt) | Open Source, professionell, nie extern geladen |
+| UI-Komponenten | Custom PanelPrimitives | Eigene wiederverwendbare Panel-Bausteine (PanelSection, PanelSlider, PanelSegmented etc.) |
+
+**Nicht verwendet:** Radix UI, Immer, externe UI-Bibliotheken.
 
 ---
 
@@ -65,83 +67,103 @@ Die App soll sich anfühlen wie ein professionelles Design-Tool – modern, aufg
 
 | Token | Dark Mode | Light Mode | Verwendung |
 |---|---|---|---|
-| `--bg` | `#1e1e1e` | `#f5f5f5` | App-Hintergrund |
-| `--surface` | `#2a2a2a` | `#ffffff` | Panels, Sidebars |
-| `--surface-hover` | `#333333` | `#f0f0f0` | Hover-States |
+| `--bg` | `#1a1a1a` | `#f0f0f0` | App-Hintergrund |
+| `--surface` | `#252525` | `#ffffff` | Panels, Sidebars, Popovers |
+| `--surface-hover` | `#2e2e2e` | `#f5f5f5` | Hover-States |
+| `--surface-active` | `#383838` | `#ebebeb` | Gedrückte/aktive States |
 | `--accent` | `#4a9eff` | `#4a9eff` | Interaktive Elemente, Selektion |
-| `--border` | `#333333` | `#e0e0e0` | Trennlinien, Panel-Ränder |
-| `--text` | `#eeeeee` | `#1a1a1a` | Primärtext |
-| `--text-muted` | `#888888` | `#666666` | Sekundärtext |
-| `--canvas-bg` | `#3a3a3a` | `#d0d0d0` | Viewport-Hintergrund (grau) |
+| `--accent-muted` | `rgba(74,158,255,0.12)` | `rgba(74,158,255,0.08)` | Aktive Tool-Hintergründe |
+| `--border` | `#2e2e2e` | `#e2e2e2` | Trennlinien, Panel-Ränder |
+| `--border-subtle` | `#262626` | `#eeeeee` | Subtile Trennlinien |
+| `--text` | `#f0f0f0` | `#1a1a1a` | Primärtext |
+| `--text-secondary` | `#c0c0c0` | `#555555` | Sekundärtext |
+| `--text-muted` | `#a0a0a0` | `#999999` | Labels, Hinweise |
+| `--canvas-bg` | `#363636` | `#d5d5d5` | Viewport-Hintergrund |
 | `--paper` | `#ffffff` | `#ffffff` | Canvas/Papier (immer weiß) |
 | `--danger` | `#ef4444` | `#ef4444` | Löschen, Warnungen |
-| `--success` | `#22c55e` | `#22c55e` | Bestätigungen |
+| `--success` | `#34d399` | `#22c55e` | Bestätigungen |
+| `--warning` | `#fbbf24` | `#f59e0b` | Hinweise |
 
 ### Regeln
 
 - Monochrom + ein Blau. Keine Farborgien.
 - Hover-States dezent (Hintergrundfarbe, kein Glow).
-- Keine Schatten-Exzesse. Maximal `box-shadow: 0 2px 8px rgba(0,0,0,0.15)`.
 - Dünne Borders (1px).
-- Abgerundete Corners: 6px für Panels, 4px für Buttons/Inputs.
-- Panels mit Backdrop-Blur (`backdrop-filter: blur(12px)`) und leichter Transparenz.
-- Lucide Icons durchgehend: 20px in Toolbars, 16px in Panels, 14px inline.
-- Inter als einzige Schriftart: 13px für UI, 12px für sekundäre Infos, 11px für Labels.
+- Abgerundete Corners: `--radius-md: 6px` für Panels, `--radius-sm: 4px` für Buttons/Inputs, `rounded-2xl` (16px) für Popovers.
+- Lucide Icons durchgehend: 18px in Toolbars, 16px in Panels, 14px inline.
+- Inter als einzige Schriftart: 13px für UI, 12px für sekundäre Infos, 11px für Labels/Section-Headers.
+- Animationen: CSS Keyframes mit `cubic-bezier(0.16, 1, 0.3, 1)` Easing (spring-like, Figma-Style). Klassen: `.anim-slide-left`, `.anim-slide-right`, `.anim-slide-down`, `.anim-scale-in`, `.anim-pop-in`, `.anim-fade-in`.
+
+### Größen-Tokens
+
+| Token | Wert | Verwendung |
+|---|---|---|
+| `--topbar-height` | `46px` | Top Bar Höhe |
+| `--statusbar-height` | `32px` | Status Bar Höhe |
+| `--toolbar-width` | `48px` | Toolbar Breite (collapsed = expanded, nur Labels/Shortcuts erscheinen) |
+| `--sidebar-width` | `300px` | Library-Drawer Breite |
 
 ---
 
 ## Layout
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│  [Logo] 033-Skizze    Dateiname.033sketch    [Offline ✓] │
-│  File  Edit  View  Help                    [⚙] [?] [◐]  │
-├────┬─────────────────────────────────────────┬───────────┤
-│    │                                         │           │
-│ T  │                                         │ INSPECTOR │
-│ o  │                                         │           │
-│ o  │           Canvas                        │ (kontext- │
-│ l  │           (weißes DIN A4                │  sensitiv)│
-│ b  │            auf grauem Grund)            │           │
-│ a  │                                         │           │
-│ r  │                                         │           │
-│    │                                         ├───────────┤
-├────┤                                         │           │
-│    │                                         │ EBENEN    │
-│ L  │                                         │ MANAGER   │
-│ i  │                                         │           │
-│ b  │                                         │           │
-│    │                                         │           │
-└────┴─────────────────────────────┬───────────┴───────────┘
-                                   │ DIN A4 · 1:200 · 100% │
-                                   └───────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│  [Logo]  Dateiname ▾  │  033 SKIZZE - V.0.5  │ [✓] [◐] [?] [⚙] │
+├────┬──────────────────────────────────────────────┬──────────┤
+│    │                                              │          │
+│ T  │                                              │  EBENEN  │
+│ o  │                                              │  (48px   │
+│ o  │           Canvas                             │  oder    │
+│ l  │           (weißes DIN A4                     │  180px)  │
+│ s  │            auf grauem Grund)                 │          │
+│    │                                              │          │
+│────│      ┌──────────────┐                        │          │
+│ L  │      │ Floating     │                        │          │
+│ i  │      │ Properties   │ (draggable)            │          │
+│ b  │      └──────────────┘                        │          │
+│    │                                              │          │
+├────┴──────────────────────────────────┬───────────┴──────────┘
+                                        │ DIN A4 · 1:200 · 100% │
+                                        └────────────────────────┘
 ```
 
-### Top Bar
+### Top Bar (46px)
 
-- Logo + App-Name links
-- Aktiver Dateiname (editierbar per Klick) mittig
-- Offline-Status-Indikator
-- Menüleiste: File, Edit, View, Help
-- Rechts: Einstellungen (Zahnrad), Hilfe (?), Dark/Light Toggle (◐)
+- **Links:** Logo + editierbarer Dateiname mit Chevron-Dropdown → Dokument-Properties (Aktenzeichen, Datum, Sachbearbeiter, Dienststelle) als aufklappbares Panel
+- **Mitte:** "033 SKIZZE - V.0.5" Brand-Text
+- **Rechts:** Status ("Lokal gespeichert ✓" / "Offline"), Teilen, Dark/Light Toggle, Hilfe, Einstellungen
+- **Keine Menüleiste** (File/Edit/View/Help) — alles über Direct Manipulation und Shortcuts
 
-### Linke Sidebar – Obere Hälfte: Toolbar
+### Linke Sidebar: Toolbar + Library (48px collapsed)
 
-Schmale vertikale Icon-Leiste. Ein Icon pro Tool. Aktives Tool hervorgehoben mit Accent-Farbe. Tooltip bei Hover mit Name + Shortcut.
+Eine einzige vertikale Sidebar mit zwei Bereichen, getrennt durch Divider:
 
-### Linke Sidebar – Untere Hälfte: Objektbibliothek
+**Oberer Bereich – Werkzeuge:** 5 Tool-Gruppen (siehe Werkzeuge-Kapitel). Jede Gruppe hat ein Icon, bei expandierter Sidebar auch Label + Shortcut-Badge. Aktives Tool mit Accent-Farbe + linker Accent-Leiste hervorgehoben.
 
-Ausklappbar. Collapsed: nur Kategorie-Icons. Expanded: volle Sidebar mit Suchfeld und Kategorie-Accordions.
+**Unterer Bereich – Bibliothek-Kategorien:** Icons für SmartRoads, Fahrzeuge, Infrastruktur, Verkehrsregelung, Umgebung, Markierungen + Suche.
 
-### Rechte Sidebar – Obere Hälfte: Inspector
+**Collapsible:** Toggle-Button (PanelLeftClose/PanelLeftOpen) wechselt zwischen 48px (nur Icons) und expandiert (Icons + Labels). Collapsed = Expanded haben gleiche `--toolbar-width: 48px`, der Inhalt ändert sich (Label/Shortcut ein-/ausgeblendet).
 
-Kontextsensitiv – zeigt Properties des aktuell ausgewählten Objekts oder Dokument-Infos wenn nichts ausgewählt ist.
+### Library-Drawer
 
-### Rechte Sidebar – Untere Hälfte: Ebenen-Manager
+Absolut positioniertes Overlay neben der Toolbar (schiebt Canvas NICHT). Öffnet bei Klick auf eine Bibliothek-Kategorie. Grid-Layout (3 Spalten) mit großen Thumbnails, Filter-Chips und Kategorie-Tabs.
 
-Layer-Stack mit Sichtbarkeit, Sperrung, Drag & Drop.
+### Rechte Sidebar: Ebenen-Manager
 
-### Statusbar
+Collapsible: 48px (Layers-Icon + Objekt-Count-Badge) oder 180px (volle Liste). Toggle über PanelRightClose-Button (zum Einklappen) und Layers-Icon (zum Aufklappen).
+
+**Kein fester Inspector/Properties-Panel in der rechten Sidebar.**
+
+### Floating Properties (Draggable Modal)
+
+Kontextsensitives Properties-Panel als frei verschiebbares Fenster (320px breit). Öffnet per:
+- Doppelklick auf Canvas-Objekt
+- Zahnrad-Icon im Ebenen-Manager
+
+Zeigt je nach Objekttyp unterschiedliche Controls (Strichstärke, Farbe, Schrift, etc.). Position merkt sich der User durch Drag.
+
+### Statusbar (32px)
 
 Minimale Leiste am unteren Rand:
 
@@ -150,14 +172,8 @@ DIN A4 · Maßstab: 1:200 · Zoom: 100%
 ```
 
 - **DIN A4:** Dokumentformat (statisch)
-- **Maßstab:** Live-Anzeige, reine Anzeige, nicht editierbar. Blinkt kurz orange wenn er eine Stufe springt.
-- **Zoom:** Aktueller Zoom-Level, +/− Buttons daneben
-
-### Panel-Verhalten
-
-- Alle Panels resizable und collapsible
-- Doppelklick auf Panel-Header → minimieren
-- Panels merken ihren Zustand (collapsed/expanded, Größe) in IndexedDB
+- **Maßstab:** Live-Anzeige, dynamisch berechnet, **nicht editierbar**. Blinkt kurz orange wenn er eine Stufe springt.
+- **Zoom:** Aktueller Zoom-Level, Klick auf % = resetView (100% + zentrieren)
 
 ---
 
@@ -165,18 +181,19 @@ DIN A4 · Maßstab: 1:200 · Zoom: 100%
 
 ### Dokumentfläche
 
-- DIN A4 Hochformat (210mm × 277mm bedruckbarer Bereich bei 10mm Rändern)
+- DIN A4 Hochformat (210mm × 297mm, bedruckbarer Bereich 190mm × 277mm bei 10mm Rändern)
 - Fester, sichtbarer Druckrahmen als weißes Rechteck
 - Kein Grid, kein Raster – freier Canvas
 - Eine Seite pro Dokument, keine Mehrseitigkeit
+- Canvas-Pixel bei 96 DPI: 793.7px × 1122.5px
 
 ### Viewport
 
 - Unendlicher Arbeitsbereich um das A4-Blatt herum (grauer Hintergrund)
 - Pan: Mittelmaus-Drag, Space + Linksklick-Drag, Touch: Zwei-Finger-Drag
-- Zoom: Scrollrad, Pinch-to-Zoom, Ctrl+0 = Fit-to-Page, Ctrl+1 = 100%
+- Zoom: Scrollrad (Zoom-to-Pointer), Pinch-to-Zoom, Klick auf % in StatusBar = Reset
 - Objekte können außerhalb des A4-Rahmens platziert werden (werden beim Export abgeschnitten)
-- Sanfter roter Schimmer am A4-Rand wenn Objekte außerhalb liegen
+- Startet bei 100% Zoom, Seite zentriert
 
 ### Druckrahmen
 
@@ -187,43 +204,107 @@ Am Rand des A4-Blattes, nur im Export/Druck sichtbar:
 
 ---
 
-## Maßstab-System
+## Maßstab-System & Koordinatensystem
 
-### Grundprinzip: Invisible Complexity
+### Grundprinzip: Dynamischer Auto-Maßstab
 
-Das gesamte Koordinatensystem arbeitet intern in **echten Metern**. Jedes Objekt, jede Straße, jeder Abstand wird in Metern definiert. Der User merkt davon nichts – er arbeitet rein visuell.
+Der Maßstab wird **vollautomatisch** berechnet. Der User wählt, sieht oder konfiguriert ihn nie direkt – er erscheint nur als Info in der Statusbar. Der User arbeitet rein visuell.
 
-### Interne Berechnung
+### Zwei Objekt-Welten
 
-```
-Bedruckbarer A4-Bereich: 190mm × 277mm
+Die App unterscheidet zwei fundamental verschiedene Objektkategorien:
 
-contentBounds = Bounding Box aller Objekte auf dem Canvas
-scaleX = 190mm / contentBounds.widthInMeters
-scaleY = 277mm / contentBounds.heightInMeters
-rawScale = min(scaleX, scaleY)
-
-VALID_SCALES = [1:50, 1:100, 1:150, 1:200, 1:250, 1:500, 1:1000]
-printScale = nächster VALID_SCALES Wert ≤ rawScale (immer abrunden)
-```
-
-### Typische Maßstäbe
-
-| Szene-Ausdehnung (längste Seite) | Auto-Maßstab | Typischer Anwendungsfall |
+| | Zeichenobjekte | Reale Objekte |
 |---|---|---|
-| bis ~15m | 1:50 | Parkplatz-Rempler, Engstelle |
-| bis ~25m | 1:100 | Einmündung, kleiner Kreuzungsbereich |
-| bis ~50m | 1:200 | Standard-Kreuzung |
-| bis ~80m | 1:250 | Große Kreuzung mit Zufahrten |
-| bis ~150m | 1:500 | Straßenabschnitt |
-| bis ~300m | 1:1000 | Langer Streckenabschnitt |
+| **Beispiele** | Freihand, Rect, Ellipse, Text | SmartRoads, Fahrzeuge, Schilder, Bemaßung |
+| **Koordinaten** | Page-Pixel (relativ zu A4 bei 0,0) | Meter (Realwelt-Maße) |
+| **Maßstab** | Irrelevant – rein visuell/dekorativ | Bestimmt Darstellungsgröße auf Canvas |
+| **Transformer** | Voller Resize + Rotate | Nur Rotate + eigene Handles (keine freie Skalierung) |
+| **Skalierung** | Frei per Handles | Parametrisch (z.B. Spuren hinzufügen/entfernen, Länge ziehen) |
+
+**Warum keine freie Skalierung bei realen Objekten?** Eine 4-spurige Straße IST 14m breit (4 × 3.5m). Der User kann sie nicht auf 20m ziehen – das ergibt physikalisch keinen Sinn. Breite = Parameteränderung (Spur dazu), Länge = Endpunkt-Handle ziehen.
+
+### Wie reale Objekte auf den Canvas kommen
+
+Jedes Bibliotheks-Objekt (Fahrzeug, Schild) hat im Object Registry hinterlegte **Realmaße in Metern**. Beim Platzieren:
+
+1. `metersToPixels(realWidth, currentScale)` → Pixel-Breite auf Canvas
+2. `metersToPixels(realHeight, currentScale)` → Pixel-Höhe auf Canvas
+3. Objekt wird mit diesen Pixel-Maßen gerendert
+
+Für SmartRoads:
+
+```
+User droppt "Gerade, 2 Spuren" auf Canvas
+→ System: 2 × 3.5m = 7m Breite
+→ User zieht Länge auf z.B. 30m
+→ metersToPixels(7, 200) = 132px breit
+→ metersToPixels(30, 200) = 567px lang
+→ Rendering auf Canvas
+```
+
+### Auto-Maßstab-Berechnung
+
+Wenn reale Objekte hinzugefügt, verschoben oder verändert werden:
+
+1. Bounding Box aller realen Objekte in Metern berechnen
+2. `calculateAutoScale()` findet den kleinsten gültigen Maßstab, bei dem alles auf A4 passt
+3. Maßstab springt ggf. auf nächste Stufe
+4. **Alle realen Objekte werden mit neuem Maßstab neu gerendert** (weniger Pixel für gleiche Meter)
+5. Zeichenobjekte bleiben unverändert (Pixel-basiert)
+
+### Gültige Maßstäbe
+
+| Maßstab | A4-Darstellungsfläche | Typischer Anwendungsfall |
+|---|---|---|
+| 1:50 | 10.5m × 14.85m | Parkplatz-Rempler, Engstelle |
+| 1:100 | 21m × 29.7m | Einmündung, kleiner Kreuzungsbereich |
+| 1:150 | 31.5m × 44.55m | Mittlere Kreuzung |
+| 1:200 | 42m × 59.4m | Standard-Kreuzung (Default) |
+| 1:250 | 52.5m × 74.25m | Große Kreuzung mit Zufahrten |
+| 1:500 | 105m × 148.5m | Straßenabschnitt |
+| 1:1000 | 210m × 297m | Langer Streckenabschnitt |
+
+### Umrechnungsfunktionen
+
+```typescript
+// Meter → Pixel: Bei 1:200 sind 1m = 5mm auf Papier = 18.9px bei 96dpi
+function metersToPixels(meters: number, scale: ValidScale): number {
+  const mmOnPaper = (1000 / scale) * meters
+  return mmOnPaper * MM_TO_PX  // MM_TO_PX = 96/25.4 ≈ 3.78
+}
+
+// Pixel → Meter: Umkehrung
+function pixelsToMeters(pixels: number, scale: ValidScale): number {
+  const mmOnPaper = pixels / MM_TO_PX
+  return mmOnPaper * (scale / 1000)
+}
+```
+
+### Bemaßungstool: Mathematik
+
+Das Bemaßungstool nutzt euklidische Distanz und `pixelsToMeters()`:
+
+```
+User klickt Punkt A → Canvas-Pixel (x1, y1)
+User klickt Punkt B → Canvas-Pixel (x2, y2)
+
+distPx = √((x2-x1)² + (y2-y1)²)
+distMeters = pixelsToMeters(distPx, currentScale)
+
+Anzeige: "6.50 m"
+```
+
+### Viewport-Zoom vs. Maßstab
+
+- **Maßstab** (1:200): Bestimmt was 1 Pixel in der realen Welt bedeutet. Beeinflusst Größe realer Objekte. Automatisch berechnet.
+- **Viewport-Zoom** (Scrollrad): Rein visuelle Vergrößerung/Verkleinerung. Ändert keine Werte. User-gesteuert.
 
 ### Was der User sieht
 
-- Statusbar: `Maßstab: 1:200` – aktualisiert sich live, reine Anzeige
-- Kurzes oranges Aufblinken wenn der Maßstab eine Stufe springt
+- Statusbar: `Maßstab: 1:200` – aktualisiert sich live, reine Anzeige, nicht editierbar
+- Bemaßungstool zeigt Realmaße (Meter-Anzeige)
 - Maßstabsleiste im Druckrahmen (nur auf dem gedruckten PDF)
-- Bemaßungstool zeigt Realmaße (einzige Stelle wo der User Meterangaben sieht)
 
 ### Was der User NICHT sieht
 
@@ -236,48 +317,118 @@ printScale = nächster VALID_SCALES Wert ≤ rawScale (immer abrunden)
 
 ## Werkzeuge (Toolbar)
 
-### Auswahl & Navigation
+5 Werkzeug-Gruppen in der vertikalen Toolbar. Jede Gruppe hat ein Icon, ein Label und einen Keyboard-Shortcut. Tool-spezifische Optionen erscheinen als Popover neben der Toolbar (320px breit, rounded-2xl, eigenständig).
 
-| Icon | Name | Shortcut | Beschreibung |
-|---|---|---|---|
-| ↖ | Auswahl | V | Einzel- und Mehrfachauswahl (Rahmen, Shift+Klick) |
-| ◇ | Direktauswahl | A | Ankerpunkte von Pfaden und Roads editieren |
-| ✋ | Hand | H / Space | Pan (auch via Mittelmaus) |
+**Grundsatz:** Ein Tool ist etwas, womit man frei auf dem Canvas interagiert (klicken, ziehen, zeichnen). Ein Bibliotheks-Objekt ist etwas Vordefiniertes, das man platziert.
 
-### Zeichenwerkzeuge
+**Popover-Verhalten:**
+- Öffnet automatisch bei Tool-Auswahl (auch via Keyboard-Shortcut)
+- Long-Press oder Rechtsklick auf Tool-Icon öffnet auch das Popover
+- Schließt bei Klick außerhalb
+- Jedes Tool hat eigene Popover-Datei, shared Design über PanelPrimitives
 
-| Icon | Name | Shortcut | Beschreibung |
-|---|---|---|---|
-| ✏️ | Freihand | B | Konfigurierbarer Pinsel (Stärke, Farbe, Glättung) |
-| ╱ | Linie | L | Gerade Linie, optional mit Pfeilspitze |
-| ↗ | Pfeil | Shift+L | Linie mit Pfeilspitze |
-| ⬜ | Rechteck | R | Rechteck / Quadrat (Shift) |
-| ⭕ | Ellipse | O | Ellipse / Kreis (Shift) |
-| ⬡ | Polygon | P | Punkt für Punkt, schließen per Doppelklick/Enter |
-| 〰️ | Pfad | Shift+P | Bezier-Kurven für Freiformen |
+**Toggle-Verhalten:** Nochmal gleichen Shortcut drücken → zurück zu Select-Tool.
 
-### Text
+```
+┌────┐
+│ ↖  │  Auswahl          V     (kein Popover)
+├────┤
+│ ✏  │  Freihand         P     (Popover: Stärke, Strichart, Glättung, Farbe)
+├────┤
+│ ⬜  │  Formen           O     (Popover: 3×3 Grid mit 9 Shapes + Kontur/Füllung)
+├────┤
+│ T  │  Text              T     (Popover: Größe, Bold/Italic/Underline, Ausrichtung, Farbe)
+├────┤
+│ ↔  │  Bemaßung          M     (Popover: Linienstärke, Schriftgröße, Farbe)
+└────┘
+```
 
-| Icon | Name | Shortcut | Beschreibung |
-|---|---|---|---|
-| T | Text | T | Textbox mit Schrift, Größe, Farbe, Ausrichtung |
+### 1. Auswahl (V)
 
-### Bemaßung
+- Klick = Einzelauswahl
+- Rahmen ziehen = Mehrfachauswahl (Marquee)
+- Shift+Klick = zur Auswahl hinzufügen/entfernen
+- Ctrl+A = Alles auswählen
+- Drag auf Objekt = verschieben
+- Anfasser an Ecken/Kanten = skalieren (nur bei Zeichenobjekten)
+- Anfasser oben = rotieren
+- **Shift + Rotation = 90°-Snap** (rastet auf 0°, 90°, 180°, 270°)
+- Doppelklick auf SmartRoad = Editor öffnen
+- Doppelklick auf Text = Text inline editieren
+- Doppelklick auf anderes Objekt = Properties-Panel öffnen
+- Delete/Backspace = Löschen
+- Pan via Space (gehalten) + Drag oder Mittelmaus-Drag
 
-| Icon | Name | Shortcut | Beschreibung |
-|---|---|---|---|
-| ↔ | Bemaßung | M | Zwei Punkte setzen → automatische Realmaß-Anzeige in Metern |
+### 2. Freihand (P)
 
-### Unfallspezifische Werkzeuge
+- Drag = freies Zeichnen
+- Bei mouseUp: Pfad-Vereinfachung via Ramer-Douglas-Peucker Algorithmus
+- Konva `Line` mit `tension` Parameter für Glättung
+- Nach Zeichnen: Auto-Switch zu Select, Objekt selektiert
+- Zu kurze Pfade (< 6 Punkte) werden verworfen
 
-| Icon | Name | Shortcut | Beschreibung |
-|---|---|---|---|
-| 〰️ | Bremsspur | – | Parametrisch: Start-/Endbreite, Verlauf, Typ |
-| ▨ | Splitterfeld | – | Polygon mit genormter Schraffur |
-| 💧 | Flüssigkeit | – | Öl, Kraftstoff, Kühlwasser (je eigene Schraffur) |
-| ✕ | Kollisionspunkt | – | Genormtes Symbol für Kollisionsstelle |
-| ◎ | Endlage | – | Marker für Fahrzeug-Endlage |
-| ↝ | Bewegungslinie | – | Gekurvte Pfeile für Fahrtrichtungen entlang Pfad |
+**Popover-Optionen:**
+- Strichstärke (1-10px, Slider)
+- Strichart (Durchgezogen / Striche / Punkte, Segmented Control)
+- Glättung (0-100%, Slider)
+- Strichfarbe (ColorPicker)
+
+### 3. Formen (O)
+
+9 Shapes im 3×3 Grid-Popover:
+
+| Rechteck | Abgerundet | Ellipse |
+|---|---|---|
+| **Dreieck** | **Polygon** | **Stern** |
+| **Linie** | **Pfeil** | **Pfad** |
+
+- Klick+Drag auf Canvas erstellt Shape
+- **Shift + Zeichnen (Linie/Pfeil) = 45°-Snap** (rastet auf 0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°)
+- Nach Zeichnen: Auto-Switch zu Select, Objekt selektiert
+- Zu kleine Objekte (< 3px) werden verworfen
+
+**Shape-Details:**
+- **Abgerundetes Rechteck:** cornerRadius 12px
+- **Dreieck + Polygon:** Konva RegularPolygon (3 bzw. 6 Seiten)
+- **Stern:** Konva Star (5 Zacken, innerRadius 0.4)
+- **Pfeil:** Konva Arrow mit dynamischer Pfeilspitze
+- **Füllung:** Nur bei geschlossenen Formen (nicht bei Linie/Pfeil/Pfad)
+
+**Popover-Optionen:**
+- Shape-Auswahl (3×3 Grid mit Icons)
+- Konturstärke (0-10px, Slider)
+- Konturart (Durchgezogen / Striche / Punkte)
+- Konturfarbe (ColorPicker)
+- Füllfarbe (ColorPicker, nur bei geschlossenen Formen)
+
+### 4. Text (T)
+
+- Klick auf Canvas = Textbox erstellen, sofort tippen (Inline-Editor)
+- Enter = Zeilenumbruch, Escape/Klick außerhalb = bestätigen
+- Feste Schriftart (Inter) – keine Schriftwahl
+- Transformer: Proportionale Skalierung (ändert fontSize, nicht Bounding Box)
+- Ebenen-Name passt sich automatisch dem Text an (Photoshop-Style)
+
+**Popover-Optionen:**
+- Schriftgröße (6-72px, Slider)
+- Stil: Bold, Italic, Underline (Toggle-Buttons)
+- Ausrichtung: Links, Mitte, Rechts
+- Textfarbe (ColorPicker)
+- Hintergrundfarbe (ColorPicker)
+
+### 5. Bemaßung (M)
+
+- Zwei-Klick-Tool: Erster Klick = Startpunkt, Zweiter Klick = Endpunkt
+- **Shift + Zeichnen = 45°-Snap** (wie bei Linie/Pfeil)
+- Erstellt DIN-Style Bemaßungslinie: Pfeilspitzen an beiden Enden, Verlängerungsstriche senkrecht, Maßzahl zentriert über der Linie
+- Distanz wird automatisch in Metern berechnet via `pixelsToMeters()`
+- Vorschau: Gestrichelte Linie + Kreise an Start/Endpunkt während des Zeichnens
+- Nach Erstellen: Auto-Switch zu Select
+
+**Popover-Optionen:**
+- Linienstärke (1-5px, Slider)
+- Schriftgröße (10-36px, Slider)
+- Linienfarbe (ColorPicker)
 
 ---
 
@@ -285,13 +436,9 @@ printScale = nächster VALID_SCALES Wert ≤ rawScale (immer abrunden)
 
 ### Aufbau
 
-Sidebar links, untere Hälfte. Zwei Zustände:
+Unterer Bereich der linken Toolbar. Collapsed: nur Kategorie-Icons. Klick auf Kategorie öffnet Library-Drawer als absolut positioniertes Overlay (schiebt Canvas nicht).
 
-**Collapsed:** Nur Kategorie-Icons vertikal. Hover zeigt Label.
-
-**Expanded:** Volle Sidebar mit:
-- Suchfeld oben (filtert über Tags und Labels)
-- Kategorien als Accordion-Gruppen
+Library-Drawer: Grid-Layout (3 Spalten) mit großen Thumbnails, Filter-Chips und Kategorie-Tabs. 300px breit.
 
 ### Kategorien
 
@@ -312,7 +459,7 @@ Jeder Typ ist ein eigenständiges, parametrisches Objekt. Drag & Drop auf Canvas
 - **Bus:** Linienbus, Gelenkbus, Reisebus
 - **Sonderfahrzeuge:** Streifenwagen, RTW, Feuerwehr
 
-Jedes Fahrzeug: SVG-Draufsicht, einfärbbar über benannte SVG-IDs, maßstabsgetreu.
+Jedes Fahrzeug: SVG-Draufsicht, einfärbbar über benannte SVG-IDs, maßstabsgetreu. **Nicht frei skalierbar** – Realmaße sind fix (z.B. VW Golf = 4.28m × 1.79m).
 
 #### 🏗️ Infrastruktur
 
@@ -340,16 +487,19 @@ Jedes Fahrzeug: SVG-Draufsicht, einfärbbar über benannte SVG-IDs, maßstabsget
 
 #### 📐 Markierungen
 
-- Bremsspuren (vordefinierte Varianten)
-- Splitterfelder, Flüssigkeiten
-- Endlagen, Kollisionspunkte
+- Bremsspuren (vordefinierte Varianten + parametrisch: Start-/Endbreite, Verlauf, Typ)
+- Splitterfelder (Polygon mit genormter Schraffur)
+- Flüssigkeiten (Öl, Kraftstoff, Kühlwasser – je eigene Schraffur/Füllung)
+- Kollisionspunkt (genormtes Symbol)
+- Endlage-Marker (genormtes Symbol)
+- Bewegungslinien / Fahrtrichtungspfeile (gekurvte Pfeile entlang Pfad)
 - Nummerierungs-Labels (kreisförmig: ①②③)
 - Himmelsrichtungs-Pfeil (N-Pfeil)
 - Foto-Standort-Marker (Kamera-Icon mit Blickrichtung)
 
 ### Drag & Drop
 
-Objekte werden per Drag aus der Bibliothek auf den Canvas gezogen. Beim Droppen werden sie mit korrekten Realmaßen platziert (intern, basierend auf dem aktuellen Auto-Maßstab). Das Objekt erscheint zentriert unter dem Cursor.
+Objekte werden per Drag aus der Bibliothek auf den Canvas gezogen. Beim Droppen werden sie mit korrekten Realmaßen platziert (über `metersToPixels()` basierend auf aktuellem Auto-Maßstab). Das Objekt erscheint zentriert unter dem Cursor.
 
 ---
 
@@ -398,26 +548,18 @@ interface ObjectEntry {
 
   // Verhalten
   rotatable: boolean
-  defaultLayer: string              // "vehicles" – Ebene auf der das Objekt landet
+  scalable: false                   // Reale Objekte sind NICHT frei skalierbar
 
   // Optionale Andockpunkte (für Snapping)
   snapPoints?: SnapPoint[]
 }
-
-type ObjectCategory =
-  | 'smartroads'
-  | 'vehicles'
-  | 'infrastructure'
-  | 'traffic-regulation'
-  | 'environment'
-  | 'markings'
 ```
 
 ### Einfärbung
 
 SVGs haben benannte IDs (z.B. `body`, `body-2`, `body-3`) für die Karosserie. Das Registry definiert welche IDs die Farbziele sind. Beim Einfärben wird per Style-Attribut die Fill-Farbe auf diesen Elementen gesetzt.
 
-Vordefinierte Farbchips im Inspector: Weiß, Schwarz, Silber, Rot, Blau, Grün, Gelb + Custom Color Picker.
+Vordefinierte Farbchips im Properties-Panel: Weiß, Schwarz, Silber, Rot, Blau, Grün, Gelb + Custom Color Picker.
 
 ---
 
@@ -428,6 +570,15 @@ Vordefinierte Farbchips im Inspector: Weiß, Schwarz, Silber, Rot, Blau, Grün, 
 SmartRoads ist das Alleinstellungsmerkmal der App. Ein parametrischer Generator für Straßensegmente, basierend auf RASt-Defaultwerten (Richtlinien für die Anlage von Stadtstraßen), aber ohne Konformitätszwang. Der User hat maximale Freiheit.
 
 RASt dient ausschließlich als Quelle für sinnvolle Standardwerte (Fahrstreifenbreiten, Gehwegbreiten etc.). Keine Validierung, keine Warnungen, keine Einschränkungen.
+
+### Interaktion auf dem Canvas
+
+SmartRoad-Objekte verhalten sich anders als Zeichenobjekte:
+- **Keine freie Skalierung** über Transformer-Handles
+- **Breite:** Nur über Parameter änderbar (Spuren hinzufügen/entfernen)
+- **Länge:** Über eigene Endpunkt-Handles (nicht den Standard-Transformer)
+- **Rotation:** Erlaubt (Shift = 90°-Snap)
+- **Verschieben:** Normal per Drag
 
 ### Verfügbare Segment-Typen
 
@@ -441,16 +592,26 @@ In der Objektbibliothek unter "SmartRoads":
 ### Workflow
 
 ```
-1. User zieht Segment-Typ aus der Bibliothek auf den Canvas
-   → Sinnvoller Default wird platziert (2 Spuren, Gehweg beidseitig)
+1. User zieht "Gerade" aus Library auf Canvas
+   → Default: 2 Spuren (7m breit), Gehweg beidseitig
+   → Maßstab berechnet sich automatisch
    → Sofort nutzbar
 
-2. Optional: Doppelklick auf platziertes Segment
-   → SmartRoad Editor öffnet sich als Overlay
-   → User passt an
-   → "Übernehmen" aktualisiert das Segment auf dem Canvas
+2. User stellt "4 Spuren" ein
+   → System: 4 × 3.5m = 14m breit
+   → Maßstab passt sich ggf. an
 
-3. Auf dem Canvas: Segment verschieben, rotieren, an andere andocken
+3. User zieht Länge über Endpunkt-Handle
+   → z.B. 40m lang
+   → Maßstab springt ggf. auf nächste Stufe
+
+4. User fügt zweite Straße hinzu → Kreuzung wird größer
+   → Maßstab springt ggf. auf 1:500
+
+5. Optional: Doppelklick auf platziertes Segment
+   → SmartRoad Editor öffnet sich als Overlay
+   → User passt Querschnitt an
+   → "Übernehmen" aktualisiert das Segment
 ```
 
 ### SmartRoad Editor – UI
@@ -673,7 +834,7 @@ MARKIERUNGEN
 **Interaktion:**
 - ≡ Drag-Handle: Reihenfolge ändern (= Position im Querschnitt tauschen)
 - 🗑 Löschen (mit Undo)
-- Klick auf Element: Schublade links klappt auf mit Optionen dieses Elements vorgeladen (Typ nachträglich änderbar)
+- Klick auf Element: Schublade links klappt auf mit Optionen dieses Elements vorgeladen
 - Klick auf Element: In der Live-Vorschau wird es hervorgehoben
 
 ### Presets (gespeicherte Querschnitte)
@@ -710,121 +871,83 @@ SmartRoad-Segmente werden intern als SVG definiert und auf den Konva-Canvas als 
 
 ---
 
-## Inspector / Properties Panel
-
-### Kontextsensitives Verhalten
-
-Der Inspector (rechte Sidebar, obere Hälfte) zeigt unterschiedliche Inhalte je nach Auswahl:
-
-### Nichts ausgewählt → Dokument-Properties
-
-```
-DOKUMENT
-──────────────────────
-Aktenzeichen: [ ____________ ]
-Datum:        [ ____________ ]
-Sachbearbeiter: [ ____________ ]
-Dienststelle: [ ____________ ]
-```
-
-Diese Felder erscheinen im Druckrahmen beim PDF-Export.
-
-### Objekt ausgewählt → Objekt-Properties
-
-```
-[Icon] PKW 1
-──────────────────────
-Rotation:  [Drehregler]
-Farbe:     [● ● ● ● ● ● ● 🎨]
-──────────────────────
-Label:     [ PKW 1          ]
-Nr:        [ 1 ]
-Notiz:     [ ______________ ]
-```
-
-- **Rotation:** Drehregler (Dial) + Shift+Drag auf Canvas
-- **Farbe:** Chips + Custom Picker (nur bei `colorable: true`)
-- **Label:** Freitext, erscheint als Beschriftung
-- **Nr:** Beteiligtennummer
-- **Notiz:** Freitext-Notiz (nur in Datei, nicht auf Canvas)
-
-Position und Größe werden ausschließlich per Direct Manipulation auf dem Canvas geändert (Drag, Anfasser). Keine X/Y/W/H-Eingabefelder.
-
-### Mehrere Objekte ausgewählt → Alignment
-
-```
-AUSRICHTUNG
-──────────────────────
-[⫢] [⫤] [⫠] [⫞]  (links, rechts, oben, unten)
-[⫟] [⫡]          (horizontal, vertikal zentriert)
-[⋯] [⋮]          (gleichmäßig verteilen h/v)
-```
-
-### SmartRoad ausgewählt → Road-Info
-
-```
-[Icon] SmartRoad: Gerade
-──────────────────────
-Spuren: 2
-Gehweg: Beidseitig
-Markierungen: 3
-
-[Bearbeiten →]  (öffnet SmartRoad Editor)
-```
-
-Einfache Anzeige + Button zum Editor. Keine Inline-Bearbeitung von Road-Parametern.
-
----
-
 ## Ebenen-Manager
 
 ### Aufbau
 
-Panel rechts unten. Zeigt den Layer-Stack des Dokuments.
+Rechte Sidebar. Collapsible: 48px (Layers-Icon + Count-Badge) oder 180px (volle Liste).
 
-### Default-Ebenen bei neuem Dokument
+### Kein Layer-System — Flache Objektliste
 
-```
-☐ Background
-├ 🛣 Straßen        👁 🔒
-├ 🚗 Fahrzeuge       👁 🔒
-├ 📐 Markierungen    👁 🔒
-├ T  Beschriftung    👁 🔒
-└ ↔  Bemaßung        👁 🔒
-```
+**Bewusste Entscheidung:** Es gibt KEINE vorgefertigten Layer-Kategorien (Straßen, Fahrzeuge etc.). Jedes Objekt auf dem Canvas ist ein eigener Eintrag im Ebenen-Manager. Die Liste startet leer.
 
-### Pro Ebene
+### Pro Objekt
 
-- **Sichtbarkeit:** Auge-Icon (👁) – Toggle
-- **Sperrung:** Schloss-Icon (🔒) – Toggle (gesperrte Objekte nicht selektierbar/verschiebbar)
-- **Farbcode:** Kleiner Farbdot für visuelle Unterscheidung
-- **Aktiv-Indikator:** Hervorgehobene Ebene = dort landen neue Objekte
+- **Typ-Icon:** Passt zum Objekttyp (Square, Circle, Pencil, Type, Ruler, etc.)
+- **Name:** Auto-generiert oder custom. Bei Text: passt sich dem Inhalt an (Photoshop-Style)
+- **Sichtbarkeit:** Auge-Icon – Toggle
+- **Sperrung:** Schloss-Icon – Toggle
+- **Farbdot:** Zeigt Strokefarbe des Objekts
+- **Properties:** Zahnrad-Icon → öffnet Floating Properties
 
 ### Interaktion
 
-- **Drag & Drop:** Ebenen-Reihenfolge ändern (Z-Order)
-- **Drag & Drop:** Objekte zwischen Ebenen verschieben
+- **Drag & Drop:** Z-Order per GripVertical Handle ändern (blaue Drop-Indicator-Linie)
+- **Klick:** Selektiert Objekt auf Canvas
+- **Shift+Klick:** Multi-Select
 - **Doppelklick auf Name:** Inline-Rename
-- **Rechtsklick:** Kontextmenü (Duplizieren, Zusammenführen, Löschen, "Alle anderen sperren")
-- **Gruppen:** Objekte innerhalb einer Ebene gruppierbar (ein-/ausklappbar)
-- **Klick auf Objekt in Liste:** Selektiert es auf dem Canvas
-- **Klick auf Objekt auf Canvas:** Scrollt die Ebenen-Liste zum entsprechenden Eintrag
+- **Auto-Expand:** Klappt auf wenn neues Objekt hinzugefügt wird
+- **Auto-Collapse:** Klappt zu wenn letztes Objekt gelöscht wird
 
-### Objektdarstellung in Ebenen
+### `objectOrder` Array
 
-```
-▼ 🚗 Fahrzeuge                   👁 🔒
-  ▼ 📁 Gruppe                    👁 🔒
-    🚗 PKW 1                 👁 🔒 🔵
-    🚗 PKW 2                 👁 🔒 🔴
-  📐 Bremsspur 1                 👁 🔒
-```
+Im Store bestimmt `objectOrder: string[]` die Zeichenreihenfolge (Index 0 = unten, letzter = oben). Der Ebenen-Manager zeigt die umgekehrte Reihenfolge (oben = vorne).
 
-Jedes Objekt zeigt: Typ-Icon, Label, Sichtbarkeit, Sperrung, Farbdot (bei eingefärbten Objekten).
+---
 
-### Dynamic Rename
+## Floating Properties Panel
 
-Inline-Rename per Doppelklick auf den Objektnamen. Sofort editierbar, Enter bestätigt, Escape bricht ab.
+### Kontextsensitives Verhalten
+
+Draggable Modal (320px, GripHorizontal Titlebar). Zeigt unterschiedliche Controls je nach Objekttyp:
+
+### Freehand → Strich-Properties
+- Strichstärke (Slider)
+- Strichart (Segmented: Linie/Striche/Punkte)
+- Glättung (Slider)
+- Strichfarbe (ColorPicker)
+- Deckkraft (Slider)
+
+### Geschlossene Shapes (Rect, Ellipse, etc.) → Kontur + Füllung
+- Konturstärke (Slider)
+- Konturart (Segmented)
+- Konturfarbe (ColorPicker)
+- Füllfarbe (ColorPicker)
+- Deckkraft (Slider)
+
+### Offene Shapes (Linie, Pfeil, Pfad) → Nur Kontur
+- Konturstärke (Slider)
+- Konturart (Segmented)
+- Konturfarbe (ColorPicker)
+- Deckkraft (Slider)
+
+### Text → Schrift-Properties
+- Schriftgröße (Slider)
+- Stil: Bold, Italic, Underline
+- Ausrichtung: Links, Mitte, Rechts
+- Textfarbe (ColorPicker)
+- Hintergrundfarbe (ColorPicker)
+- Deckkraft (Slider)
+
+### Bemaßung → Darstellungs-Properties
+- Linienstärke (Slider)
+- Schriftgröße (Slider)
+- Linienfarbe (ColorPicker)
+- Deckkraft (Slider)
+
+### Alle Objekttypen
+- Bezeichnung (Text-Input, oben im Panel)
+- Deckkraft (Slider, unten im Panel)
 
 ---
 
@@ -832,30 +955,14 @@ Inline-Rename per Doppelklick auf den Objektnamen. Sofort editierbar, Enter best
 
 ### Implementierung
 
-Über Zustand-Snapshots via zundo (Zustand-Middleware). Jeder State-Change erzeugt automatisch einen Snapshot.
+Über Zustand-Snapshots via zundo (Zustand-Middleware). State wird partialize'd – viewport, panels, theme etc. ausgeschlossen.
 
 ### Verhalten
 
 - **Ctrl+Z:** Undo
 - **Ctrl+Shift+Z / Ctrl+Y:** Redo
 - Unbegrenzt (bis Memory-Limit, älteste States fallen raus)
-- Alle Aktionen sind rückgängig machbar: Platzieren, Löschen, Verschieben, Rotieren, Farbänderungen, Ebenen-Operationen, SmartRoad-Änderungen
-
-### History-Panel (optional)
-
-Einblendbar über View-Menü. Zeigt benannte Einträge:
-
-```
-HISTORY
-──────────────────────
-• PKW 1 hinzugefügt
-• PKW 1 rotiert
-• Straße platziert
-• Bremsspur gezeichnet
-• PKW 2 eingefärbt (rot)
-```
-
-Klick auf Eintrag → springt zu diesem State.
+- Alle Aktionen sind rückgängig machbar: Platzieren, Löschen, Verschieben, Rotieren, Farbänderungen, SmartRoad-Änderungen
 
 ---
 
@@ -869,7 +976,7 @@ Internes Format: JSON in ZIP (via JSZip).
 ```
 dokument.033sketch (ZIP)
 ├── document.json       → Canvas-State, Dokument-Metadaten
-├── layers.json         → Ebenenstruktur mit Objektreferenzen
+├── layers.json         → Objektliste mit Reihenfolge
 ├── roads.json          → SmartRoad-Definitionen (parametrisch)
 ├── history.json        → Undo-History (optional, konfigurierbar)
 └── assets/             → Eingebettete Bilder/Custom-SVGs
@@ -879,7 +986,7 @@ dokument.033sketch (ZIP)
 
 - Alle 30 Sekunden automatisch in IndexedDB (via Dexie.js)
 - Kein Datenverlust bei Browser-Crash oder versehentlichem Schließen
-- Statusanzeige in der Top Bar: "Gespeichert ✓" / "Speichert..."
+- Statusanzeige in der Top Bar: "Lokal gespeichert ✓" / "Offline"
 
 ### Manuelles Speichern & Laden
 
@@ -887,14 +994,6 @@ dokument.033sketch (ZIP)
 - **Fallback:** Download als .033sketch / Upload via Datei-Dialog
 - **Ctrl+S:** Speichern
 - **Ctrl+Shift+S:** Speichern unter
-
-### Startansicht
-
-Beim Öffnen der App (kein Dokument geladen):
-
-- Zuletzt geöffnete Dokumente als Kacheln mit Thumbnail (aus IndexedDB)
-- "Neues Dokument" Button
-- Vorlagen-Auswahl (Leere Skizze, Kreuzung, T-Kreuzung, Autobahn-Abschnitt)
 
 ### Export
 
@@ -913,59 +1012,35 @@ Alle Exporte respektieren den automatisch berechneten Maßstab und beinhalten de
 
 ### Keyboard Shortcuts
 
-Alle Tools und häufigen Aktionen haben Shortcuts. Konfigurierbar über Einstellungen.
-
-**Wichtigste:**
 | Shortcut | Aktion |
 |---|---|
 | V | Auswahl-Tool |
-| H / Space (halten) | Hand-Tool (Pan) |
+| P | Freihand (Pencil) |
+| O | Formen (Objects) |
 | T | Text-Tool |
-| B | Freihand/Brush |
-| L | Linie |
-| R | Rechteck |
-| M | Bemaßung |
+| M | Bemaßung (Measure) |
+| Space (halten) | Pan (Hand) |
+| Shift + Rotation | 90°-Snap (0°, 90°, 180°, 270°) |
+| Shift + Linie/Pfeil/Bemaßung | 45°-Snap beim Zeichnen |
 | Delete / Backspace | Ausgewähltes löschen |
+| Escape | Tool-Popover schließen / Properties schließen |
 | Ctrl+Z | Undo |
 | Ctrl+Shift+Z | Redo |
-| Ctrl+C / Ctrl+V | Copy / Paste |
-| Ctrl+G | Gruppieren |
-| Ctrl+Shift+G | Gruppe auflösen |
 | Ctrl+A | Alles auswählen |
 | Ctrl+S | Speichern |
-| Ctrl+K | Command Palette |
-| Ctrl+0 | Zoom: Fit to Page |
-| Ctrl+1 | Zoom: 100% |
-| Ctrl++ / Ctrl+- | Zoom in / out |
 
-### Radial-Kontextmenü
-
-Rechtsklick auf Canvas öffnet ein rundes Menü mit den häufigsten Aktionen (kontextsensitiv):
-
-**Auf leerem Canvas:** Einfügen, Alle auswählen, Zoom to Fit
-**Auf Objekt:** Kopieren, Einfügen, Löschen, Gruppieren, Ebene wechseln, In den Vordergrund/Hintergrund
-
-### Command Palette
-
-Ctrl+K öffnet eine Suchleiste (wie VS Code / Figma). Tippen filtert alle verfügbaren Aktionen: Tools, Befehle, Objekte, Einstellungen. Enter führt aus.
+**Toggle-Verhalten:** Gleichen Shortcut nochmal drücken → zurück zu Auswahl (V).
 
 ### Snapping
 
 - An Objekte (Kanten, Mittelpunkte)
 - An Konnektoren (SmartRoad-Enden)
-- An Hilfslinien
-- Snapping global ein/aus schaltbar (Toggle in Statusbar oder Shortcut)
-
-### Hilfslinien
-
-- Ziehbar von den Linealen (Oberkante, linke Kante des Canvas)
-- Magnetisch – Objekte snappen daran
-- Löschbar per Drag zurück auf das Lineal
+- Snapping global ein/aus schaltbar
 
 ### Clipboard
 
-- Copy/Cut/Paste von Objekten
-- Intern als JSON in Zwischenablage → funktioniert auch zwischen Dokumenten (wenn beide in separaten Tabs offen)
+- Copy/Cut/Paste von Objekten (Ctrl+C/X/V)
+- Intern als JSON → funktioniert auch zwischen Dokumenten
 
 ### Touch-Support
 
@@ -974,65 +1049,173 @@ Grundlegende Bedienbarkeit auf Tablets (iPad, Surface):
 - Zoom: Pinch
 - Auswahl: Tap
 - Verschieben: Long-Press + Drag
-- Keine Hover-States auf Touch → alle wichtigen Aktionen auch per Tap erreichbar
 
 ### Dark/Light Mode
 
-- Toggle über Icon in der Top Bar (◐)
+- Toggle über Icon in der Top Bar (Sun/Moon)
 - Systemeinstellung als Default
 - Canvas/Papier bleibt immer weiß
 
 ### Lokalisierung
 
-- Deutsch als Primärsprache
-- Englisch als Fallback
-- Alle UI-Strings in i18n-Dateien (vorbereitet für weitere Sprachen)
+- Deutsch als Primärsprache (UI-Labels, Tooltips)
+- Englisch als Code-Sprache (Variablen, Kommentare)
 
 ---
 
 ## Entwicklungsphasen
 
-### Phase 1: Foundation
+### Phase 1: Foundation ✅
 
-- Projekt-Setup (Vite + React + TypeScript + Zustand + Konva)
-- Canvas mit DIN-A4-Rahmen, Pan & Zoom
-- Auto-Maßstab-System (intern, Statusbar-Anzeige)
-- Grundlegendes Tool-System (Auswahl, Hand)
-- Ebenen-Manager (Grundversion: Erstellen, Umbenennen, Sichtbarkeit, Sperrung, Drag & Drop)
-- Dark/Light Mode
-- Grundlegendes Layout (Toolbar, Panels, Statusbar)
+- Projekt-Setup (Vite + React 19 + TypeScript + Zustand + Konva)
+- Canvas mit DIN-A4-Rahmen, Pan & Zoom (Spacebar-Pan, Mittelmaus-Pan, Scroll-Zoom)
+- Layout: TopBar, Toolbar, Canvas, LayerManager, StatusBar
+- Dark/Light Mode mit CSS Custom Properties
+- Dokument-Properties (Aktenzeichen, Datum, Sachbearbeiter, Dienststelle)
 
-### Phase 2: Objekte
+### Phase 2: Zeichenwerkzeuge ✅
 
-- SVG-Preprocessing-Pipeline (SVGO, Normalisierung, Build-Script)
-- Object Registry + Manifest für alle Objekte
-- Objektbibliothek UI (Sidebar, Suche, Kategorien, Drag & Drop)
-- Inspector (Rotation, Farbe, Metadaten)
-- Objekt-Einfärbung
-- Undo/Redo (zundo)
-- Snapping-System (Objekt-an-Objekt)
+- Toolbar: 5 Tool-Gruppen mit Popovers (Freihand, Formen, Text, Bemaßung)
+- Freihand mit Pfad-Glättung (Ramer-Douglas-Peucker)
+- 9 Formen (Rect, Rounded-Rect, Ellipse, Triangle, Polygon, Star, Line, Arrow, Path)
+- Text-Tool mit Inline-Editor (Bold, Italic, Underline, Ausrichtung)
+- Bemaßung mit Zwei-Klick-Muster und Meter-Anzeige
+- Shift-constrained Drawing (45° für Linien, 90° für Rotation)
+- Shared PanelPrimitives für konsistentes Popover-Design
+- Ebenen-Manager mit Drag&Drop Z-Order, Auto-Expand/Collapse
+- Floating Properties (draggable, typ-spezifisch)
+- Custom ColorPicker (HSV, Presets, Hex-Input)
+- Animationen (CSS Keyframes, Figma-Style Easing)
 
-### Phase 3: Zeichenwerkzeuge
+### Phase 3: SmartRoads — Gerade Straße (MVP) ← NÄCHSTE SESSION
 
-- Freihand, Linie, Pfeil
-- Rechteck, Ellipse, Polygon, Pfad
-- Bemaßungstool (mit Realmaß-Anzeige in Metern)
-- Text-Tool
-- Unfallspezifische Tools (Bremsspur, Splitterfeld, Flüssigkeit, Kollisionspunkt, Endlage, Bewegungslinien)
-- Hilfslinien
+Das Herzstück der App. Wir starten mit dem minimal funktionsfähigen Straßensegment und bauen darauf auf.
 
-### Phase 4: SmartRoads
+#### 3a: Datenmodell & Typen
 
-- SmartRoad-Datenmodell (Querschnitt, Segmente, Markierungen)
-- SmartRoad Editor UI (Overlay, Element-Palette, Live-Vorschau, Quick Settings, Element-Liste)
-- Gerade Segmente (Querschnitt-Rendering, Markierungen)
+- `SmartRoadSegment` Typ definieren (eigener Typ, nicht CanvasObject):
+  ```typescript
+  interface RoadLane {
+    id: string
+    type: 'lane' | 'sidewalk' | 'bike' | 'parking' | 'green' | 'median'
+    direction?: 'forward' | 'backward'  // Fahrtrichtung
+    widthMeters: number                  // Realbreite in Metern
+    variant?: string                     // z.B. 'protected', 'striped', 'curb'
+  }
+
+  interface SmartRoadSegment {
+    id: string
+    type: 'straight'  // später: 'curve' | 'intersection' | 'roundabout'
+    // Position & Orientierung auf Canvas
+    x: number          // Meter (Weltkoordinaten)
+    y: number          // Meter (Weltkoordinaten)
+    rotation: number   // Grad
+    lengthMeters: number  // Gesamtlänge
+    // Querschnitt (von links nach rechts, Draufsicht in Fahrtrichtung)
+    lanes: RoadLane[]
+    // Berechnet
+    totalWidthMeters: number  // Summe aller lane.widthMeters
+    // Markierungen (Phase 4)
+    markings?: RoadMarking[]
+    // State
+    visible: boolean
+    locked: boolean
+    label: string
+  }
+  ```
+- `SmartRoadSegment` im Store neben `objects` als eigene Collection (`roads: Record<string, SmartRoadSegment>`, `roadOrder: string[]`)
+- Getrennt von `CanvasObject`, weil fundamental anderes Verhalten (Meter-basiert, parametrisch, kein freier Resize)
+
+#### 3b: Rendering — Gerade Straße auf Canvas
+
+- Neue Komponente `SmartRoadRenderer.tsx` (analog zu `CanvasObjects.tsx`)
+- Rendering via Konva `Group` + `Rect` pro Spur:
+  - Fahrbahn: dunkelgrau (`#555`)
+  - Gehweg: hellgrau (`#bbb`)
+  - Radweg: optional rot getönt
+  - Grünstreifen: grün
+  - Leitlinie (Mittellinie): weiße gestrichelte Linie zwischen Gegenrichtungs-Spuren
+  - Fahrstreifenbegrenzung: durchgezogene weiße Linie an Außenkanten
+- Pixel-Berechnung: `metersToPixels(lane.widthMeters, currentScale)` pro Spur
+- Straße wird als rotierbare Group gerendert, Position = `metersToPixels(x/y)`
+- **Kein Konva Transformer** für Resize — eigene Endpunkt-Handles für Längenänderung
+
+#### 3c: Dynamischer Auto-Maßstab
+
+- Neue Store-Action: `recalculateScale()` — wird aufgerufen wenn:
+  - Road hinzugefügt/entfernt wird
+  - Road-Länge oder Querschnitt sich ändert
+  - Road verschoben wird
+- Berechnung: Bounding Box aller Roads in Metern → `calculateAutoScale()` → Store-Update
+- Wenn Maßstab springt: Alle Roads neu rendern (neue Pixel-Größen)
+- Zeichenobjekte (Freihand, Shapes etc.) bleiben unverändert — Pixel-basiert
+- StatusBar zeigt neuen Maßstab, kurzes oranges Aufblinken bei Sprung
+
+#### 3d: Library-Integration — Straße droppen
+
+- "Gerade" als erstes echtes Objekt in der SmartRoads-Kategorie der Library
+- Drag & Drop auf Canvas → Default-Straße erstellen:
+  - 2 Fahrstreifen (je 3.25m, Gegenrichtung) + Gehweg beidseitig (je 2.50m)
+  - Gesamtbreite: 11.50m
+  - Default-Länge: 30m
+  - Zentriert unter Cursor
+- Nach Drop: Objekt selektiert, Properties-Panel öffnet
+
+#### 3e: Interaktion auf Canvas
+
+- **Selektieren:** Klick auf Straße = selektieren (blauer Rahmen)
+- **Verschieben:** Drag = Straße verschieben → `recalculateScale()`
+- **Rotieren:** Rotation-Handle des Transformers (Shift = 90°-Snap), KEIN Resize via Handles
+- **Länge ändern:** Zwei kreisförmige Endpunkt-Handles an den kurzen Seiten der Straße. Drag = Länge ändern (in Metern, snapped ggf.)
+- **KEIN freier Resize:** Transformer-Anchors deaktiviert für SmartRoad-Objekte
+- **Doppelklick:** Öffnet SmartRoad Editor (Phase 4) — vorerst: öffnet Quick-Properties
+
+#### 3f: Quick-Properties für Straße (im Floating Panel)
+
+- Bezeichnung (Input)
+- **Spuren: [−] 2 [+]** — Fahrstreifen hinzufügen/entfernen
+- **Gehweg: [L] [Beide] [R] [—]** — Gehweg-Konfiguration
+- **Länge:** Anzeige in Metern (read-only, Änderung per Canvas-Handle)
+- **Breite:** Anzeige in Metern (read-only, Änderung per Spuranzahl)
+- Deckkraft (Slider)
+
+#### 3g: Ebenen-Manager Integration
+
+- SmartRoad-Objekte erscheinen im Ebenen-Manager wie andere Objekte
+- Eigenes Icon (Road/Highway Icon aus Lucide)
+- Name: "Straße 1", "Straße 2" etc. (oder custom Label)
+- Sichtbarkeit, Sperrung, Drag&Drop Z-Order — alles wie bei Zeichenobjekten
+
+#### Architektur-Entscheidungen für Phase 3
+
+1. **Getrennte Collections:** `roads` + `roadOrder` im Store, getrennt von `objects` + `objectOrder`. Grund: SmartRoads haben fundamental anderes Datenmodell, Rendering und Interaktion.
+2. **Meter als Quelle der Wahrheit:** Road-Dimensionen in Metern gespeichert. Pixel-Werte werden bei jedem Render berechnet via `metersToPixels()`.
+3. **Querschnitt = Array von Spuren:** Von links nach rechts (Draufsicht in Fahrtrichtung). Einfach erweiterbar um neue Spurtypen.
+4. **Rendering via Konva Shapes (nicht SVG):** Direkte Konva Rects/Lines sind performanter und einfacher zu parametrisieren als SVG-Generierung. SVG kommt erst beim Export.
+5. **Scale-Trigger:** Jede Mutation an `roads` löst `recalculateScale()` aus. Debounced bei Drag-Operationen.
+
+### Phase 4: SmartRoads — Editor & erweiterte Segmente
+
+- SmartRoad Editor UI (Overlay, Element-Palette, Live-Vorschau, Quick Settings)
+- Erweiterte Spurtypen (Radweg, Parkstreifen, Busstreifen, Grünstreifen, Mittelstreifen)
+- Straßenmarkierungen (Leitlinie, Haltelinie, Zebrastreifen, Richtungspfeile)
 - Kurven (Radius, Winkel, Drag-Handles)
 - Kreuzungen (Template-System, Arm-Konfiguration)
 - Kreisverkehr (Parametrisch, Zufahrten)
 - Snapping/Konnektoren zwischen Segmenten
 - Preset-System (System-Presets + User-Presets)
 
-### Phase 5: Polish & Export
+### Phase 5: Objekte & Library
+
+- SVG-Preprocessing-Pipeline (SVGO, Normalisierung)
+- Object Registry + Manifest für alle Objekte (Fahrzeuge, Schilder, etc.)
+- Objektbibliothek: Drag & Drop aus Library auf Canvas
+- Maßstabsgerechte Platzierung (metersToPixels, nicht frei skalierbar)
+- Objekt-Einfärbung
+- Undo/Redo UI-Anbindung (zundo ist ready)
+- Snapping-System (Objekt-an-Objekt, Objekt-an-Road)
+
+### Phase 6: Polish & Export
 
 - PDF-Export mit Druckrahmen (Maßstabsleiste, Metadaten)
 - PDF/A-1b für elektronische Akte
@@ -1040,12 +1223,9 @@ Grundlegende Bedienbarkeit auf Tablets (iPad, Surface):
 - Dateiformat (.033sketch) Save/Load
 - Auto-Save (IndexedDB, Dexie.js)
 - Startansicht (zuletzt geöffnet, Vorlagen)
-- Keyboard Shortcuts komplett
-- Command Palette (Ctrl+K)
-- Radial-Kontextmenü
+- Keyboard Shortcuts komplett (Copy/Paste, Gruppieren etc.)
 - Touch-Support
 - Vorlagen-System
-- Onboarding (interaktives Tutorial beim ersten Start)
 
 ---
 
@@ -1061,26 +1241,34 @@ Alles läuft über React-State (Zustand). Der Canvas ist kein eigenständiges Ö
 interface AppState {
   // Dokument
   document: DocumentMeta           // Aktenzeichen, Datum, etc.
-  
+
   // Canvas
   viewport: ViewportState          // Zoom, Pan-Offset
   scale: ScaleState                // Berechneter Maßstab
-  
-  // Objekte & Ebenen
-  layers: Layer[]                  // Ebenen-Stack
-  objects: Map<string, CanvasObject>  // Alle Objekte, ID → Objekt
+  canvasSize: { width; height }    // Container-Größe für resetView
+
+  // Zeichenobjekte (Pixel-basiert, flach, keine Layer-Gruppierung)
+  objects: Record<string, CanvasObject>  // Alle Objekte, ID → Objekt
+  objectOrder: string[]            // Z-Order (Index 0 = unten, letzter = oben)
   selection: string[]              // IDs der ausgewählten Objekte
-  
+
+  // SmartRoads (Meter-basiert, parametrisch, eigene Collection)
+  roads: Record<string, SmartRoadSegment>
+  roadOrder: string[]              // Z-Order für Roads
+
   // Tools
   activeTool: ToolType             // Aktives Werkzeug
   toolOptions: ToolOptions         // Tool-spezifische Optionen
-  
+
   // SmartRoads
   roadEditor: RoadEditorState | null  // null = Editor geschlossen
-  
+
   // UI
-  panels: PanelStates              // Collapsed/Expanded, Größen
+  panels: PanelStates              // Collapsed/Expanded, Breiten
   theme: 'light' | 'dark'
+  propertiesPanelId: string | null // Welches Objekt zeigt Properties
+  activeLibraryCategory: string | null
+  editingTextId: string | null     // Inline Text-Editor
 }
 ```
 
@@ -1089,13 +1277,12 @@ interface AppState {
 ```
 Zustand Store (Quelle der Wahrheit)
        │
-       ├──→ react-konva Komponenten (Canvas-Rendering)
-       ├──→ Inspector Panel (React-Komponenten)
+       ├──→ react-konva Komponenten (Canvas-Rendering via CanvasObjects.tsx)
+       ├──→ Floating Properties (React-Komponenten)
        ├──→ Ebenen-Manager (React-Komponenten)
-       └──→ SmartRoad Editor (React-Komponenten)
+       ├──→ Toolbar + Popovers (React-Komponenten)
+       └──→ SmartRoad Editor (React-Komponenten, Phase 4)
 ```
-
-Alle Views lesen denselben Store. Änderungen in einem View (z.B. Objekt im Ebenen-Manager löschen) reflektieren sofort in allen anderen Views (Canvas, Inspector).
 
 ### Offline-Strategie
 
@@ -1108,10 +1295,10 @@ Workbox (vite-plugin-pwa)
 IndexedDB (Dexie.js)
 ├── Dokumente: Auto-Save-Snapshots
 ├── User-Presets: Gespeicherte SmartRoad-Querschnitte
-├── UI-State: Panel-Positionen, Theme-Preference
+├── UI-State: Theme-Preference
 └── Thumbnails: Vorschaubilder für Startansicht
 ```
 
 ---
 
-*Dieses Dokument ist die verbindliche Spezifikation für die Entwicklung von 033-Skizze v1.0. Änderungen werden versioniert und hier dokumentiert.*
+*Dieses Dokument ist die verbindliche Spezifikation für die Entwicklung von 033-Skizze V2. Zuletzt aktualisiert: 2026-03-18 (Session 3).*

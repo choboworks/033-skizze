@@ -1,14 +1,190 @@
-import { useRef, useEffect, useCallback } from 'react'
-import { Rect, Ellipse, Line, Arrow, RegularPolygon, Star, Transformer } from 'react-konva'
+import { useRef, useEffect, useCallback, useState } from 'react'
+import { Rect, Ellipse, Line, Arrow, RegularPolygon, Star, Text, Group, Transformer } from 'react-konva'
 import { useAppStore } from '@/store'
 import type { CanvasObject } from '@/types'
-import type Konva from 'konva'
+import Konva from 'konva'
+import { shapeRefs } from './shapeRefs'
+import { pixelsToMeters } from '@/utils/scale'
 
-/**
- * Registry to track Konva node refs by object ID.
- * Shared between ShapeRenderer instances and the shared Transformer.
- */
-const shapeRefs = new Map<string, Konva.Node>()
+// ─── Text Shape (auto-sized background rect) ─────────────────
+
+function TextShape({
+  obj,
+  commonProps,
+  editingTextId,
+}: {
+  obj: CanvasObject
+  commonProps: Record<string, unknown>
+  editingTextId: string | null
+}) {
+  const textRef = useRef<Konva.Text>(null)
+  const rectRef = useRef<Konva.Rect>(null)
+  const hasBg = !!(obj.textBackground && obj.textBackground !== 'transparent')
+
+  // Sync rect size with actual text dimensions after render
+  useEffect(() => {
+    if (hasBg && textRef.current && rectRef.current) {
+      rectRef.current.width(textRef.current.width())
+      rectRef.current.height(textRef.current.height())
+      rectRef.current.getLayer()?.batchDraw()
+    }
+  })
+
+  return (
+    <Group
+      {...commonProps}
+      width={obj.width}
+      height={obj.height}
+      visible={obj.visible && editingTextId !== obj.id}
+    >
+      {hasBg && (
+        <Rect
+          ref={rectRef as React.RefObject<Konva.Rect>}
+          x={0}
+          y={0}
+          fill={obj.textBackground}
+          listening={false}
+        />
+      )}
+      <Text
+        ref={textRef as React.RefObject<Konva.Text>}
+        text={obj.text || ''}
+        fontSize={obj.fontSize ?? 24}
+        lineHeight={1.2}
+        fontStyle={obj.fontStyle ?? 'normal'}
+        textDecoration={obj.textDecoration || ''}
+        align={(obj.textAlign ?? 'left') as 'left' | 'center' | 'right'}
+        fill={obj.fillColor !== 'transparent' ? obj.fillColor : '#000000'}
+      />
+    </Group>
+  )
+}
+
+// ─── Dimension Shape (measurement line with label) ───────────
+
+function DimensionShape({
+  obj,
+  commonProps,
+}: {
+  obj: CanvasObject
+  commonProps: Record<string, unknown>
+}) {
+  const scale = useAppStore((s) => s.scale)
+  const start = obj.dimensionStart
+  const end = obj.dimensionEnd
+  if (!start || !end) return null
+
+  // All coords relative to dimensionStart (the group origin)
+  const sx = 0
+  const sy = 0
+  const ex = end.x - start.x
+  const ey = end.y - start.y
+
+  const distPx = Math.sqrt(ex * ex + ey * ey)
+  const distMeters = pixelsToMeters(distPx, scale.currentScale)
+  const label = `${distMeters.toFixed(2)} m`
+
+  // Angle of the line
+  const angle = Math.atan2(ey, ex)
+  const cos = Math.cos(angle)
+  const sin = Math.sin(angle)
+
+  // Perpendicular offset for extension lines
+  const ext = 12
+  const perpX = -sin * ext
+  const perpY = cos * ext
+
+  const fontSize = obj.fontSize ?? 14
+  const strokeColor = obj.strokeColor || '#000000'
+  const strokeWidth = obj.strokeWidth || 1.5
+
+  // Arrowhead size
+  const arrowLen = 8
+  const arrowAngle = Math.PI / 6
+
+  // Arrow points at start (pointing outward from start toward end)
+  const a1x1 = sx + Math.cos(angle + arrowAngle) * arrowLen
+  const a1y1 = sy + Math.sin(angle + arrowAngle) * arrowLen
+  const a1x2 = sx + Math.cos(angle - arrowAngle) * arrowLen
+  const a1y2 = sy + Math.sin(angle - arrowAngle) * arrowLen
+
+  // Arrow points at end (pointing outward from end toward start)
+  const a2x1 = ex - Math.cos(angle + arrowAngle) * arrowLen
+  const a2y1 = ey - Math.sin(angle + arrowAngle) * arrowLen
+  const a2x2 = ex - Math.cos(angle - arrowAngle) * arrowLen
+  const a2y2 = ey - Math.sin(angle - arrowAngle) * arrowLen
+
+  // Midpoint for text
+  const midX = (sx + ex) / 2
+  const midY = (sy + ey) / 2
+
+  // Text rotation: keep readable (flip if upside-down)
+  let textAngle = (angle * 180) / Math.PI
+  if (textAngle > 90 || textAngle < -90) textAngle += 180
+
+  // Text offset perpendicular above the line
+  const textOffX = -sin * (fontSize * 0.8)
+  const textOffY = cos * (fontSize * 0.8)
+
+  return (
+    <Group
+      {...commonProps}
+      x={start.x}
+      y={start.y}
+    >
+      {/* Extension lines at start and end */}
+      <Line
+        points={[sx - perpX, sy - perpY, sx + perpX, sy + perpY]}
+        stroke={strokeColor}
+        strokeWidth={strokeWidth * 0.6}
+        listening={false}
+      />
+      <Line
+        points={[ex - perpX, ey - perpY, ex + perpX, ey + perpY]}
+        stroke={strokeColor}
+        strokeWidth={strokeWidth * 0.6}
+        listening={false}
+      />
+
+      {/* Main line (listening enabled for drag/click hit area) */}
+      <Line
+        points={[sx, sy, ex, ey]}
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        hitStrokeWidth={Math.max(20, strokeWidth + 16)}
+      />
+
+      {/* Arrowhead at start */}
+      <Line
+        points={[a1x1, a1y1, sx, sy, a1x2, a1y2]}
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        listening={false}
+      />
+
+      {/* Arrowhead at end */}
+      <Line
+        points={[a2x1, a2y1, ex, ey, a2x2, a2y2]}
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        listening={false}
+      />
+
+      {/* Distance label */}
+      <Text
+        x={midX + textOffX}
+        y={midY + textOffY}
+        text={label}
+        fontSize={fontSize}
+        fill={strokeColor}
+        rotation={textAngle}
+        offsetX={label.length * fontSize * 0.3}
+        offsetY={fontSize / 2}
+        listening={false}
+      />
+    </Group>
+  )
+}
 
 // ─── Single Shape ─────────────────────────────────────────────
 
@@ -22,6 +198,7 @@ function ShapeRenderer({
   onDoubleClick: (id: string) => void
 }) {
   const updateObject = useAppStore((s) => s.updateObject)
+  const editingTextId = useAppStore((s) => s.editingTextId)
 
   const registerRef = useCallback(
     (node: Konva.Node | null) => {
@@ -47,7 +224,21 @@ function ShapeRenderer({
     onTap: (e: Konva.KonvaEventObject<Event>) =>
       onSelect(obj.id, e as Konva.KonvaEventObject<MouseEvent>),
     onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => {
-      updateObject(obj.id, { x: e.target.x(), y: e.target.y() })
+      if (obj.type === 'dimension' && obj.dimensionStart && obj.dimensionEnd) {
+        // Dimension group origin = dimensionStart, so delta = newPos - oldStart
+        const newX = e.target.x()
+        const newY = e.target.y()
+        const dx = newX - obj.dimensionStart.x
+        const dy = newY - obj.dimensionStart.y
+        updateObject(obj.id, {
+          x: newX,
+          y: newY,
+          dimensionStart: { x: newX, y: newY },
+          dimensionEnd: { x: obj.dimensionEnd.x + dx, y: obj.dimensionEnd.y + dy },
+        })
+      } else {
+        updateObject(obj.id, { x: e.target.x(), y: e.target.y() })
+      }
     },
     onTransformEnd: (e: Konva.KonvaEventObject<Event>) => {
       const node = e.target
@@ -56,13 +247,46 @@ function ShapeRenderer({
       node.scaleX(1)
       node.scaleY(1)
 
-      updateObject(obj.id, {
-        x: node.x(),
-        y: node.y(),
-        width: Math.max(2, node.width() * scaleX),
-        height: Math.max(2, node.height() * scaleY),
-        rotation: node.rotation(),
-      })
+      if (obj.type === 'freehand' || obj.type === 'line' || obj.type === 'arrow') {
+        const pts = obj.points || []
+        const scaledPoints = pts.map((v, i) => (i % 2 === 0 ? v * scaleX : v * scaleY))
+        updateObject(obj.id, {
+          x: node.x(),
+          y: node.y(),
+          rotation: node.rotation(),
+          points: scaledPoints,
+        })
+      } else if (obj.type === 'text') {
+        // Use uniform scale (average of X/Y) so text scales proportionally
+        const scale = (Math.abs(scaleX) + Math.abs(scaleY)) / 2
+        const newFontSize = Math.max(6, Math.round((obj.fontSize ?? 24) * scale))
+        const numLines = (obj.text || '').split('\n').length || 1
+        const newHeight = newFontSize * 1.2 * numLines
+        // Measure new text width via a temporary Konva.Text node
+        const tempText = new Konva.Text({
+          text: obj.text || '',
+          fontSize: newFontSize,
+          fontStyle: obj.fontStyle ?? 'normal',
+        })
+        const newWidth = Math.max(20, tempText.width())
+        tempText.destroy()
+        updateObject(obj.id, {
+          x: node.x(),
+          y: node.y(),
+          width: newWidth,
+          height: newHeight,
+          fontSize: newFontSize,
+          rotation: node.rotation(),
+        })
+      } else {
+        updateObject(obj.id, {
+          x: node.x(),
+          y: node.y(),
+          width: Math.max(2, node.width() * scaleX),
+          height: Math.max(2, node.height() * scaleY),
+          rotation: node.rotation(),
+        })
+      }
     },
   }
 
@@ -191,6 +415,23 @@ function ShapeRenderer({
         />
       )
 
+    case 'text':
+      return (
+        <TextShape
+          obj={obj}
+          commonProps={commonProps}
+          editingTextId={editingTextId}
+        />
+      )
+
+    case 'dimension':
+      return (
+        <DimensionShape
+          obj={obj}
+          commonProps={commonProps}
+        />
+      )
+
     default:
       return null
   }
@@ -200,9 +441,22 @@ function ShapeRenderer({
 
 function SelectionTransformer() {
   const trRef = useRef<Konva.Transformer>(null)
+  const [shiftHeld, setShiftHeld] = useState(false)
   const selection = useAppStore((s) => s.selection)
   const objects = useAppStore((s) => s.objects)
   const updateObject = useAppStore((s) => s.updateObject)
+
+  // Track Shift key for rotation snapping
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => { if (e.key === 'Shift') setShiftHeld(true) }
+    const up = (e: KeyboardEvent) => { if (e.key === 'Shift') setShiftHeld(false) }
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
+    return () => {
+      window.removeEventListener('keydown', down)
+      window.removeEventListener('keyup', up)
+    }
+  }, [])
 
   // Sync transformer nodes whenever selection changes
   useEffect(() => {
@@ -250,6 +504,8 @@ function SelectionTransformer() {
     <Transformer
       ref={trRef as React.RefObject<Konva.Transformer>}
       rotateEnabled={true}
+      rotationSnaps={shiftHeld ? [0, 90, 180, 270] : []}
+      rotationSnapTolerance={shiftHeld ? 45 : 0}
       enabledAnchors={[
         'top-left', 'top-right', 'bottom-left', 'bottom-right',
         'middle-left', 'middle-right', 'top-center', 'bottom-center',
@@ -277,10 +533,12 @@ export function CanvasObjects() {
   const select = useAppStore((s) => s.select)
   const addToSelection = useAppStore((s) => s.addToSelection)
   const openProperties = useAppStore((s) => s.openProperties)
+  const setEditingTextId = useAppStore((s) => s.setEditingTextId)
+  const clearSelection = useAppStore((s) => s.clearSelection)
+
 
   const handleSelect = (id: string, e: Konva.KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
-
     if (e.evt.shiftKey) {
       addToSelection(id)
     } else {
@@ -288,10 +546,19 @@ export function CanvasObjects() {
     }
   }
 
-  // Render in z-order: first in array = bottom, last = top
-  const orderedObjects = objectOrder
-    .map((id) => objects[id])
-    .filter(Boolean)
+  const handleDoubleClick = (id: string) => {
+    const obj = objects[id]
+    if (obj?.type === 'text') {
+      clearSelection()
+      setEditingTextId(id)
+      openProperties(id)
+    } else {
+      select([id])
+      openProperties(id)
+    }
+  }
+
+  const orderedObjects = objectOrder.map((id) => objects[id]).filter(Boolean)
 
   return (
     <>
@@ -300,10 +567,7 @@ export function CanvasObjects() {
           key={obj.id}
           obj={obj}
           onSelect={handleSelect}
-          onDoubleClick={(id) => {
-            select([id])
-            openProperties(id)
-          }}
+          onDoubleClick={handleDoubleClick}
         />
       ))}
       <SelectionTransformer />

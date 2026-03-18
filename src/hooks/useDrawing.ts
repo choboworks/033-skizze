@@ -2,6 +2,7 @@ import { useRef, useCallback } from 'react'
 import { useAppStore } from '@/store'
 import type { CanvasObject, ShapeType } from '@/types'
 import type Konva from 'konva'
+import { snapTo45 } from '@/utils/snapAngle'
 
 interface DrawState {
   isDrawing: boolean
@@ -150,7 +151,7 @@ export function useDrawing() {
   )
 
   const onDrawMove = useCallback(
-    (stage: Konva.Stage, tool: string) => {
+    (stage: Konva.Stage, tool: string, shiftKey = false) => {
       const state = drawState.current
       if (!state.isDrawing || !state.currentId) return
 
@@ -171,10 +172,16 @@ export function useDrawing() {
           })
         }
       } else if (tool === 'line' || tool === 'arrow') {
+        let ex = dx, ey = dy
+        if (shiftKey) {
+          const snapped = snapTo45(0, 0, dx, dy)
+          ex = snapped.x
+          ey = snapped.y
+        }
         updateObject(state.currentId, {
-          points: [0, 0, dx, dy],
-          width: Math.abs(dx),
-          height: Math.abs(dy),
+          points: [0, 0, ex, ey],
+          width: Math.abs(ex),
+          height: Math.abs(ey),
         })
       } else {
         updateObject(state.currentId, {

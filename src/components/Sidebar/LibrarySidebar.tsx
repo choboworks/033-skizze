@@ -93,7 +93,7 @@ export function LibrarySidebar() {
 
   return (
     <div
-      className="flex flex-col absolute z-40"
+      className="flex flex-col absolute z-40 anim-slide-left"
       style={{
         width: 320,
         left: 'var(--toolbar-width)',
@@ -114,7 +114,7 @@ export function LibrarySidebar() {
       >
         <div className="flex items-center gap-2.5">
           <CategoryIcon size={16} style={{ color: 'var(--accent)' }} />
-          <span className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
+          <span className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>
             {category.label}
           </span>
         </div>
@@ -124,7 +124,7 @@ export function LibrarySidebar() {
           onClick={() => setLibraryCategory(null)}
           title="Schließen"
         >
-          <X size={15} />
+          <X size={14} />
         </button>
       </div>
 
@@ -139,17 +139,17 @@ export function LibrarySidebar() {
             <button
               key={chip}
               onClick={() => setActiveFilter(chip)}
-              className="px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              className="px-4 py-2 rounded-lg text-[13px] font-medium transition-colors"
               style={{
-                background: isActive ? 'var(--accent)' : 'var(--bg)',
-                color: isActive ? '#fff' : 'var(--text-muted)',
+                background: isActive ? 'var(--accent-muted)' : 'var(--bg)',
+                color: isActive ? 'var(--accent)' : 'var(--text-muted)',
                 border: isActive ? '1px solid var(--accent)' : '1px solid var(--border)',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) e.currentTarget.style.background = 'var(--surface-hover)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = isActive ? 'var(--accent)' : 'var(--bg)'
+                e.currentTarget.style.background = isActive ? 'var(--accent-muted)' : 'var(--bg)'
               }}
             >
               {chip}
@@ -183,11 +183,11 @@ export function LibrarySidebar() {
                 className="w-full aspect-4/3 rounded-md flex items-center justify-center"
                 style={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)' }}
               >
-                <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>SVG</span>
+                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>SVG</span>
               </div>
               {/* Label */}
               <span
-                className="text-xs text-center leading-tight w-full truncate"
+                className="text-[11px] text-center leading-tight w-full truncate"
                 style={{ color: 'var(--text)' }}
               >
                 {item.name}
@@ -198,7 +198,7 @@ export function LibrarySidebar() {
 
         {filteredItems.length === 0 && (
           <div className="flex items-center justify-center py-8">
-            <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
+            <span className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
               Keine Elemente
             </span>
           </div>
