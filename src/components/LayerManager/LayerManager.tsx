@@ -19,9 +19,9 @@ import {
   Settings2,
   GripVertical,
   PanelRightClose,
-  PanelRightOpen,
   Ruler,
   Type,
+  Route,
 } from 'lucide-react'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { CanvasObject, ShapeType } from '@/types'
@@ -40,6 +40,7 @@ function ObjectIcon({ type }: { type: ShapeType }) {
     case 'freehand': return <Pencil size={16} />
     case 'text': return <Type size={16} />
     case 'dimension': return <Ruler size={16} />
+    case 'smartroad': return <Route size={16} />
     default: return <Square size={16} />
   }
 }
@@ -60,6 +61,7 @@ function objectDisplayName(obj: CanvasObject, index: number): string {
     text: 'Text',
     image: 'Bild',
     dimension: 'Bemaßung',
+    smartroad: 'Straße',
   }
   return `${typeNames[obj.type] || obj.type} ${index + 1}`
 }
@@ -79,7 +81,7 @@ export function LayerManager() {
   const [collapsed, setCollapsed] = useState(true)
   const prevCount = useRef(objectOrder.length)
 
-  // Auto-expand when a new object is added (via store subscribe, not effect)
+  // Auto-expand when a new object is added
   useEffect(() => {
     const unsub = useAppStore.subscribe((state) => {
       const count = state.objectOrder.length
@@ -107,7 +109,7 @@ export function LayerManager() {
   }
 
   const displayOrder = [...objectOrder].reverse()
-  const hasObjects = displayOrder.length > 0
+  const hasEntries = displayOrder.length > 0
 
   const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
     setDragId(id)
@@ -172,11 +174,11 @@ export function LayerManager() {
             className="icon-btn mt-3"
             style={{ padding: 6 }}
             onClick={() => setCollapsed(false)}
-            title={`Ebenen${hasObjects ? ` (${displayOrder.length})` : ''} einblenden`}
+            title={`Ebenen${hasEntries ? ` (${displayOrder.length})` : ''} einblenden`}
           >
-            <Layers size={18} style={{ color: hasObjects ? 'var(--text-secondary)' : 'var(--text-muted)' }} />
+            <Layers size={18} style={{ color: hasEntries ? 'var(--text-secondary)' : 'var(--text-muted)' }} />
           </button>
-          {hasObjects && (
+          {hasEntries && (
             <div
               className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold mt-1"
               style={{ background: 'var(--accent)', color: '#fff' }}
@@ -208,12 +210,12 @@ export function LayerManager() {
         className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest shrink-0"
         style={{ color: 'var(--text-muted)' }}
       >
-        Ebenen {hasObjects && <span style={{ color: 'var(--accent)' }}>({displayOrder.length})</span>}
+        Ebenen {hasEntries && <span style={{ color: 'var(--accent)' }}>({displayOrder.length})</span>}
       </div>
 
       {/* Object list */}
       <div className="flex-1 overflow-y-auto" ref={listRef}>
-        {!hasObjects && (
+        {!hasEntries && (
           <div className="px-3 py-2 text-[13px]" style={{ color: 'var(--text-muted)' }}>
             Keine Objekte
           </div>
@@ -316,7 +318,14 @@ export function LayerManager() {
 
               {/* Hover actions */}
               <div className="flex items-center gap-0.5 px-1.5 pb-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="icon-btn" style={{ padding: 4 }} onClick={(e) => { e.stopPropagation(); openProperties(obj.id) }} title="Eigenschaften">
+                <button className="icon-btn" style={{ padding: 4 }} onClick={(e) => {
+                  e.stopPropagation()
+                  if (obj.type === 'smartroad' && obj.subtype) {
+                    useAppStore.getState().openRoadEditor(obj.id, obj.subtype)
+                  } else {
+                    openProperties(obj.id)
+                  }
+                }} title="Eigenschaften">
                   <Settings2 size={14} />
                 </button>
                 <button className="icon-btn" style={{ padding: 4 }} onClick={(e) => { e.stopPropagation(); updateObject(obj.id, { visible: !obj.visible }) }} title={obj.visible ? 'Ausblenden' : 'Einblenden'}>
@@ -332,6 +341,7 @@ export function LayerManager() {
             </div>
           )
         })}
+
       </div>
         </div>
       )}

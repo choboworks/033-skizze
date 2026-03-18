@@ -1,10 +1,7 @@
 import { create } from 'zustand'
 import { temporal } from 'zundo'
-import { enableMapSet } from 'immer'
 import { PAGE_WIDTH_PX, PAGE_HEIGHT_PX } from '@/utils/scale'
 import type { AppState, Layer, CanvasObject, Theme, ToolType, ViewportState, PanelStates, ScaleState, DocumentMeta } from '@/types'
-
-enableMapSet()
 
 // --- Default Layers (empty – objects are shown directly) ---
 const DEFAULT_LAYERS: Layer[] = []
@@ -113,7 +110,7 @@ export const useAppStore = create<AppState>()(
         set({ canvasSize: size }),
 
       // Tools
-      setActiveTool: (tool: ToolType) => set({ activeTool: tool }),
+      setActiveTool: (tool: ToolType) => set({ activeTool: tool, activeLibraryCategory: null }),
       setToolOptions: (options: Partial<import('@/types').ToolOptions>) =>
         set((state) => ({ toolOptions: { ...state.toolOptions, ...options } })),
 
@@ -228,6 +225,12 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           document: { ...state.document, ...changes, updatedAt: Date.now() },
         })),
+
+      // Road Editor
+      openRoadEditor: (roadId: string, subtype: import('@/types').SmartRoadSubtype) =>
+        set({ roadEditor: { roadId, subtype } }),
+
+      closeRoadEditor: () => set({ roadEditor: null }),
 
       // Scale
       updateScale: (scale: ScaleState) => set({ scale }),

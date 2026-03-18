@@ -166,7 +166,7 @@ export function useDrawing() {
         state.freehandPoints.push(dx, dy)
 
         // Only update every 3rd point for performance
-        if (state.freehandPoints.length % 6 === 0 || true) {
+        if (state.freehandPoints.length % 6 === 0) {
           updateObject(state.currentId, {
             points: [...state.freehandPoints],
           })

@@ -302,7 +302,7 @@
 - **Sprache UI**: Deutsch (Labels, Tooltips, Platzhalter)
 - **Sprache Code**: Englisch (Variablen, Kommentare, Commits)
 - **Styling**: Tailwind CSS 4 Klassen + inline styles mit CSS-Variablen (var(--xxx))
-- **State**: Zustand mit flachen Actions, kein Immer
+- **State**: Zustand mit flachen Actions, kein Immer (bewusst entfernt Session 4 — State ist flach genug für Spread-Updates. Bei tief verschachtelten SmartRoad-Strukturen ggf. wieder einführen)
 - **Komponenten**: Funktionale Components, keine Klassen
 - **Icons**: Lucide React, immer (einzige Icon-Library)
 - **Tool-Panels**: Jedes Tool hat eigene Datei, shared Design via PanelPrimitives

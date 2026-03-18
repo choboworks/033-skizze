@@ -2,6 +2,9 @@ import { useAppStore } from '@/store'
 import { LIBRARY_CATEGORIES } from '@/constants/library'
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import { createDefaultStraightRoad, totalWidth } from '@/smartroads/constants'
+import { PAGE_WIDTH_PX, PAGE_HEIGHT_PX, metersToPixels } from '@/utils/scale'
+import type { CanvasObject } from '@/types'
 
 const SUB_CATEGORIES: Record<string, string[]> = {
   smartroads: ['Alle', 'Geraden', 'Kurven', 'Kreuzungen', 'Kreisverkehr'],
@@ -74,10 +77,81 @@ const LIBRARY_ITEMS: Record<string, { name: string; sub: string }[]> = {
   ],
 }
 
+// --- Inline SVG icons for library items ---
+function StraightRoadIcon() {
+  return (
+    <svg width="48" height="36" viewBox="0 0 48 36" fill="none">
+      {/* Sidewalks */}
+      <rect x="2" y="2" width="8" height="32" rx="1" fill="#c8c0b0" />
+      <rect x="38" y="2" width="8" height="32" rx="1" fill="#c8c0b0" />
+      {/* Curbs */}
+      <rect x="10" y="2" width="1.5" height="32" fill="#999" />
+      <rect x="36.5" y="2" width="1.5" height="32" fill="#999" />
+      {/* Lanes */}
+      <rect x="11.5" y="2" width="12.5" height="32" fill="#3a3a3a" />
+      <rect x="24" y="2" width="12.5" height="32" fill="#3a3a3a" />
+      {/* Center line (dashed) */}
+      <line x1="24" y1="4" x2="24" y2="10" stroke="#fff" strokeWidth="0.8" strokeDasharray="3 3" />
+      <line x1="24" y1="14" x2="24" y2="20" stroke="#fff" strokeWidth="0.8" strokeDasharray="3 3" />
+      <line x1="24" y1="24" x2="24" y2="30" stroke="#fff" strokeWidth="0.8" strokeDasharray="3 3" />
+    </svg>
+  )
+}
+
+function LibraryItemIcon({ name, category }: { name: string; category: string }) {
+  if (category === 'smartroads') {
+    if (name.includes('Gerade')) return <StraightRoadIcon />
+    // Future: CurveRoadIcon, IntersectionIcon, RoundaboutIcon
+  }
+  return <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>SVG</span>
+}
+
 export function LibrarySidebar() {
   const activeCategory = useAppStore((s) => s.activeLibraryCategory)
   const setLibraryCategory = useAppStore((s) => s.setLibraryCategory)
   const [activeFilter, setActiveFilter] = useState('Alle')
+
+  const handleItemClick = (itemName: string) => {
+    if (itemName === 'Gerade Straße') {
+      // Place default straight road on canvas center (no editor)
+      const state = createDefaultStraightRoad()
+      const editorState = JSON.stringify(state)
+      const realWidth = totalWidth(state.strips)
+      const realHeight = state.length
+      // Center the road on the A4 page, accounting for scaled dimensions
+      const scale = useAppStore.getState().scale.currentScale
+      const scaleFactor = metersToPixels(1, scale)
+      const roadPixelW = realWidth * scaleFactor
+      const roadPixelH = realHeight * scaleFactor
+
+      const newObj: CanvasObject = {
+        id: crypto.randomUUID(),
+        type: 'smartroad',
+        subtype: 'straight',
+        category: 'smartroads',
+        layerId: '',
+        label: 'Straße',
+        x: (PAGE_WIDTH_PX - roadPixelW) / 2,
+        y: (PAGE_HEIGHT_PX - roadPixelH) / 2,
+        width: realWidth,
+        height: realHeight,
+        rotation: 0,
+        strokeColor: 'transparent',
+        strokeWidth: 0,
+        fillColor: 'transparent',
+        opacity: 1,
+        visible: true,
+        locked: false,
+        editorState,
+        realWidth,
+        realHeight,
+      }
+      const store = useAppStore.getState()
+      store.addObject(newObj)
+      store.select([newObj.id])
+      store.setLibraryCategory(null) // close library
+    }
+  }
 
   if (!activeCategory) return null
 
@@ -164,10 +238,16 @@ export function LibrarySidebar() {
           {filteredItems.map((item) => (
             <button
               key={item.name}
+              draggable
               className="flex flex-col items-center gap-2 p-3 rounded-lg transition-all cursor-grab"
               style={{
                 background: 'var(--bg)',
                 border: '1px solid var(--border)',
+              }}
+              onDoubleClick={() => handleItemClick(item.name)}
+              onDragStart={(e) => {
+                e.dataTransfer.setData('application/smartroad', item.name)
+                e.dataTransfer.effectAllowed = 'copy'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.borderColor = 'var(--accent)'
@@ -180,10 +260,10 @@ export function LibrarySidebar() {
             >
               {/* Thumbnail */}
               <div
-                className="w-full aspect-4/3 rounded-md flex items-center justify-center"
+                className="w-full aspect-4/3 rounded-md flex items-center justify-center overflow-hidden"
                 style={{ background: 'var(--surface)', border: '1px solid var(--border-subtle)' }}
               >
-                <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>SVG</span>
+                <LibraryItemIcon name={item.name} category={activeCategory} />
               </div>
               {/* Label */}
               <span

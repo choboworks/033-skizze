@@ -75,6 +75,10 @@ export type ShapeType =
   | 'text'
   | 'dimension'
   | 'image'
+  | 'smartroad'
+
+// --- SmartRoad Subtypes ---
+export type SmartRoadSubtype = 'straight' | 'curve' | 'intersection' | 'roundabout'
 
 export interface CanvasObject {
   id: string
@@ -112,6 +116,11 @@ export interface CanvasObject {
   // Dimension-specific
   dimensionStart?: { x: number; y: number }  // start point in page coords
   dimensionEnd?: { x: number; y: number }    // end point in page coords
+  // SmartRoad-specific
+  subtype?: SmartRoadSubtype          // 'straight' | 'curve' | 'intersection' | 'roundabout'
+  editorState?: string                // Konva stage.toJSON() — serialized editor canvas
+  realWidth?: number                  // bounding box width in meters (for auto-scale)
+  realHeight?: number                 // bounding box height in meters (for auto-scale)
   // State
   visible: boolean
   locked: boolean
@@ -145,7 +154,7 @@ export type Theme = 'light' | 'dark'
 // --- Road Editor ---
 export interface RoadEditorState {
   roadId: string
-  // Will be expanded in Phase 4
+  subtype: SmartRoadSubtype
 }
 
 // --- Tool Options ---
@@ -174,7 +183,7 @@ export interface AppState {
   scale: ScaleState
   canvasSize: { width: number; height: number }
 
-  // Objects & Layers
+  // Objects & Layers (SmartRoads live here too, as type: 'smartroad')
   layers: Layer[]
   objects: Record<string, CanvasObject>
   objectOrder: string[]  // z-order: first = bottom, last = top
@@ -239,6 +248,10 @@ export interface AppState {
 
   // Actions – Document
   updateDocument: (changes: Partial<DocumentMeta>) => void
+
+  // Actions – Road Editor
+  openRoadEditor: (roadId: string, subtype: SmartRoadSubtype) => void
+  closeRoadEditor: () => void
 
   // Actions – Scale
   updateScale: (scale: ScaleState) => void

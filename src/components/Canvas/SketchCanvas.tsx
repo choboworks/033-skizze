@@ -4,6 +4,8 @@ import { useAppStore } from '@/store'
 import { PAGE_WIDTH_PX, PAGE_HEIGHT_PX, MM_TO_PX, pixelsToMeters } from '@/utils/scale'
 import { snapTo45 } from '@/utils/snapAngle'
 import { CanvasObjects } from './CanvasObjects'
+import { createDefaultStraightRoad, totalWidth } from '@/smartroads/constants'
+import { metersToPixels } from '@/utils/scale'
 import { shapeRefs } from './shapeRefs'
 import { useDrawing } from '@/hooks/useDrawing'
 import type Konva from 'konva'
@@ -85,18 +87,16 @@ export function SketchCanvas() {
     setMarqueeRect(null)
     if (!rect || (rect.w < 3 && rect.h < 3)) return
     const mx = rect.x, my = rect.y, mx2 = mx + rect.w, my2 = my + rect.h
+    const state = useAppStore.getState()
     const hits: string[] = []
-    const objs = useAppStore.getState().objects
     for (const [id, node] of shapeRefs) {
-      if (!objs[id]?.visible) continue
+      if (!state.objects[id]?.visible) continue
       const box = node.getClientRect({ relativeTo: node.getLayer()! })
       if ((box.x + box.width) > mx && box.x < mx2 && (box.y + box.height) > my && box.y < my2) {
         hits.push(id)
       }
     }
-    if (hits.length > 0) {
-      useAppStore.getState().select(hits)
-    }
+    if (hits.length > 0) state.select(hits)
   }, [])
 
   // Window-level mouseup fallback (clears marquee if mouse leaves stage)
@@ -460,6 +460,63 @@ export function SketchCanvas() {
       ref={containerRef}
       className="flex-1 overflow-hidden relative"
       style={{ background: 'var(--canvas-bg)', cursor }}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes('application/smartroad')) {
+          e.preventDefault()
+          e.dataTransfer.dropEffect = 'copy'
+        }
+      }}
+      onDrop={(e) => {
+        const itemName = e.dataTransfer.getData('application/smartroad')
+        if (!itemName) return
+        e.preventDefault()
+
+        if (itemName.includes('Gerade')) {
+          const state = createDefaultStraightRoad()
+          const editorState = JSON.stringify(state)
+          const realWidth = totalWidth(state.strips)
+          const realHeight = state.length
+          const currentScale = useAppStore.getState().scale.currentScale
+          const scaleFactor = metersToPixels(1, currentScale)
+
+          // Convert drop position (screen px) to canvas coordinates
+          const rect = containerRef.current?.getBoundingClientRect()
+          if (!rect) return
+          const dropX = (e.clientX - rect.left - viewport.x) / viewport.zoom
+          const dropY = (e.clientY - rect.top - viewport.y) / viewport.zoom
+
+          // Center the road under the cursor
+          const roadPxW = realWidth * scaleFactor
+          const roadPxH = realHeight * scaleFactor
+
+          const newObj: CanvasObject = {
+            id: crypto.randomUUID(),
+            type: 'smartroad',
+            subtype: 'straight',
+            category: 'smartroads',
+            layerId: '',
+            label: 'Straße',
+            x: dropX - roadPxW / 2,
+            y: dropY - roadPxH / 2,
+            width: realWidth,
+            height: realHeight,
+            rotation: 0,
+            strokeColor: 'transparent',
+            strokeWidth: 0,
+            fillColor: 'transparent',
+            opacity: 1,
+            visible: true,
+            locked: false,
+            editorState,
+            realWidth,
+            realHeight,
+          }
+          const store = useAppStore.getState()
+          store.addObject(newObj)
+          store.select([newObj.id])
+          store.setLibraryCategory(null)
+        }
+      }}
     >
       <Stage
         ref={stageRef}

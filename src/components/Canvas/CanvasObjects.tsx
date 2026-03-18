@@ -5,6 +5,7 @@ import type { CanvasObject } from '@/types'
 import Konva from 'konva'
 import { shapeRefs } from './shapeRefs'
 import { pixelsToMeters } from '@/utils/scale'
+import { SmartRoadCanvasObject } from '@/smartroads/rendering/SmartRoadCanvasObject'
 
 // ─── Text Shape (auto-sized background rect) ─────────────────
 
@@ -546,9 +547,19 @@ export function CanvasObjects() {
     }
   }
 
+  const setRoadEditor = useCallback((roadId: string) => {
+    // Open the SmartRoad editor for this object
+    const obj = objects[roadId]
+    if (obj?.type === 'smartroad' && obj.subtype) {
+      useAppStore.getState().openRoadEditor(roadId, obj.subtype)
+    }
+  }, [objects])
+
   const handleDoubleClick = (id: string) => {
     const obj = objects[id]
-    if (obj?.type === 'text') {
+    if (obj?.type === 'smartroad') {
+      setRoadEditor(id)
+    } else if (obj?.type === 'text') {
       clearSelection()
       setEditingTextId(id)
       openProperties(id)
@@ -558,18 +569,33 @@ export function CanvasObjects() {
     }
   }
 
+  const scale = useAppStore((s) => s.scale.currentScale)
   const orderedObjects = objectOrder.map((id) => objects[id]).filter(Boolean)
 
   return (
     <>
-      {orderedObjects.map((obj) => (
-        <ShapeRenderer
-          key={obj.id}
-          obj={obj}
-          onSelect={handleSelect}
-          onDoubleClick={handleDoubleClick}
-        />
-      ))}
+      {orderedObjects.map((obj) => {
+        // SmartRoad objects use their own renderer
+        if (obj.type === 'smartroad') {
+          return (
+            <SmartRoadCanvasObject
+              key={obj.id}
+              obj={obj}
+              scale={scale}
+              onSelect={handleSelect}
+              onDoubleClick={handleDoubleClick}
+            />
+          )
+        }
+        return (
+          <ShapeRenderer
+            key={obj.id}
+            obj={obj}
+            onSelect={handleSelect}
+            onDoubleClick={handleDoubleClick}
+          />
+        )
+      })}
       <SelectionTransformer />
     </>
   )

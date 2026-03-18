@@ -187,19 +187,18 @@ export function ColorPicker({
   const isTransparent = value === 'transparent' || value === ''
   const safeHex = isTransparent ? '#000000' : (value.startsWith('#') ? value : '#000000')
   const [h, s, v] = hexToHsv(safeHex)
-  const [hue, setHue] = useState(h)
+  // hueOverride: only set while user drags the hue slider (preserves hue for grays)
+  const [hueOverride, setHueOverride] = useState<number | null>(null)
+  const hue = hueOverride ?? h
 
-  // Keep hue in sync when value changes externally
-  useEffect(() => {
-    if (!isTransparent && value.startsWith('#') && value.length === 7) {
-      const [newH] = hexToHsv(value)
-      // Only update hue if it's a meaningful change (avoid resetting on pure gray)
-      if (newH !== 0 || value === '#000000' || value === '#ff0000') {
-        setHue(newH)
-      }
-      setHexInput(value)
-    }
-  }, [value, isTransparent])
+  // Reset override and hex input when value changes externally
+  const [prevValue, setPrevValue] = useState(value)
+  if (prevValue !== value) {
+    setPrevValue(value)
+    setHexInput(value)
+    // Clear hue override so we derive from the new value
+    setHueOverride(null)
+  }
 
   // Close on outside click
   useEffect(() => {
@@ -220,7 +219,7 @@ export function ColorPicker({
   }
 
   const handleHue = (newH: number) => {
-    setHue(newH)
+    setHueOverride(newH)
     const hex = hsvToHex(newH, s || 1, v || 1)
     onChange(hex)
     setHexInput(hex)
