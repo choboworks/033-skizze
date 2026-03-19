@@ -3,7 +3,7 @@ import { LIBRARY_CATEGORIES } from '@/constants/library'
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { createDefaultStraightRoad, totalWidth } from '@/smartroads/constants'
-import { PAGE_WIDTH_PX, PAGE_HEIGHT_PX, metersToPixels } from '@/utils/scale'
+import { PAGE_WIDTH_PX, PAGE_HEIGHT_PX, pixelsToMeters } from '@/utils/scale'
 import type { CanvasObject } from '@/types'
 
 const SUB_CATEGORIES: Record<string, string[]> = {
@@ -118,11 +118,6 @@ export function LibrarySidebar() {
       const editorState = JSON.stringify(state)
       const realWidth = totalWidth(state.strips)
       const realHeight = state.length
-      // Center the road on the A4 page, accounting for scaled dimensions
-      const scale = useAppStore.getState().scale.currentScale
-      const scaleFactor = metersToPixels(1, scale)
-      const roadPixelW = realWidth * scaleFactor
-      const roadPixelH = realHeight * scaleFactor
 
       const newObj: CanvasObject = {
         id: crypto.randomUUID(),
@@ -131,8 +126,8 @@ export function LibrarySidebar() {
         category: 'smartroads',
         layerId: '',
         label: 'Straße',
-        x: (PAGE_WIDTH_PX - roadPixelW) / 2,
-        y: (PAGE_HEIGHT_PX - roadPixelH) / 2,
+        x: 0, y: 0,
+        xMeters: 0, yMeters: 0, // temporary, will be centered after scale calc
         width: realWidth,
         height: realHeight,
         rotation: 0,
@@ -148,8 +143,17 @@ export function LibrarySidebar() {
       }
       const store = useAppStore.getState()
       store.addObject(newObj)
+      store.recalculateScale()
+      // Center on A4 page at the NEW scale
+      const newScale = useAppStore.getState().scale.currentScale
+      const pageWidthM = pixelsToMeters(PAGE_WIDTH_PX, newScale)
+      const pageHeightM = pixelsToMeters(PAGE_HEIGHT_PX, newScale)
+      store.updateObject(newObj.id, {
+        xMeters: (pageWidthM - realWidth) / 2,
+        yMeters: (pageHeightM - realHeight) / 2,
+      })
       store.select([newObj.id])
-      store.setLibraryCategory(null) // close library
+      store.setLibraryCategory(null)
     }
   }
 

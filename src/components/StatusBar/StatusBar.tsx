@@ -1,5 +1,5 @@
 import { useAppStore } from '@/store'
-import { Minus, Plus, Scaling } from 'lucide-react'
+import { Minus, Plus, Scaling, RotateCcw } from 'lucide-react'
 
 export function StatusBar() {
   const scale = useAppStore((s) => s.scale)
@@ -7,8 +7,11 @@ export function StatusBar() {
   const zoomTo = useAppStore((s) => s.zoomTo)
   const setViewport = useAppStore((s) => s.setViewport)
   const resetView = useAppStore((s) => s.resetView)
+  const setScaleOverride = useAppStore((s) => s.setScaleOverride)
 
   const zoomPercent = Math.round(viewport.zoom * 100)
+  const hasOverride = scale.viewport !== null
+  const effectiveScale = hasOverride ? Math.round(scale.viewport!.scale) : scale.currentScale
 
   const handleZoomIn = () => {
     const newZoom = Math.min(5, viewport.zoom * 1.2)
@@ -63,12 +66,25 @@ export function StatusBar() {
         </button>
       </div>
 
-      {/* Right: Scale */}
+      {/* Right: Scale (orange + reset when override active) */}
       <div className="flex items-center gap-1.5 flex-1 justify-end">
-        <Scaling size={13} />
-        <span className="font-medium" style={{ color: 'var(--text)' }}>
-          1:{scale.currentScale}
+        <Scaling size={13} style={hasOverride ? { color: '#f0a030' } : undefined} />
+        <span
+          className="font-medium"
+          style={{ color: hasOverride ? '#f0a030' : 'var(--text)' }}
+        >
+          1:{effectiveScale}
         </span>
+        {hasOverride && (
+          <button
+            className="icon-btn"
+            style={{ padding: 3, color: '#f0a030' }}
+            onClick={() => setScaleOverride(null)}
+            title="Druckbereich zurücksetzen (Auto)"
+          >
+            <RotateCcw size={13} />
+          </button>
+        )}
       </div>
     </div>
   )

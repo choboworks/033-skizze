@@ -161,7 +161,7 @@ export function LayerManager() {
     <div
       className="flex flex-col h-full shrink-0 overflow-hidden"
       style={{
-        width: collapsed ? 48 : 180,
+        width: collapsed ? 48 : 240,
         background: 'var(--surface)',
         borderLeft: '1px solid var(--border)',
         transition: 'width 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -189,7 +189,7 @@ export function LayerManager() {
         </div>
       ) : (
         /* ─── Expanded view ─── */
-        <div className="flex flex-col h-full min-w-45 anim-fade-in">
+        <div className="flex flex-col h-full min-w-60 anim-fade-in">
 
       {/* Toggle button — mirrors toolbar toggle */}
       <div className="flex shrink-0 mb-1" style={{ justifyContent: 'flex-start', paddingLeft: 6 }}>
@@ -207,7 +207,7 @@ export function LayerManager() {
 
       {/* Section label */}
       <div
-        className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest shrink-0"
+        className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest shrink-0 text-center"
         style={{ color: 'var(--text-muted)' }}
       >
         Ebenen {hasEntries && <span style={{ color: 'var(--accent)' }}>({displayOrder.length})</span>}
@@ -216,10 +216,11 @@ export function LayerManager() {
       {/* Object list */}
       <div className="flex-1 overflow-y-auto" ref={listRef}>
         {!hasEntries && (
-          <div className="px-3 py-2 text-[13px]" style={{ color: 'var(--text-muted)' }}>
+          <div className="px-4 py-3 text-[13px] text-center" style={{ color: 'var(--text-muted)' }}>
             Keine Objekte
           </div>
         )}
+        <div className="flex flex-col gap-2 px-2.5 pb-3">
         {displayOrder.map((objId, idx) => {
           const obj = objects[objId]
           if (!obj) return null
@@ -237,10 +238,10 @@ export function LayerManager() {
               onDragOver={(e) => handleDragOver(e, obj.id)}
               onDrop={handleDrop}
               onDragEnd={handleDragEnd}
-              className="relative group cursor-pointer transition-colors"
+              className="relative group cursor-pointer transition-all rounded-lg"
               style={{
                 background: isSelected ? 'var(--accent-muted)' : 'transparent',
-                borderLeft: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
+                border: isSelected ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
                 opacity: isDragging ? 0.4 : 1,
               }}
               onClick={(e) => {
@@ -254,26 +255,35 @@ export function LayerManager() {
                 }
               }}
               onMouseEnter={(e) => {
-                if (!isSelected && !isDragging) e.currentTarget.style.background = 'var(--surface-hover)'
+                if (!isSelected && !isDragging) {
+                  e.currentTarget.style.borderColor = 'var(--text-muted)'
+                  e.currentTarget.style.background = 'var(--surface-hover)'
+                }
               }}
               onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = isSelected ? 'var(--accent)' : 'var(--border)'
                 e.currentTarget.style.background = isSelected ? 'var(--accent-muted)' : 'transparent'
               }}
             >
               {/* Drop indicators */}
               {isDropTarget && dropPosition === 'above' && (
-                <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: 'var(--accent)', zIndex: 10 }} />
+                <div className="absolute -top-1 left-2 right-2 h-0.5 rounded-full" style={{ background: 'var(--accent)', zIndex: 10 }} />
               )}
               {isDropTarget && dropPosition === 'below' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: 'var(--accent)', zIndex: 10 }} />
+                <div className="absolute -bottom-1 left-2 right-2 h-0.5 rounded-full" style={{ background: 'var(--accent)', zIndex: 10 }} />
               )}
 
               {/* Main row */}
-              <div className="flex items-center gap-2 px-2.5" style={{ height: 36 }}>
+              <div className="flex items-center gap-2.5 px-3" style={{ height: 75 }}>
                 <GripVertical
-                  size={13}
+                  size={14}
                   className="shrink-0 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-60 transition-opacity"
                   style={{ color: 'var(--text-muted)' }}
+                />
+                {/* Color dot */}
+                <span
+                  className="shrink-0 w-3.5 h-3.5 rounded-sm"
+                  style={{ background: obj.strokeColor, border: '1.5px solid rgba(255,255,255,0.2)' }}
                 />
                 <span className="shrink-0" style={{ color: isSelected ? 'var(--accent)' : 'var(--text-muted)' }}>
                   <ObjectIcon type={obj.type} />
@@ -295,7 +305,7 @@ export function LayerManager() {
                     />
                   ) : (
                     <span
-                      className="text-[13px] truncate block"
+                      className="text-[12px] truncate block"
                       style={{
                         color: isSelected ? 'var(--text)' : 'var(--text-secondary)',
                         fontWeight: isSelected ? 600 : 400,
@@ -310,38 +320,34 @@ export function LayerManager() {
                     </span>
                   )}
                 </div>
-                <span
-                  className="shrink-0 w-2.5 h-2.5 rounded-sm"
-                  style={{ background: obj.strokeColor, border: '1px solid var(--border)' }}
-                />
-              </div>
 
-              {/* Hover actions */}
-              <div className="flex items-center gap-0.5 px-1.5 pb-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="icon-btn" style={{ padding: 4 }} onClick={(e) => {
-                  e.stopPropagation()
-                  if (obj.type === 'smartroad' && obj.subtype) {
-                    useAppStore.getState().openRoadEditor(obj.id, obj.subtype)
-                  } else {
-                    openProperties(obj.id)
-                  }
-                }} title="Eigenschaften">
-                  <Settings2 size={14} />
-                </button>
-                <button className="icon-btn" style={{ padding: 4 }} onClick={(e) => { e.stopPropagation(); updateObject(obj.id, { visible: !obj.visible }) }} title={obj.visible ? 'Ausblenden' : 'Einblenden'}>
-                  {obj.visible ? <Eye size={14} /> : <EyeOff size={14} />}
-                </button>
-                <button className="icon-btn" style={{ padding: 4 }} onClick={(e) => { e.stopPropagation(); updateObject(obj.id, { locked: !obj.locked }) }} title={obj.locked ? 'Entsperren' : 'Sperren'}>
-                  {obj.locked ? <Lock size={14} /> : <Unlock size={14} />}
-                </button>
-                <button className="icon-btn" style={{ padding: 4, color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); removeObject(obj.id) }} title="Löschen">
-                  <Trash2 size={14} />
-                </button>
+                {/* Inline hover actions */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button className="icon-btn" style={{ padding: 5 }} onClick={(e) => {
+                    e.stopPropagation()
+                    if (obj.type === 'smartroad' && obj.subtype) {
+                      useAppStore.getState().openRoadEditor(obj.id, obj.subtype)
+                    } else {
+                      openProperties(obj.id)
+                    }
+                  }} title="Eigenschaften">
+                    <Settings2 size={14} />
+                  </button>
+                  <button className="icon-btn" style={{ padding: 5 }} onClick={(e) => { e.stopPropagation(); updateObject(obj.id, { visible: !obj.visible }) }} title={obj.visible ? 'Ausblenden' : 'Einblenden'}>
+                    {obj.visible ? <Eye size={14} /> : <EyeOff size={14} />}
+                  </button>
+                  <button className="icon-btn" style={{ padding: 5 }} onClick={(e) => { e.stopPropagation(); updateObject(obj.id, { locked: !obj.locked }) }} title={obj.locked ? 'Entsperren' : 'Sperren'}>
+                    {obj.locked ? <Lock size={14} /> : <Unlock size={14} />}
+                  </button>
+                  <button className="icon-btn" style={{ padding: 5, color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); removeObject(obj.id) }} title="Löschen">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
             </div>
           )
         })}
-
+        </div>
       </div>
         </div>
       )}

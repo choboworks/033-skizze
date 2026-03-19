@@ -2,16 +2,18 @@ import { useRef, useCallback, useEffect, useState } from 'react'
 import { Stage, Layer, Rect, Line as KonvaLine, Circle } from 'react-konva'
 import { useAppStore } from '@/store'
 import { PAGE_WIDTH_PX, PAGE_HEIGHT_PX, MM_TO_PX, pixelsToMeters } from '@/utils/scale'
+import { useAusschnitt } from '@/hooks/useAusschnitt'
+import { PrintAreaFrame, PrintAreaPreview } from '@/components/Toolbar/PrintAreaTool'
 import { snapTo45 } from '@/utils/snapAngle'
 import { CanvasObjects } from './CanvasObjects'
 import { createDefaultStraightRoad, totalWidth } from '@/smartroads/constants'
-import { metersToPixels } from '@/utils/scale'
 import { shapeRefs } from './shapeRefs'
 import { useDrawing } from '@/hooks/useDrawing'
 import type Konva from 'konva'
 import type { CanvasObject } from '@/types'
 
 const MARGIN_PX = 10 * MM_TO_PX
+
 
 export function SketchCanvas() {
   const stageRef = useRef<Konva.Stage>(null)
@@ -30,6 +32,8 @@ export function SketchCanvas() {
   const editingTextId = useAppStore((s) => s.editingTextId)
   const setEditingTextId = useAppStore((s) => s.setEditingTextId)
   const objects = useAppStore((s) => s.objects)
+  const scaleViewport = useAppStore((s) => s.scale.viewport)
+  const hasScaleOverride = scaleViewport !== null
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
@@ -47,6 +51,13 @@ export function SketchCanvas() {
   // Dimension tool: first click + preview endpoint
   const [dimStart, setDimStart] = useState<{ x: number; y: number } | null>(null)
   const [dimEnd, setDimEnd] = useState<{ x: number; y: number } | null>(null)
+
+  // Print-area tool (extracted to PrintAreaTool.tsx)
+  const {
+    ausschnittStart, ausschnittEnd,
+    handleAusschnittMouseDown,
+    handleAusschnittMouseMove, handleAusschnittMouseUp,
+  } = useAusschnitt()
 
   // Spacebar pan
   const [spaceHeld, setSpaceHeld] = useState(false)
@@ -137,7 +148,7 @@ export function SketchCanvas() {
     return () => observer.disconnect()
   }, [setViewport, zoomTo, setCanvasSize])
 
-  // Wheel zoom
+  // Wheel zoom (visual only, no print-area scroll zoom)
   const handleWheel = useCallback(
     (e: Konva.KonvaEventObject<WheelEvent>) => {
       e.evt.preventDefault()
@@ -289,6 +300,9 @@ export function SketchCanvas() {
         return
       }
 
+      // Print-area tool: start frame drag
+      if (e.evt.button === 0 && handleAusschnittMouseDown(stage, viewport)) return
+
       // Drawing mode
       if (e.evt.button === 0 && isDrawingTool(activeTool)) {
         onDrawStart(stage, activeTool)
@@ -310,7 +324,7 @@ export function SketchCanvas() {
         clearSelection()
       }
     },
-    [activeTool, viewport, toolOptions, addObject, setEditingTextId, isDrawingTool, onDrawStart, clearSelection, dimStart]
+    [activeTool, viewport, toolOptions, addObject, setEditingTextId, isDrawingTool, onDrawStart, clearSelection, dimStart, handleAusschnittMouseDown]
   )
 
   const handleMouseMove = useCallback(
@@ -322,6 +336,9 @@ export function SketchCanvas() {
         })
         return
       }
+
+      // Print-area frame drag
+      if (stageRef.current && handleAusschnittMouseMove(stageRef.current, viewport)) return
 
       // Marquee drag
       if (marqueeStart.current) {
@@ -370,7 +387,7 @@ export function SketchCanvas() {
         if (stage) onDrawMove(stage, activeTool, e.evt.shiftKey)
       }
     },
-    [setViewport, isDrawing, onDrawMove, activeTool, viewport, dimStart]
+    [setViewport, isDrawing, onDrawMove, activeTool, viewport, dimStart, handleAusschnittMouseMove]
   )
 
   const handleMouseUp = useCallback(() => {
@@ -380,6 +397,9 @@ export function SketchCanvas() {
       return
     }
 
+    // Print-area frame drag finished
+    if (handleAusschnittMouseUp()) return
+
     if (marqueeStart.current) {
       finishMarquee()
       return
@@ -388,7 +408,7 @@ export function SketchCanvas() {
     if (isDrawing()) {
       onDrawEnd(removeObject)
     }
-  }, [isDrawing, onDrawEnd, removeObject, finishMarquee])
+  }, [isDrawing, onDrawEnd, removeObject, finishMarquee, handleAusschnittMouseUp])
 
   // Resize textarea to fit content (no auto-wrap — width tracks longest line)
   const resizeTextarea = useCallback(() => {
@@ -449,9 +469,11 @@ export function SketchCanvas() {
     ? isDraggingCursor ? 'grabbing' : 'grab'
     : activeTool === 'text'
       ? 'text'
-      : isDrawMode
+      : activeTool === 'print-area'
         ? 'crosshair'
-        : 'default'
+        : isDrawMode
+          ? 'crosshair'
+          : 'default'
 
   const editingObj = editingTextId ? objects[editingTextId] : null
 
@@ -476,18 +498,12 @@ export function SketchCanvas() {
           const editorState = JSON.stringify(state)
           const realWidth = totalWidth(state.strips)
           const realHeight = state.length
-          const currentScale = useAppStore.getState().scale.currentScale
-          const scaleFactor = metersToPixels(1, currentScale)
 
-          // Convert drop position (screen px) to canvas coordinates
+          // Save drop position in page-pixel coordinates (convert to meters AFTER scale recalc)
           const rect = containerRef.current?.getBoundingClientRect()
           if (!rect) return
-          const dropX = (e.clientX - rect.left - viewport.x) / viewport.zoom
-          const dropY = (e.clientY - rect.top - viewport.y) / viewport.zoom
-
-          // Center the road under the cursor
-          const roadPxW = realWidth * scaleFactor
-          const roadPxH = realHeight * scaleFactor
+          const dropPxX = (e.clientX - rect.left - viewport.x) / viewport.zoom
+          const dropPxY = (e.clientY - rect.top - viewport.y) / viewport.zoom
 
           const newObj: CanvasObject = {
             id: crypto.randomUUID(),
@@ -496,8 +512,8 @@ export function SketchCanvas() {
             category: 'smartroads',
             layerId: '',
             label: 'Straße',
-            x: dropX - roadPxW / 2,
-            y: dropY - roadPxH / 2,
+            x: 0, y: 0,
+            xMeters: 0, yMeters: 0,
             width: realWidth,
             height: realHeight,
             rotation: 0,
@@ -513,6 +529,17 @@ export function SketchCanvas() {
           }
           const store = useAppStore.getState()
           store.addObject(newObj)
+          store.recalculateScale()
+
+          // Convert drop position to meters using the NEW scale
+          const newScale = useAppStore.getState().scale.currentScale
+          const dropMetersX = pixelsToMeters(dropPxX, newScale)
+          const dropMetersY = pixelsToMeters(dropPxY, newScale)
+          store.updateObject(newObj.id, {
+            xMeters: dropMetersX - realWidth / 2,
+            yMeters: dropMetersY - realHeight / 2,
+          })
+
           store.select([newObj.id])
           store.setLibraryCategory(null)
         }
@@ -569,10 +596,18 @@ export function SketchCanvas() {
           />
         </Layer>
 
-        {/* Objects layer */}
-        <Layer name="objects">
-          <CanvasObjects />
-        </Layer>
+        {/* Objects layer — clips to content frame when override active */}
+        {(() => {
+          const fX = hasScaleOverride ? (scaleViewport!.frameX * MM_TO_PX) : 0
+          const fY = hasScaleOverride ? (scaleViewport!.frameY * MM_TO_PX) : 0
+          const fW = hasScaleOverride ? (scaleViewport!.frameW * MM_TO_PX) : PAGE_WIDTH_PX
+          const fH = hasScaleOverride ? (scaleViewport!.frameH * MM_TO_PX) : PAGE_HEIGHT_PX
+          return (
+            <Layer name="objects" clipX={fX} clipY={fY} clipWidth={fW} clipHeight={fH}>
+              <CanvasObjects />
+            </Layer>
+          )
+        })()}
 
         {/* Dimension preview line */}
         {dimStart && dimEnd && (
@@ -615,6 +650,20 @@ export function SketchCanvas() {
               dash={[6 / viewport.zoom, 3 / viewport.zoom]}
               listening={false}
             />
+          </Layer>
+        )}
+
+        {/* Print-area frame drag preview */}
+        {ausschnittStart && ausschnittEnd && activeTool === 'print-area' && (
+          <Layer>
+            <PrintAreaPreview start={ausschnittStart} end={ausschnittEnd} zoom={viewport.zoom} />
+          </Layer>
+        )}
+
+        {/* Interactive content frame (draggable + resizable when override active) */}
+        {hasScaleOverride && (
+          <Layer>
+            <PrintAreaFrame zoom={viewport.zoom} />
           </Layer>
         )}
       </Stage>

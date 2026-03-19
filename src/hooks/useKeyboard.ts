@@ -9,6 +9,7 @@ const TOOL_SHORTCUTS: Record<string, ToolType> = {
   o: 'rect',
   t: 'text',
   m: 'dimension',
+  a: 'print-area',
 }
 
 // Which tools belong to the same group (for toggle behavior)

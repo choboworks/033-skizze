@@ -4,7 +4,7 @@ import { useAppStore } from '@/store'
 import type { CanvasObject } from '@/types'
 import Konva from 'konva'
 import { shapeRefs } from './shapeRefs'
-import { pixelsToMeters } from '@/utils/scale'
+import { pixelsToMeters, MM_TO_PX } from '@/utils/scale'
 import { SmartRoadCanvasObject } from '@/smartroads/rendering/SmartRoadCanvasObject'
 
 // ─── Text Shape (auto-sized background rect) ─────────────────
@@ -200,6 +200,7 @@ function ShapeRenderer({
 }) {
   const updateObject = useAppStore((s) => s.updateObject)
   const editingTextId = useAppStore((s) => s.editingTextId)
+  const activeTool = useAppStore((s) => s.activeTool)
 
   const registerRef = useCallback(
     (node: Konva.Node | null) => {
@@ -218,7 +219,7 @@ function ShapeRenderer({
     y: obj.y,
     rotation: obj.rotation,
     opacity: obj.opacity,
-    draggable: !obj.locked,
+    draggable: !obj.locked && (activeTool === 'select' || (activeTool === 'print-area' && !!useAppStore.getState().scale.viewport)),
     onClick: (e: Konva.KonvaEventObject<MouseEvent>) => onSelect(obj.id, e),
     onDblClick: () => onDoubleClick(obj.id),
     onDblTap: () => onDoubleClick(obj.id),
@@ -501,16 +502,20 @@ function SelectionTransformer() {
 
   if (selection.length === 0) return null
 
+  // If ANY selected object is a smartroad, disable resize (real objects have fixed dimensions)
+  const hasSmartRoad = selection.some((id) => objects[id]?.type === 'smartroad')
+  const anchors = hasSmartRoad
+    ? [] // no resize for real objects
+    : ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right', 'top-center', 'bottom-center']
+
   return (
     <Transformer
       ref={trRef as React.RefObject<Konva.Transformer>}
       rotateEnabled={true}
+      resizeEnabled={!hasSmartRoad}
       rotationSnaps={shiftHeld ? [0, 90, 180, 270] : []}
       rotationSnapTolerance={shiftHeld ? 45 : 0}
-      enabledAnchors={[
-        'top-left', 'top-right', 'bottom-left', 'bottom-right',
-        'middle-left', 'middle-right', 'top-center', 'bottom-center',
-      ]}
+      enabledAnchors={anchors}
       boundBoxFunc={(_oldBox, newBox) => {
         if (Math.abs(newBox.width) < 2 || Math.abs(newBox.height) < 2) {
           return _oldBox
@@ -569,7 +574,30 @@ export function CanvasObjects() {
     }
   }
 
-  const scale = useAppStore((s) => s.scale.currentScale)
+  const scaleState = useAppStore((s) => s.scale)
+  const scale = scaleState.currentScale
+
+  // Effective scale and viewport offset for print-area override
+  const effectiveScale = scaleState.viewport?.scale ?? scale
+
+  // Content frame from viewport override (dynamic size/position)
+  const vp = scaleState.viewport
+  const frameWmm = vp?.frameW ?? 190
+  const frameHmm = vp?.frameH ?? 257
+  const frameXmm = vp?.frameX ?? 10
+  const frameYmm = vp?.frameY ?? 25
+
+  const offsetXMeters = vp
+    ? vp.centerX - (frameWmm / 1000 * effectiveScale) / 2
+    : 0
+  const offsetYMeters = vp
+    ? vp.centerY - (frameHmm / 1000 * effectiveScale) / 2
+    : 0
+
+  // Pixel offset for content frame origin (within A4 page)
+  const contentOriginX = vp ? frameXmm * MM_TO_PX : 0
+  const contentOriginY = vp ? frameYmm * MM_TO_PX : 0
+
   const orderedObjects = objectOrder.map((id) => objects[id]).filter(Boolean)
 
   return (
@@ -581,7 +609,11 @@ export function CanvasObjects() {
             <SmartRoadCanvasObject
               key={obj.id}
               obj={obj}
-              scale={scale}
+              scale={effectiveScale}
+              offsetXMeters={offsetXMeters}
+              offsetYMeters={offsetYMeters}
+              contentOriginX={contentOriginX}
+              contentOriginY={contentOriginY}
               onSelect={handleSelect}
               onDoubleClick={handleDoubleClick}
             />

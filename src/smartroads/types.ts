@@ -71,9 +71,12 @@ export type MarkingType =
 // --- Marking Variants ---
 export type MarkingVariant =
   // Centerline
-  | 'standard-dash'     // 6m/6m
-  | 'short-dash'        // 3m/3m
-  | 'warning-dash'      // 6m/3m
+  | 'standard-dash'     // Leitlinie innerorts: 3m/6m
+  | 'rural-dash'        // Leitlinie außerorts/Landstraße: 6m/12m
+  | 'autobahn-dash'     // Leitlinie Autobahn: 6m/12m, 15cm breit
+  | 'short-dash'        // Kurze Leitlinie: 1.5m/3m
+  | 'warning-dash'      // Warnlinie innerorts: 6m/3m
+  | 'autobahn-warning'  // Warnlinie Autobahn: 12m/6m
   // Lane boundary
   | 'solid'
   | 'double'
@@ -108,12 +111,16 @@ export interface Marking {
   color?: string
 }
 
+// --- Road Class (determines marking dimensions) ---
+export type RoadClass = 'innerorts' | 'ausserorts' | 'autobahn'
+
 // --- Road States (per segment type) ---
 
 export interface StraightRoadState {
   strips: Strip[]
   markings: Marking[]
   length: number           // Meter
+  roadClass?: RoadClass    // defaults to 'innerorts' if absent
 }
 
 export interface CurveRoadState {

@@ -9,25 +9,34 @@ import { StopLine } from './markings/StopLine'
 // MarkingRenderer – Dispatches to the correct Konva component
 // ============================================================
 
-interface Props {
+export interface MarkingCommonProps {
   marking: Marking
-  roadLength: number
   draggable?: boolean
+  selected?: boolean
+  snapPositions?: number[]
+  peerPhases?: number[]
   onDragEnd?: (id: string, x: number, y: number) => void
+  onClick?: (id: string) => void
+  onDoubleClick?: (id: string) => void
+  onDragging?: (isDragging: boolean) => void
 }
 
-export function MarkingRenderer({ marking, roadLength, draggable, onDragEnd }: Props) {
-  switch (marking.type) {
+interface Props extends MarkingCommonProps {
+  roadLength: number
+}
+
+export function MarkingRenderer({ roadLength, ...common }: Props) {
+  switch (common.marking.type) {
     case 'centerline':
-      return <CenterLine marking={marking} roadLength={roadLength} draggable={draggable} onDragEnd={onDragEnd} />
+      return <CenterLine {...common} roadLength={roadLength} />
     case 'laneboundary':
-      return <LaneBoundary marking={marking} roadLength={roadLength} draggable={draggable} onDragEnd={onDragEnd} />
+      return <LaneBoundary {...common} roadLength={roadLength} />
     case 'crosswalk':
-      return <Crosswalk marking={marking} draggable={draggable} onDragEnd={onDragEnd} />
+      return <Crosswalk {...common} />
     case 'arrow':
-      return <DirectionArrow marking={marking} draggable={draggable} onDragEnd={onDragEnd} />
+      return <DirectionArrow {...common} />
     case 'stopline':
-      return <StopLine marking={marking} draggable={draggable} onDragEnd={onDragEnd} />
+      return <StopLine {...common} />
     default:
       return null
   }

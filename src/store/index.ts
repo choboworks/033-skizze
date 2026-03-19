@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { temporal } from 'zundo'
-import { PAGE_WIDTH_PX, PAGE_HEIGHT_PX } from '@/utils/scale'
-import type { AppState, Layer, CanvasObject, Theme, ToolType, ViewportState, PanelStates, ScaleState, DocumentMeta } from '@/types'
+import { PAGE_WIDTH_PX, PAGE_HEIGHT_PX, calculateAutoScale } from '@/utils/scale'
+import type { AppState, Layer, CanvasObject, Theme, ToolType, ViewportState, PanelStates, ScaleState, ScaleViewportOverride, DocumentMeta } from '@/types'
 
 // --- Default Layers (empty – objects are shown directly) ---
 const DEFAULT_LAYERS: Layer[] = []
@@ -39,7 +39,7 @@ export const useAppStore = create<AppState>()(
       viewport: { x: 0, y: 0, zoom: 1 },
 
       // Scale
-      scale: { currentScale: 200, rawScale: 200 },
+      scale: { currentScale: 200, rawScale: 200, viewport: null },
 
       // Canvas container size (updated by SketchCanvas)
       canvasSize: { width: 800, height: 600 },
@@ -234,6 +234,37 @@ export const useAppStore = create<AppState>()(
 
       // Scale
       updateScale: (scale: ScaleState) => set({ scale }),
+
+      recalculateScale: () =>
+        set((state) => {
+          // Find bounding box of all SmartRoad objects in meters
+          const smartroads = Object.values(state.objects).filter((o) => o.type === 'smartroad' && o.xMeters != null)
+          if (smartroads.length === 0) return { scale: { currentScale: 200, rawScale: 200, viewport: state.scale.viewport } }
+
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+          for (const obj of smartroads) {
+            const x = obj.xMeters!
+            const y = obj.yMeters!
+            const w = obj.realWidth || 0
+            const h = obj.realHeight || 0
+            minX = Math.min(minX, x)
+            minY = Math.min(minY, y)
+            maxX = Math.max(maxX, x + w)
+            maxY = Math.max(maxY, y + h)
+          }
+
+          const contentH = maxY - minY
+          // Scale based on LENGTH only — width may overflow the page (that's OK)
+          // Add 15% padding
+          const auto = calculateAutoScale(0, contentH * 1.15)
+          return { scale: { ...auto, viewport: state.scale.viewport } }
+        }),
+
+      // Scale override (Druckbereich tool)
+      setScaleOverride: (viewport: ScaleViewportOverride | null) =>
+        set((state) => ({
+          scale: { ...state.scale, viewport },
+        })),
 
       // Editing text
       setEditingTextId: (id: string | null) => set({ editingTextId: id }),

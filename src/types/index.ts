@@ -17,6 +17,7 @@ export type ToolType =
   | 'star'
   | 'text'
   | 'dimension'
+  | 'print-area'
   | 'brake-trail'
   | 'debris-field'
   | 'fluid'
@@ -32,12 +33,24 @@ export interface ViewportState {
 }
 
 // --- Scale ---
-export const VALID_SCALES = [50, 100, 150, 200, 250, 500, 1000] as const
+export const VALID_SCALES = [10, 15, 20, 25, 30, 40, 50, 60, 75, 100, 125, 150, 175, 200, 250, 300, 400, 500, 600, 750, 1000, 1500, 2000, 3000, 5000] as const
 export type ValidScale = (typeof VALID_SCALES)[number]
+
+export interface ScaleViewportOverride {
+  centerX: number    // Meter – center of the print area
+  centerY: number    // Meter
+  scale: number      // e.g. 150 for 1:150 (continuous, not snapped to ValidScale)
+  // Content frame position/size on A4 page (in mm)
+  frameX: number     // default 10
+  frameY: number     // default 25
+  frameW: number     // default 190
+  frameH: number     // default 257
+}
 
 export interface ScaleState {
   currentScale: ValidScale
   rawScale: number
+  viewport: ScaleViewportOverride | null  // null = auto mode
 }
 
 // --- Document ---
@@ -116,9 +129,11 @@ export interface CanvasObject {
   // Dimension-specific
   dimensionStart?: { x: number; y: number }  // start point in page coords
   dimensionEnd?: { x: number; y: number }    // end point in page coords
-  // SmartRoad-specific
+  // SmartRoad-specific (real-world objects use meter positions)
   subtype?: SmartRoadSubtype          // 'straight' | 'curve' | 'intersection' | 'roundabout'
-  editorState?: string                // Konva stage.toJSON() — serialized editor canvas
+  editorState?: string                // serialized editor state (JSON)
+  xMeters?: number                    // position in meters (source of truth for real objects)
+  yMeters?: number                    // position in meters (source of truth for real objects)
   realWidth?: number                  // bounding box width in meters (for auto-scale)
   realHeight?: number                 // bounding box height in meters (for auto-scale)
   // State
@@ -255,6 +270,8 @@ export interface AppState {
 
   // Actions – Scale
   updateScale: (scale: ScaleState) => void
+  recalculateScale: () => void
+  setScaleOverride: (viewport: ScaleViewportOverride | null) => void
 
   // Editing text
   editingTextId: string | null

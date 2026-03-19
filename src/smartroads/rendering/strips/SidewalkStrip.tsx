@@ -1,6 +1,5 @@
 import { Rect } from 'react-konva'
-import { usePavingPattern } from '../../shared/patterns'
-import { STRIP_COLORS } from '../../constants'
+import { getPavingPattern } from '../../shared/patterns'
 
 interface Props {
   x: number
@@ -9,17 +8,11 @@ interface Props {
 }
 
 export function SidewalkStrip({ x, width, length }: Props) {
-  const pattern = usePavingPattern()
-
-  if (!pattern) {
-    return <Rect x={x} y={0} width={width} height={length} fill={STRIP_COLORS.sidewalk} />
-  }
-
   return (
     <Rect
       x={x} y={0}
       width={width} height={length}
-      fillPatternImage={pattern}
+      fillPatternImage={getPavingPattern() as unknown as HTMLImageElement}
       fillPatternScale={{ x: 0.02, y: 0.02 }}
     />
   )

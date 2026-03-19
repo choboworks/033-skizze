@@ -1,6 +1,5 @@
 import { Rect } from 'react-konva'
-import { useGrassPattern } from '../../shared/patterns'
-import { STRIP_COLORS } from '../../constants'
+import { getGrassPattern } from '../../shared/patterns'
 
 interface Props {
   x: number
@@ -9,17 +8,11 @@ interface Props {
 }
 
 export function GreenStrip({ x, width, length }: Props) {
-  const pattern = useGrassPattern()
-
-  if (!pattern) {
-    return <Rect x={x} y={0} width={width} height={length} fill={STRIP_COLORS.green} />
-  }
-
   return (
     <Rect
       x={x} y={0}
       width={width} height={length}
-      fillPatternImage={pattern}
+      fillPatternImage={getGrassPattern() as unknown as HTMLImageElement}
       fillPatternScale={{ x: 0.02, y: 0.02 }}
     />
   )

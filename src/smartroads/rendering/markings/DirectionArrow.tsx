@@ -1,13 +1,18 @@
-import { Path } from 'react-konva'
+import { Group, Path, Rect } from 'react-konva'
 import type { Marking } from '../../types'
+import { handleMarkingDragMove } from './snapHelper'
 
 interface Props {
   marking: Marking
   draggable?: boolean
+  selected?: boolean
+  snapPositions?: number[]
   onDragEnd?: (id: string, x: number, y: number) => void
+  onClick?: (id: string) => void
+  onDoubleClick?: (id: string) => void
+  onDragging?: (isDragging: boolean) => void
 }
 
-// SVG path data for arrow variants (in meter-scale, ~2m tall)
 const ARROW_PATHS: Record<string, string> = {
   straight:       'M0,1 L0,-1 M-0.4,-0.5 L0,-1 L0.4,-0.5',
   left:           'M0,1 L0,0 Q0,-0.8 -0.8,-0.8 M-0.4,-0.4 L-0.8,-0.8 L-0.4,-1.2',
@@ -16,22 +21,46 @@ const ARROW_PATHS: Record<string, string> = {
   'straight-right': 'M0,1 L0,-1 M-0.4,-0.5 L0,-1 L0.4,-0.5 M0,0 Q0,-0.6 0.6,-0.6',
 }
 
-export function DirectionArrow({ marking, draggable, onDragEnd }: Props) {
+export function DirectionArrow({ marking, draggable, selected, snapPositions, onDragEnd, onClick, onDoubleClick, onDragging }: Props) {
   const pathData = ARROW_PATHS[marking.variant] || ARROW_PATHS.straight
+  const hitSize = 2.5
 
   return (
-    <Path
+    <Group
       x={marking.x} y={marking.y}
-      data={pathData}
-      stroke="#ffffff"
-      strokeWidth={0.15}
-      lineCap="round"
-      lineJoin="round"
-      opacity={0.9}
-      scaleX={1.5}
-      scaleY={1.5}
       draggable={draggable}
-      onDragEnd={(e) => onDragEnd?.(marking.id, e.target.x(), e.target.y())}
-    />
+      onDragStart={() => onDragging?.(true)}
+      onDragMove={(e) => handleMarkingDragMove(e, snapPositions)}
+      onDragEnd={(e) => { onDragging?.(false); onDragEnd?.(marking.id, e.target.x(), e.target.y()) }}
+      onClick={(e) => { e.cancelBubble = true; onClick?.(marking.id) }}
+      onDblClick={(e) => { e.cancelBubble = true; onDoubleClick?.(marking.id) }}
+      onTap={(e) => { e.cancelBubble = true; onClick?.(marking.id) }}
+      onDblTap={() => onDoubleClick?.(marking.id)}
+    >
+      {selected && (
+        <Rect
+          x={-hitSize / 2} y={-hitSize / 2}
+          width={hitSize} height={hitSize}
+          fill="rgba(74,158,255,0.15)"
+          listening={false}
+        />
+      )}
+      <Path
+        data={pathData}
+        stroke="#ffffff"
+        strokeWidth={0.15}
+        lineCap="round"
+        lineJoin="round"
+        opacity={0.9}
+        scaleX={1.5}
+        scaleY={1.5}
+      />
+      <Rect
+        x={-hitSize / 2} y={-hitSize / 2}
+        width={hitSize} height={hitSize}
+        fill="rgba(0,0,0,0.001)"
+        cursor="pointer"
+      />
+    </Group>
   )
 }

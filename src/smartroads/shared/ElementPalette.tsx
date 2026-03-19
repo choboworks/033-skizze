@@ -4,7 +4,7 @@ import { STRIP_LABELS, VARIANT_LABELS } from '../constants'
 import type { StripType, StripVariant, MarkingType, MarkingVariant } from '../types'
 
 // ============================================================
-// ElementPalette – Compact sidebar, no scrolling needed
+// ElementPalette – Figma-style sidebar with large touch targets
 // ============================================================
 
 const STRIP_OPTIONS: { type: StripType; variants: { variant: StripVariant; label: string }[] }[] = [
@@ -39,9 +39,10 @@ const STRIP_OPTIONS: { type: StripType; variants: { variant: StripVariant; label
 
 const MARKING_OPTIONS: { type: MarkingType; label: string; variants: { variant: MarkingVariant; label: string }[] }[] = [
   { type: 'centerline', label: 'Leitlinie', variants: [
-    { variant: 'standard-dash', label: 'Standard' },
-    { variant: 'short-dash', label: 'Kurz' },
-    { variant: 'warning-dash', label: 'Warnlinie' },
+    { variant: 'standard-dash', label: 'Innerorts (3m/6m)' },
+    { variant: 'rural-dash', label: 'Außerorts (6m/12m)' },
+    { variant: 'autobahn-dash', label: 'Autobahn (6m/12m)' },
+    { variant: 'warning-dash', label: 'Warnlinie (6m/3m)' },
   ]},
   { type: 'laneboundary', label: 'Begrenzung', variants: [
     { variant: 'solid', label: 'Durchgezogen' },
@@ -67,28 +68,28 @@ export function ElementPalette({ onAddStrip, onAddMarking }: Props) {
     <div className="flex flex-col h-full">
       <Accordion.Root type="multiple" className="flex-1">
         {/* Section: Streifen */}
-        <div className="px-3 pt-3 pb-1.5 text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--text-muted)' }}>
+        <div className="px-4 pt-5 pb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-center" style={{ color: 'var(--text-muted)' }}>
           Streifen
         </div>
 
         {STRIP_OPTIONS.map((opt) => (
-          <Accordion.Item key={opt.type} value={opt.type} className="mx-2 mb-0.5">
+          <Accordion.Item key={opt.type} value={opt.type} className="mx-3 mb-0.5">
             <Accordion.Trigger
-              className="group flex items-center justify-between w-full px-2.5 py-1.5 text-[12px] font-medium rounded-md transition-colors"
-              style={{ color: 'var(--text-secondary)' }}
+              className="group flex items-center justify-between w-full px-3 rounded-lg transition-colors"
+              style={{ color: 'var(--text-secondary)', height: 38 }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-hover)' }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
             >
-              {STRIP_LABELS[opt.type]}
-              <ChevronDown size={12} className="shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" style={{ color: 'var(--text-muted)' }} />
+              <span className="text-[13px] font-medium">{STRIP_LABELS[opt.type]}</span>
+              <ChevronDown size={14} className="shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" style={{ color: 'var(--text-muted)' }} />
             </Accordion.Trigger>
             <Accordion.Content className="overflow-hidden">
-              <div className="pl-3 pr-1 pb-1.5 flex flex-col gap-px">
+              <div className="pl-4 pr-2 pb-2 flex flex-col gap-0.5">
                 {opt.variants.map((v) => (
                   <button
                     key={v.variant}
-                    className="text-left text-[11px] px-2.5 py-1 rounded-md transition-colors"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-left text-[12px] px-3 rounded-lg transition-colors"
+                    style={{ color: 'var(--text-muted)', height: 34 }}
                     onClick={() => onAddStrip(opt.type, v.variant, 'right')}
                     onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--accent-muted)'; e.currentTarget.style.color = 'var(--accent)' }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
@@ -102,31 +103,31 @@ export function ElementPalette({ onAddStrip, onAddMarking }: Props) {
         ))}
 
         {/* Divider */}
-        <div className="mx-4 my-2 h-px" style={{ background: 'var(--border)' }} />
+        <div className="mx-5 my-3 h-px" style={{ background: 'var(--border)' }} />
 
         {/* Section: Markierungen */}
-        <div className="px-3 pb-1.5 text-[9px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--text-muted)' }}>
+        <div className="px-4 pb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-center" style={{ color: 'var(--text-muted)' }}>
           Markierungen
         </div>
 
         {MARKING_OPTIONS.map((opt) => (
-          <Accordion.Item key={opt.type} value={`m-${opt.type}`} className="mx-2 mb-0.5">
+          <Accordion.Item key={opt.type} value={`m-${opt.type}`} className="mx-3 mb-0.5">
             <Accordion.Trigger
-              className="group flex items-center justify-between w-full px-2.5 py-1.5 text-[12px] font-medium rounded-md transition-colors"
-              style={{ color: 'var(--text-secondary)' }}
+              className="group flex items-center justify-between w-full px-3 rounded-lg transition-colors"
+              style={{ color: 'var(--text-secondary)', height: 38 }}
               onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-hover)' }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
             >
-              {opt.label}
-              <ChevronDown size={12} className="shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" style={{ color: 'var(--text-muted)' }} />
+              <span className="text-[13px] font-medium">{opt.label}</span>
+              <ChevronDown size={14} className="shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" style={{ color: 'var(--text-muted)' }} />
             </Accordion.Trigger>
             <Accordion.Content className="overflow-hidden">
-              <div className="pl-3 pr-1 pb-1.5 flex flex-col gap-px">
+              <div className="pl-4 pr-2 pb-2 flex flex-col gap-0.5">
                 {opt.variants.map((v) => (
                   <button
                     key={v.variant}
-                    className="text-left text-[11px] px-2.5 py-1 rounded-md transition-colors"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="text-left text-[12px] px-3 rounded-lg transition-colors"
+                    style={{ color: 'var(--text-muted)', height: 34 }}
                     onClick={() => onAddMarking(opt.type, v.variant)}
                     onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--accent-muted)'; e.currentTarget.style.color = 'var(--accent)' }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}

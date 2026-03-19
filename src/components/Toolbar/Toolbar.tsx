@@ -7,6 +7,7 @@ import {
   Square,
   Type,
   Ruler,
+  ScanSearch,
   Search,
   PanelLeftClose,
   PanelLeftOpen,
@@ -79,6 +80,15 @@ const TOOL_GROUPS: ToolGroup[] = [
     tools: ['dimension'],
     hasPopover: true,
   },
+  {
+    id: 'print-area',
+    defaultTool: 'print-area',
+    icon: ScanSearch,
+    label: 'Ausschnitt',
+    shortcut: 'A',
+    tools: ['print-area'],
+    hasPopover: false,
+  },
 ]
 
 function findGroupForTool(toolId: ToolType): ToolGroup | undefined {
@@ -113,6 +123,7 @@ export function Toolbar() {
     shapes: 'rect',
     text: 'text',
     measure: 'dimension',
+    'print-area': 'print-area',
   })
 
   // Auto-open popover when tool changes (e.g. via keyboard shortcut)
@@ -238,7 +249,7 @@ export function Toolbar() {
       {/* Section label */}
       {isExpanded && (
         <div
-          className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest"
+          className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-center"
           style={{ color: 'var(--text-muted)' }}
         >
           Werkzeuge
@@ -357,7 +368,7 @@ export function Toolbar() {
       {/* Section label */}
       {isExpanded && (
         <div
-          className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest"
+          className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-center"
           style={{ color: 'var(--text-muted)' }}
         >
           Bibliothek
