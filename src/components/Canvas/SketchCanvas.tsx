@@ -481,7 +481,13 @@ export function SketchCanvas() {
     <div
       ref={containerRef}
       className="flex-1 overflow-hidden relative"
-      style={{ background: 'var(--canvas-bg)', cursor }}
+      style={{
+        background: 'var(--canvas-bg)',
+        cursor,
+        borderRadius: 'var(--radius-2xl)',
+        border: '1px solid var(--border)',
+        boxShadow: 'var(--shadow-lg)',
+      }}
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes('application/smartroad')) {
           e.preventDefault()
@@ -545,6 +551,41 @@ export function SketchCanvas() {
         }
       }}
     >
+      {/* Tool Context Bar */}
+      <div
+        className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 py-2"
+        style={{
+          background: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderBottom: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-2xl) var(--radius-2xl) 0 0',
+          pointerEvents: 'none',
+        }}
+      >
+        <div className="flex items-center gap-2" style={{ pointerEvents: 'auto' }}>
+          <span className="badge badge-accent" style={{ fontSize: 10, padding: '3px 8px' }}>
+            {(() => {
+              const labels: Record<string, string> = {
+                select: 'Auswahl', freehand: 'Freihand', rect: 'Rechteck',
+                'rounded-rect': 'Abgerundet', ellipse: 'Ellipse', triangle: 'Dreieck',
+                polygon: 'Polygon', star: 'Stern', line: 'Linie', arrow: 'Pfeil',
+                path: 'Pfad', text: 'Text', dimension: 'Bemaßung', 'print-area': 'Ausschnitt',
+              }
+              return `Aktiv: ${labels[activeTool] || activeTool}`
+            })()}
+          </span>
+          {hasScaleOverride && (
+            <span className="badge" style={{ fontSize: 10, padding: '3px 8px', background: 'rgba(240, 160, 48, 0.15)', color: '#f0a030' }}>
+              Ausschnitt-Override
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 text-[10px]" style={{ color: 'var(--text-muted)' }}>
+          Scroll = Zoom · Space = Pan
+        </div>
+      </div>
+
       <Stage
         ref={stageRef}
         width={canvasSize.width}

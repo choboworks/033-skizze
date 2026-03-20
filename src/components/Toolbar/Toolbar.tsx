@@ -8,15 +8,11 @@ import {
   Type,
   Ruler,
   ScanSearch,
-  Search,
-  PanelLeftClose,
-  PanelLeftOpen,
   Circle,
   Hexagon,
   Spline,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { LIBRARY_CATEGORIES } from '@/constants/library'
 import { FreehandToolPopover } from './FreehandTool'
 import { ShapesToolPopover } from './ShapesTool'
 import { TextToolPopover } from './TextTool'
@@ -107,13 +103,6 @@ function getShapeIcon(toolId: ToolType): LucideIcon {
 export function Toolbar() {
   const activeTool = useAppStore((s) => s.activeTool)
   const setActiveTool = useAppStore((s) => s.setActiveTool)
-  const activeLibraryCategory = useAppStore((s) => s.activeLibraryCategory)
-  const setLibraryCategory = useAppStore((s) => s.setLibraryCategory)
-  const leftSidebarCollapsed = useAppStore((s) => s.panels.leftSidebarCollapsed)
-  const toggleLeftSidebar = useAppStore((s) => s.toggleLeftSidebar)
-
-  const isExpanded = !leftSidebarCollapsed
-
   const [openPopoverGroupId, setOpenPopoverGroupId] = useState<string | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -165,7 +154,6 @@ export function Toolbar() {
   const handleGroupClick = useCallback((group: ToolGroup) => {
     const isGroupActive = group.tools.some((t) => t === activeTool)
     if (isGroupActive) {
-      // Already active: deselect → go back to select, close popover
       setActiveTool('select')
       setOpenPopoverGroupId(null)
       return
@@ -216,292 +204,98 @@ export function Toolbar() {
   }
 
   return (
-    <div
-      className="flex flex-col py-2 shrink-0 h-full overflow-hidden"
+    <aside
+      className="flex flex-col shrink-0 h-full glass z-40"
       style={{
         width: 'var(--toolbar-width)',
-        background: 'var(--surface)',
-        borderRight: '1px solid var(--border)',
-        transition: 'width 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-        alignItems: isExpanded ? 'stretch' : 'center',
+        borderRadius: 'var(--radius-xl)',
+        padding: '12px 8px',
       }}
     >
-      {/* Toggle button */}
-      <div
-        className="flex shrink-0 mb-1"
-        style={{ justifyContent: isExpanded ? 'flex-end' : 'center', paddingRight: isExpanded ? 6 : 0 }}
-      >
-        <button
-          onClick={toggleLeftSidebar}
-          className="w-8 h-8 flex items-center justify-center rounded transition-colors"
+      {/* Section label */}
+      <div className="flex items-center justify-between px-1 mb-2">
+        <span
+          className="text-[10px] font-medium uppercase tracking-[0.15em]"
           style={{ color: 'var(--text-muted)' }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          title={isExpanded ? 'Einklappen' : 'Ausklappen'}
         >
-          {isExpanded
-            ? <PanelLeftClose size={16} />
-            : <PanelLeftOpen size={16} />
-          }
-        </button>
+          Tools
+        </span>
       </div>
 
-      {/* Section label */}
-      {isExpanded && (
-        <div
-          className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-center"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          Werkzeuge
-        </div>
-      )}
+      {/* Tool cards */}
+      <div className="flex flex-col gap-1.5">
+        {TOOL_GROUPS.map((group) => {
+          const currentToolId = activePerGroup[group.id] || group.defaultTool
+          const isGroupActive = group.tools.some((t) => t === activeTool)
+          const displayIcon = group.id === 'shapes' ? getShapeIcon(currentToolId) : group.icon
 
-      {/* Tool groups */}
-      {TOOL_GROUPS.map((group) => {
-        const currentToolId = activePerGroup[group.id] || group.defaultTool
-        const isGroupActive = group.tools.some((t) => t === activeTool)
-        const isPopoverOpen = openPopoverGroupId === group.id
-        const displayIcon = group.id === 'shapes' ? getShapeIcon(currentToolId) : group.icon
-
-        return (
-          <div key={group.id} className="relative" style={{ paddingLeft: isExpanded ? 6 : 0, paddingRight: isExpanded ? 6 : 0 }}>
-            {isExpanded ? (
-              /* Expanded: icon + label + shortcut */
-              <button
-                data-toolbar-group={group.id}
-                onClick={() => handleGroupClick(group)}
-                onPointerDown={() => { if (group.hasPopover) handlePointerDown(group.id) }}
-                onPointerUp={handlePointerUp}
-                onPointerLeave={handlePointerUp}
-                onContextMenu={(e) => { if (group.hasPopover) handleContextMenu(e, group.id) }}
-                className="w-full flex items-center gap-2.5 px-2.5 rounded transition-colors"
-                style={{
-                  height: 34,
-                  background: isGroupActive ? 'var(--accent-muted)' : 'transparent',
-                  color: isGroupActive ? 'var(--accent)' : 'var(--text)',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isGroupActive) e.currentTarget.style.background = 'var(--surface-hover)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = isGroupActive ? 'var(--accent-muted)' : 'transparent'
-                }}
-              >
-                {isGroupActive && (
-                  <div
-                    className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r"
-                    style={{ background: 'var(--accent)' }}
-                  />
-                )}
-                {React.createElement(displayIcon, { size: 15 })}
-                <span className="text-[13px] font-medium flex-1 text-left whitespace-nowrap" style={{ opacity: 1, transition: 'opacity 0.15s ease' }}>{group.label}</span>
-                <span
-                  className="text-[11px] font-mono px-1.5 py-0.5 rounded whitespace-nowrap"
-                  style={{
-                    background: 'var(--bg)',
-                    color: 'var(--text-muted)',
-                    opacity: 1,
-                    transition: 'opacity 0.15s ease',
-                  }}
-                >
-                  {group.shortcut}
-                </span>
-              </button>
-            ) : (
-              /* Collapsed: icon only */
-              <button
-                data-toolbar-group={group.id}
-                onClick={() => handleGroupClick(group)}
-                onPointerDown={() => { if (group.hasPopover) handlePointerDown(group.id) }}
-                onPointerUp={handlePointerUp}
-                onPointerLeave={handlePointerUp}
-                onContextMenu={(e) => { if (group.hasPopover) handleContextMenu(e, group.id) }}
-                className="w-9 h-9 flex items-center justify-center rounded transition-colors relative group"
-                style={{
-                  background: isGroupActive ? 'var(--accent-muted)' : 'transparent',
-                  color: isGroupActive ? 'var(--accent)' : 'var(--text-muted)',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isGroupActive) e.currentTarget.style.background = 'var(--surface-hover)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = isGroupActive ? 'var(--accent-muted)' : 'transparent'
-                }}
-              >
-                {isGroupActive && (
-                  <div
-                    className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r"
-                    style={{ background: 'var(--accent)' }}
-                  />
-                )}
-                {React.createElement(displayIcon, { size: 18 })}
-                {!isPopoverOpen && (
-                  <div
-                    className="absolute left-full ml-2 px-2 py-1 rounded text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-                    style={{
-                      background: 'var(--surface)',
-                      color: 'var(--text)',
-                      border: '1px solid var(--border)',
-                      boxShadow: 'var(--shadow-panel)',
-                    }}
-                  >
-                    {group.label}{' '}
-                    <span style={{ color: 'var(--text-muted)' }}>({group.shortcut})</span>
-                  </div>
-                )}
-              </button>
-            )}
-          </div>
-        )
-      })}
-
-      {/* Separator */}
-      <div
-        className="my-2 shrink-0"
-        style={{
-          borderTop: '1px solid var(--border)',
-          marginLeft: isExpanded ? 10 : 8,
-          marginRight: isExpanded ? 10 : 8,
-        }}
-      />
-
-      {/* Section label */}
-      {isExpanded && (
-        <div
-          className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-widest text-center"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          Bibliothek
-        </div>
-      )}
-
-      {/* Library category buttons */}
-      {LIBRARY_CATEGORIES.map((cat) => {
-        const Icon = cat.icon
-        const isActive = activeLibraryCategory === cat.id
-
-        return (
-          <div
-            key={cat.id}
-            className="relative"
-            style={{ paddingLeft: isExpanded ? 6 : 0, paddingRight: isExpanded ? 6 : 0 }}
-          >
-            {isExpanded ? (
-              <button
-                onClick={() => setLibraryCategory(isActive ? null : cat.id)}
-                className="w-full flex items-center gap-2.5 px-2.5 rounded transition-colors"
-                style={{
-                  height: 34,
-                  background: isActive ? 'var(--accent-muted)' : 'transparent',
-                  color: isActive ? 'var(--accent)' : 'var(--text)',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) e.currentTarget.style.background = 'var(--surface-hover)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = isActive ? 'var(--accent-muted)' : 'transparent'
-                }}
-              >
-                {isActive && (
-                  <div
-                    className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r"
-                    style={{ background: 'var(--accent)' }}
-                  />
-                )}
-                <Icon size={15} />
-                <span className="text-[13px] font-medium whitespace-nowrap">{cat.label}</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => setLibraryCategory(isActive ? null : cat.id)}
-                className="w-9 h-9 flex items-center justify-center rounded transition-colors relative group"
-                style={{
-                  background: isActive ? 'var(--accent-muted)' : 'transparent',
-                  color: isActive ? 'var(--accent)' : 'var(--text-muted)',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) e.currentTarget.style.background = 'var(--surface-hover)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = isActive ? 'var(--accent-muted)' : 'transparent'
-                }}
-              >
-                <Icon size={18} />
-                {isActive && (
-                  <div
-                    className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r"
-                    style={{ background: 'var(--accent)' }}
-                  />
-                )}
-                <div
-                  className="absolute left-full ml-2 px-2 py-1 rounded text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-                  style={{
-                    background: 'var(--surface)',
-                    color: 'var(--text)',
-                    border: '1px solid var(--border)',
-                    boxShadow: 'var(--shadow-panel)',
-                  }}
-                >
-                  {cat.label}
-                </div>
-              </button>
-            )}
-          </div>
-        )
-      })}
-
-      {/* Search */}
-      <div
-        className="my-2 shrink-0"
-        style={{
-          borderTop: '1px solid var(--border)',
-          marginLeft: isExpanded ? 10 : 8,
-          marginRight: isExpanded ? 10 : 8,
-        }}
-      />
-      <div
-        className="relative"
-        style={{ paddingLeft: isExpanded ? 6 : 0, paddingRight: isExpanded ? 6 : 0 }}
-      >
-        {isExpanded ? (
-          <button
-            onClick={() => setLibraryCategory(LIBRARY_CATEGORIES[0].id)}
-            className="w-full flex items-center gap-2.5 px-2.5 rounded transition-colors"
-            style={{ height: 34, color: 'var(--text)' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          >
-            <Search size={15} />
-            <span className="text-[13px] font-medium">Suchen</span>
-          </button>
-        ) : (
-          <button
-            onClick={() => setLibraryCategory(LIBRARY_CATEGORIES[0].id)}
-            className="w-9 h-9 flex items-center justify-center rounded transition-colors relative group"
-            style={{ color: 'var(--text-muted)' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          >
-            <Search size={18} />
-            <div
-              className="absolute left-full ml-2 px-2 py-1 rounded text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
+          return (
+            <button
+              key={group.id}
+              data-toolbar-group={group.id}
+              onClick={() => handleGroupClick(group)}
+              onPointerDown={() => { if (group.hasPopover) handlePointerDown(group.id) }}
+              onPointerUp={handlePointerUp}
+              onPointerLeave={handlePointerUp}
+              onContextMenu={(e) => { if (group.hasPopover) handleContextMenu(e, group.id) }}
+              className="group flex w-full flex-col items-center gap-1.5 px-1 py-2.5 transition-all"
               style={{
-                background: 'var(--surface)',
-                color: 'var(--text)',
-                border: '1px solid var(--border)',
-                boxShadow: 'var(--shadow-panel)',
+                borderRadius: 'var(--radius-lg)',
+                border: isGroupActive
+                  ? '1px solid rgba(56, 189, 248, 0.4)'
+                  : '1px solid var(--border-subtle)',
+                background: isGroupActive ? 'var(--accent-muted)' : 'var(--surface-raised)',
+                boxShadow: isGroupActive ? 'var(--shadow-glow)' : 'none',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => {
+                if (!isGroupActive) {
+                  e.currentTarget.style.borderColor = 'var(--border)'
+                  e.currentTarget.style.background = 'var(--surface-hover)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = isGroupActive
+                  ? 'rgba(56, 189, 248, 0.4)'
+                  : 'var(--border-subtle)'
+                e.currentTarget.style.background = isGroupActive
+                  ? 'var(--accent-muted)'
+                  : 'var(--surface-raised)'
               }}
             >
-              Suchen
-            </div>
-          </button>
-        )}
+              <div
+                className="flex items-center justify-center transition-colors"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 'var(--radius-md)',
+                  background: isGroupActive ? 'var(--accent)' : 'var(--surface)',
+                  color: isGroupActive ? '#000' : 'var(--text-muted)',
+                }}
+              >
+                {React.createElement(displayIcon, { size: 17 })}
+              </div>
+              <div className="text-center">
+                <div
+                  className="text-[10px] font-medium leading-tight"
+                  style={{ color: isGroupActive ? 'var(--text)' : 'var(--text-secondary)' }}
+                >
+                  {group.label}
+                </div>
+                <div className="text-[9px]" style={{ color: 'var(--text-muted)' }}>
+                  {group.shortcut}
+                </div>
+              </div>
+            </button>
+          )
+        })}
       </div>
 
-      <div className="h-1" />
+      {/* Spacer */}
+      <div className="flex-1" />
 
       {/* Tool options popover */}
       {openPopoverGroupId && renderPopover()}
-    </div>
+    </aside>
   )
 }

@@ -159,11 +159,10 @@ export function LayerManager() {
   // ─── Single wrapper with animated width ───
   return (
     <div
-      className="flex flex-col h-full shrink-0 overflow-hidden"
+      className="flex flex-col h-full shrink-0 overflow-hidden glass"
       style={{
         width: collapsed ? 48 : 240,
-        background: 'var(--surface)',
-        borderLeft: '1px solid var(--border)',
+        borderRadius: 'var(--radius-xl)',
         transition: 'width 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >

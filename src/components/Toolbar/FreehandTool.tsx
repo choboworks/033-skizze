@@ -28,14 +28,12 @@ export function FreehandToolPopover({
   return (
     <div
       data-toolbar-popover
-      className="absolute z-40 rounded-2xl overflow-hidden anim-slide-left"
+      className="absolute z-40 overflow-hidden anim-slide-left glass"
       style={{
         width: 320,
         left: 'calc(var(--toolbar-width) + 10px)',
-        top: 'calc(var(--topbar-height) + 10px)',
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        boxShadow: '0 12px 40px rgba(0,0,0,0.4)',
+        top: 10,
+        borderRadius: 'var(--radius-lg)',
       }}
     >
       {/* Header */}

@@ -171,22 +171,20 @@ export function LibrarySidebar() {
 
   return (
     <div
-      className="flex flex-col absolute z-40 anim-slide-left"
+      className="flex flex-col absolute z-40 anim-slide-left glass"
       style={{
         width: 320,
-        left: 'var(--toolbar-width)',
-        top: 'var(--topbar-height)',
-        bottom: 'var(--statusbar-height)',
-        background: 'var(--surface)',
-        borderRight: '1px solid var(--border)',
-        boxShadow: 'var(--shadow-lg)',
+        left: 'calc(var(--toolbar-width) + var(--gap))',
+        top: 0,
+        bottom: 0,
+        borderRadius: 'var(--radius-xl)',
       }}
     >
       {/* Header */}
       <div
         className="flex items-center justify-between px-4 shrink-0"
         style={{
-          height: 'var(--topbar-height)',
+          height: 48,
           borderBottom: '1px solid var(--border)',
         }}
       >
@@ -217,17 +215,17 @@ export function LibrarySidebar() {
             <button
               key={chip}
               onClick={() => setActiveFilter(chip)}
-              className="px-4 py-2 rounded-lg text-[13px] font-medium transition-colors"
+              className="px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors"
               style={{
-                background: isActive ? 'var(--accent-muted)' : 'var(--bg)',
+                background: isActive ? 'var(--accent-muted)' : 'var(--surface)',
                 color: isActive ? 'var(--accent)' : 'var(--text-muted)',
-                border: isActive ? '1px solid var(--accent)' : '1px solid var(--border)',
+                border: 'none',
               }}
               onMouseEnter={(e) => {
                 if (!isActive) e.currentTarget.style.background = 'var(--surface-hover)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = isActive ? 'var(--accent-muted)' : 'var(--bg)'
+                e.currentTarget.style.background = isActive ? 'var(--accent-muted)' : 'var(--surface)'
               }}
             >
               {chip}

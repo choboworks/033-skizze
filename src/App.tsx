@@ -6,9 +6,8 @@ import { StraightEditor } from '@/smartroads/editors/StraightEditor'
 import { createDefaultStraightRoad, totalWidth } from '@/smartroads/constants'
 import { TopBar } from '@/components/TopBar/TopBar'
 import { Toolbar } from '@/components/Toolbar/Toolbar'
-import { LibrarySidebar } from '@/components/Sidebar/LibrarySidebar'
 import { SketchCanvas } from '@/components/Canvas/SketchCanvas'
-import { LayerManager } from '@/components/LayerManager/LayerManager'
+import { RightSidebar } from '@/components/RightSidebar/RightSidebar'
 import { FloatingProperties } from '@/components/Inspector/FloatingProperties'
 import { StatusBar } from '@/components/StatusBar/StatusBar'
 import { PAGE_WIDTH_PX, PAGE_HEIGHT_PX, pixelsToMeters } from '@/utils/scale'
@@ -17,20 +16,12 @@ import type { CanvasObject } from '@/types'
 
 export default function App() {
   const theme = useAppStore((s) => s.theme)
-  const leftSidebarCollapsed = useAppStore((s) => s.panels.leftSidebarCollapsed)
   const roadEditor = useAppStore((s) => s.roadEditor)
   const [devBench, setDevBench] = useState(false)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
-
-  useEffect(() => {
-    document.documentElement.style.setProperty(
-      '--toolbar-width',
-      leftSidebarCollapsed ? '48px' : '240px'
-    )
-  }, [leftSidebarCollapsed])
 
   // Ctrl+Shift+D → Toggle DevTestBench
   useEffect(() => {
@@ -137,30 +128,30 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden" style={{ background: 'var(--bg)' }}>
-      <TopBar />
+    <div className="h-screen w-screen overflow-hidden relative" style={{ background: 'var(--bg)' }}>
+      {/* Background gradient overlay */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'var(--bg-gradient)' }} />
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left: fixed 48px in flex flow, Toolbar overlays as absolute when expanded */}
-        <div className="relative shrink-0 z-40" style={{ width: 48 }}>
-          <div className="absolute top-0 left-0 h-full">
-            <Toolbar />
-          </div>
+      {/* Padded content */}
+      <div
+        className="relative flex flex-col h-full"
+        style={{ padding: 'var(--app-padding)', gap: 'var(--gap)' }}
+      >
+        <TopBar />
+
+        <div className="flex flex-1 overflow-hidden relative" style={{ gap: 'var(--gap)' }}>
+          {/* Left: Toolbar (fixed 92px) */}
+          <Toolbar />
+
+          {/* Canvas */}
+          <SketchCanvas />
+
+          {/* Right: Sidebar (Ebenen + Library/Metadaten) */}
+          <RightSidebar />
         </div>
-        <LibrarySidebar />
 
-        {/* Canvas */}
-        <SketchCanvas />
-
-        {/* Right: fixed 48px in flex flow, LayerManager overlays as absolute when expanded */}
-        <div className="relative shrink-0 z-40" style={{ width: 48 }}>
-          <div className="absolute top-0 right-0 h-full">
-            <LayerManager />
-          </div>
-        </div>
+        <StatusBar />
       </div>
-
-      <StatusBar />
 
       {/* Floating Properties Modal */}
       <FloatingProperties />

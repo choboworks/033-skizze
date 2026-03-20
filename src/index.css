@@ -12,18 +12,18 @@
 }
 
 /* ============================================================
-   033-Skizze – Design Tokens (Figma-Style)
+   033-Skizze – Design Tokens (Glassmorphism)
    ============================================================ */
 
 @theme {
-  --color-bg: #1a1a1a;
-  --color-surface: #252525;
-  --color-surface-hover: #2e2e2e;
-  --color-accent: #4a9eff;
-  --color-border: #2e2e2e;
-  --color-text: #f0f0f0;
-  --color-text-muted: #a0a0a0;
-  --color-canvas-bg: #363636;
+  --color-bg: #0b0d12;
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-surface-hover: rgba(255, 255, 255, 0.08);
+  --color-accent: #38bdf8;
+  --color-border: rgba(255, 255, 255, 0.10);
+  --color-text: rgba(255, 255, 255, 0.95);
+  --color-text-muted: rgba(255, 255, 255, 0.45);
+  --color-canvas-bg: #0f1218;
   --color-paper: #ffffff;
   --color-danger: #ef4444;
   --color-success: #34d399;
@@ -34,23 +34,34 @@
    ============================================================ */
 
 :root {
-  /* Dark mode (default) */
-  --bg: #1a1a1a;
-  --surface: #252525;
-  --surface-hover: #2e2e2e;
-  --surface-active: #383838;
-  --accent: #4a9eff;
-  --accent-muted: rgba(74, 158, 255, 0.12);
-  --border: #2e2e2e;
-  --border-subtle: #262626;
-  --text: #f0f0f0;
-  --text-secondary: #c0c0c0;
-  --text-muted: #a0a0a0;
-  --canvas-bg: #363636;
+  /* Dark mode (default) — Glassmorphism */
+  --bg: #0b0d12;
+  --bg-gradient: radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 40%),
+                 radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.08), transparent 40%);
+  --surface: rgba(255, 255, 255, 0.05);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --surface-active: rgba(255, 255, 255, 0.12);
+  --surface-raised: rgba(255, 255, 255, 0.03);
+  --accent: #38bdf8;
+  --accent-hover: #7dd3fc;
+  --accent-strong: #0ea5e9;
+  --accent-muted: rgba(56, 189, 248, 0.15);
+  --border: rgba(255, 255, 255, 0.10);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --text: rgba(255, 255, 255, 0.95);
+  --text-secondary: rgba(255, 255, 255, 0.75);
+  --text-muted: rgba(255, 255, 255, 0.45);
+  --canvas-bg: #0f1218;
   --paper: #ffffff;
   --danger: #ef4444;
   --success: #34d399;
   --warning: #fbbf24;
+
+  /* Glass */
+  --glass-blur: blur(20px);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
 
   /* Typography */
   --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
@@ -67,47 +78,66 @@
   --space-lg: 16px;
   --space-xl: 20px;
 
-  /* Radii */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  /* Radii — large for glassmorphism */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+  --radius-2xl: 32px;
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
-  --shadow-tooltip: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --shadow-tooltip: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.12);
 
-  /* Sizes */
-  --topbar-height: 46px;
-  --statusbar-height: 32px;
-  --toolbar-width: 48px;
+  /* Layout */
+  --topbar-height: 52px;
+  --statusbar-height: 44px;
+  --toolbar-width: 92px;
   --sidebar-width: 300px;
+  --app-padding: 16px;
+  --gap: 12px;
 }
 
 [data-theme="light"] {
-  --bg: #f0f0f0;
-  --surface: #ffffff;
-  --surface-hover: #f5f5f5;
-  --surface-active: #ebebeb;
-  --accent: #4a9eff;
-  --accent-muted: rgba(74, 158, 255, 0.08);
-  --border: #e2e2e2;
-  --border-subtle: #eeeeee;
-  --text: #1a1a1a;
-  --text-secondary: #555555;
-  --text-muted: #999999;
-  --canvas-bg: #d5d5d5;
+  --bg: #e8eaef;
+  --bg-gradient: radial-gradient(circle at top left, rgba(59, 130, 246, 0.06), transparent 40%),
+                 radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.04), transparent 40%);
+  --surface: rgba(255, 255, 255, 0.65);
+  --surface-hover: rgba(255, 255, 255, 0.80);
+  --surface-active: rgba(255, 255, 255, 0.90);
+  --surface-raised: rgba(255, 255, 255, 0.45);
+  --accent: #0ea5e9;
+  --accent-hover: #38bdf8;
+  --accent-strong: #0284c7;
+  --accent-muted: rgba(14, 165, 233, 0.10);
+  --border: rgba(0, 0, 0, 0.08);
+  --border-subtle: rgba(0, 0, 0, 0.04);
+  --text: rgba(0, 0, 0, 0.90);
+  --text-secondary: rgba(0, 0, 0, 0.65);
+  --text-muted: rgba(0, 0, 0, 0.40);
+  --canvas-bg: #d0d2d8;
   --paper: #ffffff;
   --danger: #ef4444;
   --success: #22c55e;
   --warning: #f59e0b;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  /* Glass light */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+
+  /* Shadows light */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
   --shadow-tooltip: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-glow: 0 0 30px rgba(14, 165, 233, 0.06);
 }
 
 /* ============================================================
@@ -131,6 +161,18 @@ html, body, #root {
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Glass Utility
+   ============================================================ */
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 /* ============================================================
@@ -276,11 +318,11 @@ html, body, #root {
 
 .field-input {
   width: 100%;
-  padding: 6px 8px;
+  padding: 6px 10px;
   border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
   color: var(--text);
-  background: var(--bg);
+  background: var(--surface-raised);
   border: 1px solid var(--border);
   outline: none;
   transition: border-color 0.15s;
@@ -299,4 +341,32 @@ html, body, #root {
   font-weight: 500;
   color: var(--text-muted);
   margin-bottom: 4px;
+}
+
+/* ============================================================
+   Badge (reusable glass badge)
+   ============================================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: none;
+  white-space: nowrap;
+}
+
+.badge-accent {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.badge-success {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--success);
 }

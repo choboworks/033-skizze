@@ -103,14 +103,12 @@ export function FloatingProperties() {
 
   return (
     <div
-      className="fixed z-50 rounded-2xl select-none overflow-hidden anim-pop-in"
+      className="fixed z-50 select-none overflow-hidden anim-pop-in glass"
       style={{
         left: pos.x,
         top: pos.y,
         width: 320,
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        boxShadow: '0 16px 48px rgba(0,0,0,0.45)',
+        borderRadius: 'var(--radius-lg)',
       }}
     >
       {/* Title Bar */}

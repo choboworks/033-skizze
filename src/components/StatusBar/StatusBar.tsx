@@ -1,9 +1,10 @@
 import { useAppStore } from '@/store'
-import { Minus, Plus, Scaling, RotateCcw } from 'lucide-react'
+import { Minus, Plus, Scaling, RotateCcw, ZoomIn, Settings2 } from 'lucide-react'
 
 export function StatusBar() {
   const scale = useAppStore((s) => s.scale)
   const viewport = useAppStore((s) => s.viewport)
+  const activeTool = useAppStore((s) => s.activeTool)
   const zoomTo = useAppStore((s) => s.zoomTo)
   const setViewport = useAppStore((s) => s.setViewport)
   const resetView = useAppStore((s) => s.resetView)
@@ -12,6 +13,23 @@ export function StatusBar() {
   const zoomPercent = Math.round(viewport.zoom * 100)
   const hasOverride = scale.viewport !== null
   const effectiveScale = hasOverride ? Math.round(scale.viewport!.scale) : scale.currentScale
+
+  const toolLabels: Record<string, string> = {
+    select: 'Auswahl',
+    freehand: 'Freihand',
+    rect: 'Rechteck',
+    'rounded-rect': 'Abgerundet',
+    ellipse: 'Ellipse',
+    triangle: 'Dreieck',
+    polygon: 'Polygon',
+    star: 'Stern',
+    line: 'Linie',
+    arrow: 'Pfeil',
+    path: 'Pfad',
+    text: 'Text',
+    dimension: 'Bemaßung',
+    'print-area': 'Ausschnitt',
+  }
 
   const handleZoomIn = () => {
     const newZoom = Math.min(5, viewport.zoom * 1.2)
@@ -26,20 +44,37 @@ export function StatusBar() {
   }
 
   return (
-    <div
-      className="flex items-center justify-between select-none shrink-0"
+    <footer
+      className="glass flex items-center justify-between select-none shrink-0"
       style={{
+        borderRadius: 'var(--radius-lg)',
+        padding: '0 var(--space-lg)',
         height: 'var(--statusbar-height)',
-        background: 'var(--surface)',
-        borderTop: '1px solid var(--border)',
-        padding: '0 var(--space-md)',
         fontSize: 'var(--font-size-xs)',
-        color: 'var(--text-muted)',
       }}
     >
-      {/* Left: Canvas info */}
+      {/* Left: Status badges */}
       <div className="flex items-center gap-2 flex-1">
-        <span>DIN A4 canvas, 794×1123px</span>
+        <span className="badge badge-accent">
+          Tool: {toolLabels[activeTool] || activeTool}
+        </span>
+        <span className="badge">
+          Zoom: {zoomPercent}%
+        </span>
+        <span className="badge" style={hasOverride ? { background: 'rgba(240, 160, 48, 0.15)', color: '#f0a030' } : undefined}>
+          <Scaling size={12} />
+          1:{effectiveScale}
+          {hasOverride && (
+            <button
+              className="ml-1 hover:opacity-80 transition-opacity"
+              style={{ color: '#f0a030', background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}
+              onClick={() => setScaleOverride(null)}
+              title="Druckbereich zurücksetzen (Auto)"
+            >
+              <RotateCcw size={11} />
+            </button>
+          )}
+        </span>
       </div>
 
       {/* Center: Zoom controls */}
@@ -49,14 +84,10 @@ export function StatusBar() {
         </button>
         <button
           onClick={resetView}
-          className="min-w-12 text-center px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer"
+          className="min-w-12 text-center px-2 py-1 rounded-lg text-[11px] font-medium transition-colors cursor-pointer"
           style={{ color: 'var(--text)' }}
-          onMouseEnter={(e) =>
-            (e.currentTarget.style.background = 'var(--surface-hover)')
-          }
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = 'transparent')
-          }
+          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
+          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           title="Seite einpassen"
         >
           {zoomPercent}%
@@ -66,26 +97,20 @@ export function StatusBar() {
         </button>
       </div>
 
-      {/* Right: Scale (orange + reset when override active) */}
-      <div className="flex items-center gap-1.5 flex-1 justify-end">
-        <Scaling size={13} style={hasOverride ? { color: '#f0a030' } : undefined} />
-        <span
-          className="font-medium"
-          style={{ color: hasOverride ? '#f0a030' : 'var(--text)' }}
+      {/* Right: Actions */}
+      <div className="flex items-center gap-2 flex-1 justify-end text-[11px]" style={{ color: 'var(--text-muted)' }}>
+        <span>Scroll = Zoom · Space = Pan</span>
+        <button
+          onClick={resetView}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] transition-colors"
+          style={{ color: 'var(--text-muted)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-hover)'; e.currentTarget.style.color = 'var(--text)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
         >
-          1:{effectiveScale}
-        </span>
-        {hasOverride && (
-          <button
-            className="icon-btn"
-            style={{ padding: 3, color: '#f0a030' }}
-            onClick={() => setScaleOverride(null)}
-            title="Druckbereich zurücksetzen (Auto)"
-          >
-            <RotateCcw size={13} />
-          </button>
-        )}
+          <ZoomIn size={14} />
+          Reset View
+        </button>
       </div>
-    </div>
+    </footer>
   )
 }
