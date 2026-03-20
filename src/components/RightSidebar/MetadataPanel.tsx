@@ -22,9 +22,10 @@ export function MetadataPanel() {
         </div>
 
         <div
-          className="p-3 space-y-2.5"
+          className="space-y-2.5"
           style={{
-            borderRadius: 'var(--radius-lg)',
+            padding: 14,
+            borderRadius: 20,
             border: '1px solid var(--border)',
             background: 'var(--surface-raised)',
           }}
@@ -39,9 +40,10 @@ export function MetadataPanel() {
       {/* Skizzenoptionen */}
       <GlassPanel title="Skizzenoptionen">
         <div
-          className="p-3 space-y-3"
+          className="space-y-3"
           style={{
-            borderRadius: 'var(--radius-lg)',
+            padding: 14,
+            borderRadius: 20,
             border: '1px solid var(--border)',
             background: 'var(--surface-raised)',
           }}
@@ -64,7 +66,7 @@ export function MetadataPanel() {
             <div className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>
               Aktueller Maßstab
             </div>
-            <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+            <div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
               {hasOverride ? 'Manuell (Ausschnitt-Override)' : 'Automatisch aus realen Objekten berechnet'}
             </div>
           </div>
@@ -86,7 +88,7 @@ export function MetadataPanel() {
                 className="px-3 py-2 text-[11px] font-medium"
                 style={{
                   borderRadius: 'var(--radius-md)',
-                  border: isActive ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid var(--border)',
+                  border: isActive ? '1px solid var(--accent)' : '1px solid var(--border)',
                   background: isActive ? 'var(--accent-muted)' : 'var(--surface)',
                   color: isActive ? 'var(--accent)' : 'var(--text-muted)',
                 }}
@@ -104,8 +106,8 @@ export function MetadataPanel() {
 function GlassPanel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div
-      className="glass p-4"
-      style={{ borderRadius: 'var(--radius-lg)' }}
+      className="glass"
+      style={{ borderRadius: 20, padding: 14 }}
     >
       <div className="text-[12px] font-semibold tracking-wide mb-3" style={{ color: 'var(--text)' }}>
         {title}
@@ -118,14 +120,14 @@ function GlassPanel({ title, children }: { title: string; children: React.ReactN
 function InfoBlock({ label, value, onChange }: { label: string; value: string; onChange?: (v: string) => void }) {
   return (
     <div
-      className="p-3"
       style={{
-        borderRadius: 'var(--radius-lg)',
+        padding: 14,
+        borderRadius: 20,
         border: '1px solid var(--border)',
         background: 'var(--surface-raised)',
       }}
     >
-      <div className="text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>{label}</div>
+      <div className="text-[11px] mb-1" style={{ color: 'var(--text-muted)' }}>{label}</div>
       {onChange ? (
         <input
           value={value}
@@ -164,7 +166,7 @@ function ToggleSwitch({ defaultOn = false }: { defaultOn?: boolean }) {
       <div
         className="absolute top-0.5 w-4 h-4 rounded-full transition-transform"
         style={{
-          background: '#fff',
+          background: 'var(--paper)',
           left: on ? 18 : 2,
           transition: 'left 0.15s ease',
         }}

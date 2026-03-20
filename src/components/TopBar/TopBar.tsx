@@ -11,7 +11,6 @@ import {
   Redo2,
   Save,
   Download,
-  Route,
   Scaling,
 } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
@@ -64,18 +63,14 @@ export function TopBar() {
     >
       {/* Left: Logo + App Name */}
       <div className="flex items-center gap-3 min-w-0 flex-1 relative" ref={panelRef}>
-        <div
-          className="flex h-10 w-10 items-center justify-center rounded-2xl shrink-0"
-          style={{
-            background: 'linear-gradient(135deg, var(--accent), var(--accent-strong))',
-            boxShadow: '0 4px 12px rgba(56, 189, 248, 0.25)',
-          }}
-        >
-          <Route size={18} style={{ color: '#000' }} />
-        </div>
+        <img
+          src="/logo_ohne.png"
+          alt="033-Skizze"
+          className="h-9 w-9 rounded-xl shrink-0 object-contain"
+        />
         <div className="min-w-0">
-          <div className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>033-Skizze V2</div>
-          <div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Verkehrsunfallskizzen-Tool</div>
+          <div className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>033-Skizze</div>
+          <div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>by Alex Pohlmeier</div>
         </div>
       </div>
 
@@ -83,8 +78,8 @@ export function TopBar() {
       <div className="hidden lg:flex items-center gap-2">
         <button
           onClick={() => setShowDocPanel(!showDocPanel)}
-          className="badge badge-accent"
-          style={{ cursor: 'pointer', border: 'none' }}
+          className="badge"
+          style={{ cursor: 'pointer', height: 28, fontSize: 11 }}
         >
           {documentName}
           <ChevronDown
@@ -96,12 +91,12 @@ export function TopBar() {
           />
         </button>
 
-        <span className="badge badge-success">
+        <span className="badge badge-accent" style={{ height: 28, fontSize: 11 }}>
           <Scaling size={12} />
           {hasOverride ? `1:${effectiveScale} (Override)` : `1:${effectiveScale}`}
         </span>
 
-        <span className="badge" style={{ gap: 4 }}>
+        <span className="badge" style={{ gap: 4, height: 28, fontSize: 11 }}>
           {isOnline ? (
             <>
               <Check size={11} style={{ color: 'var(--success)' }} />
@@ -145,51 +140,31 @@ export function TopBar() {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2 flex-1 justify-end">
-        <button className="icon-btn" onClick={toggleTheme} title={`${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
-          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+        <button className="icon-btn" onClick={toggleTheme} title={`${theme === 'dark' ? 'Light' : 'Dark'} Mode`} style={{ width: 32, height: 32, borderRadius: 12 }}>
+          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
         </button>
-        <button className="icon-btn" title="Einstellungen">
-          <Settings size={16} />
+        <button className="icon-btn" title="Einstellungen" style={{ width: 32, height: 32, borderRadius: 12 }}>
+          <Settings size={14} />
         </button>
 
-        <div className="w-px h-6 mx-1" style={{ background: 'var(--border)' }} />
+        <div className="w-px mx-1" style={{ height: 18, background: 'var(--border)', opacity: 0.45 }} />
 
         <button
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-[12px] font-medium transition-colors"
-          style={{
-            background: 'var(--surface)',
-            color: 'var(--text)',
-            border: '1px solid var(--border)',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--surface)')}
+          className="surface-btn flex items-center gap-1.5 h-9 px-3.5 rounded-[14px] text-[12px] font-semibold"
           title="Rückgängig"
         >
           <Undo2 size={14} />
           <span className="hidden xl:inline">Undo</span>
         </button>
         <button
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-[12px] font-medium transition-colors"
-          style={{
-            background: 'var(--surface)',
-            color: 'var(--text)',
-            border: '1px solid var(--border)',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--surface)')}
+          className="surface-btn flex items-center gap-1.5 h-9 px-3.5 rounded-[14px] text-[12px] font-semibold"
           title="Speichern"
         >
           <Save size={14} />
           <span className="hidden xl:inline">Save</span>
         </button>
         <button
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-[12px] font-semibold transition-colors"
-          style={{
-            background: 'var(--accent)',
-            color: '#000',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--accent-hover)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--accent)')}
+          className="primary-btn flex items-center gap-1.5 h-9 px-3.5 rounded-[14px] text-[12px] font-bold"
           title="Exportieren"
         >
           <Download size={14} />
@@ -217,8 +192,6 @@ function DocField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="field-input"
-        onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent)')}
-        onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
       />
     </div>
   )

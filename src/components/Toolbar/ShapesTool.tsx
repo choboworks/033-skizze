@@ -63,32 +63,30 @@ export function ShapesToolPopover({
   return (
     <div
       data-toolbar-popover
-      className="absolute z-40 overflow-hidden anim-slide-left glass"
+      className="absolute z-40 overflow-hidden anim-slide-left tool-popover"
       style={{
-        width: 320,
         left: 'calc(var(--toolbar-width) + 10px)',
         top: 10,
-        borderRadius: 'var(--radius-lg)',
       }}
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-7 py-5"
-        style={{ borderBottom: '1px solid var(--border)' }}
+        className="flex items-center justify-between"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 10, marginBottom: 12 }}
       >
         <div className="flex items-center gap-3">
-          <Square size={18} style={{ color: 'var(--accent)' }} />
-          <span className="text-[16px] font-semibold" style={{ color: 'var(--text)' }}>
+          <Square size={16} style={{ color: 'var(--accent)' }} />
+          <span className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>
             Formen
           </span>
         </div>
-        <button className="icon-btn" style={{ padding: 6 }} onClick={onClose}>
+        <button className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0 }} onClick={onClose}>
           <X size={16} />
         </button>
       </div>
 
       {/* Shape grid */}
-      <div className="px-7 pt-7 pb-8" style={{ borderBottom: '1px solid var(--border)' }}>
+      <div style={{ marginBottom: 14 }}>
         <div className="grid grid-cols-3 gap-3">
           {SHAPES.map((shape) => {
             const Icon = shape.icon
@@ -97,38 +95,11 @@ export function ShapesToolPopover({
               <button
                 key={shape.id}
                 onClick={() => onSelectTool(shape.id)}
-                className="flex items-center justify-center aspect-square rounded-xl transition-all relative group"
-                style={{
-                  background: isActive ? 'var(--accent-muted)' : 'var(--bg)',
-                  color: isActive ? 'var(--accent)' : 'var(--text-muted)',
-                  border: isActive ? '1px solid var(--accent)' : '1px solid var(--border)',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'var(--surface-hover)'
-                    e.currentTarget.style.borderColor = 'var(--text-muted)'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'var(--bg)'
-                    e.currentTarget.style.borderColor = 'var(--border)'
-                  }
-                }}
+                data-active={isActive}
+                className="shape-option relative group"
               >
-                <Icon size={28} />
-                {/* Tooltip */}
-                <div
-                  className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded text-[11px] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
-                  style={{
-                    background: 'var(--bg)',
-                    color: 'var(--text)',
-                    border: '1px solid var(--border)',
-                    boxShadow: 'var(--shadow-panel)',
-                  }}
-                >
-                  {shape.label}
-                </div>
+                <Icon size={24} />
+                <span className="text-[10px]" style={{ color: isActive ? 'var(--accent)' : 'var(--text-muted)' }}>{shape.label}</span>
               </button>
             )
           })}

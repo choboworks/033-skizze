@@ -53,7 +53,7 @@ export function FloatingProperties() {
   const updateObject = useAppStore((s) => s.updateObject)
   const closeProperties = useAppStore((s) => s.closeProperties)
 
-  const PANEL_W = 320
+  const PANEL_W = 304
 
   const [pos, setPos] = useState(() => {
     const { rightSidebarCollapsed } = useAppStore.getState().panels
@@ -103,30 +103,33 @@ export function FloatingProperties() {
 
   return (
     <div
-      className="fixed z-50 select-none overflow-hidden anim-pop-in glass"
+      className="fixed z-50 select-none overflow-hidden anim-pop-in"
       style={{
         left: pos.x,
         top: pos.y,
-        width: 320,
-        borderRadius: 'var(--radius-lg)',
+        width: PANEL_W,
+        borderRadius: 22,
+        background: 'linear-gradient(180deg, rgba(20,24,32,0.96), rgba(14,18,24,0.94))',
+        border: '1px solid rgba(255,255,255,0.10)',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04)',
       }}
     >
       {/* Title Bar */}
       <div
-        className="flex items-center gap-3 px-7 py-5 cursor-grab active:cursor-grabbing"
-        style={{ borderBottom: '1px solid var(--border)' }}
+        className="flex items-center gap-3 cursor-grab active:cursor-grabbing"
+        style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
         onMouseDown={onDragStart}
       >
         <GripHorizontal size={16} style={{ color: 'var(--text-muted)' }} />
         <div className="flex-1 min-w-0">
-          <div className="text-[16px] font-semibold truncate" style={{ color: 'var(--text)' }}>
+          <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--text)' }}>
             {displayName}
           </div>
           <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
             {typeLabel(obj.type)} – Eigenschaften
           </div>
         </div>
-        <button className="icon-btn" style={{ padding: 5 }} onClick={closeProperties}>
+        <button className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0 }} onClick={closeProperties}>
           <X size={16} />
         </button>
       </div>
@@ -219,7 +222,7 @@ function TextProperties({
         />
         <PanelSliderEnd />
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <span className="text-[13px]" style={{ color: 'var(--text)' }}>Stil</span>
           <div className="flex gap-1.5">
             {[
@@ -230,14 +233,8 @@ function TextProperties({
               <button
                 key={i}
                 onClick={onClick}
-                className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
-                style={{
-                  background: active ? 'var(--accent-muted)' : 'var(--bg)',
-                  color: active ? 'var(--accent)' : 'var(--text-muted)',
-                  border: active ? '1px solid var(--accent)' : '1px solid var(--border)',
-                }}
-                onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--surface-hover)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = active ? 'var(--accent-muted)' : 'var(--bg)' }}
+                data-active={active}
+                className="toggle-btn w-9 h-9 flex items-center justify-center rounded-xl"
               >
                 <Icon size={14} />
               </button>
@@ -255,14 +252,8 @@ function TextProperties({
                 <button
                   key={align}
                   onClick={() => update({ textAlign: align })}
-                  className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
-                  style={{
-                    background: isActive ? 'var(--accent-muted)' : 'var(--bg)',
-                    color: isActive ? 'var(--accent)' : 'var(--text-muted)',
-                    border: isActive ? '1px solid var(--accent)' : '1px solid var(--border)',
-                  }}
-                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'var(--surface-hover)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = isActive ? 'var(--accent-muted)' : 'var(--bg)' }}
+                  data-active={isActive}
+                  className="toggle-btn w-9 h-9 flex items-center justify-center rounded-xl"
                 >
                   <Icon size={14} />
                 </button>

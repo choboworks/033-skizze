@@ -47,26 +47,24 @@ export function TextToolPopover({
   return (
     <div
       data-toolbar-popover
-      className="absolute z-40 overflow-hidden anim-slide-left glass"
+      className="absolute z-40 overflow-hidden anim-slide-left tool-popover"
       style={{
-        width: 320,
         left: 'calc(var(--toolbar-width) + 10px)',
         top: 10,
-        borderRadius: 'var(--radius-lg)',
       }}
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-7 py-5"
-        style={{ borderBottom: '1px solid var(--border)' }}
+        className="flex items-center justify-between"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 10, marginBottom: 12 }}
       >
         <div className="flex items-center gap-3">
-          <Type size={18} style={{ color: 'var(--accent)' }} />
-          <span className="text-[16px] font-semibold" style={{ color: 'var(--text)' }}>
+          <Type size={16} style={{ color: 'var(--accent)' }} />
+          <span className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>
             Text
           </span>
         </div>
-        <button className="icon-btn" style={{ padding: 6 }} onClick={onClose}>
+        <button className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0 }} onClick={onClose}>
           <X size={16} />
         </button>
       </div>
@@ -84,7 +82,7 @@ export function TextToolPopover({
         <PanelSliderEnd />
 
         {/* Bold / Italic */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <span className="text-[13px]" style={{ color: 'var(--text)' }}>Stil</span>
           <div className="flex gap-1.5">
             {[
@@ -95,14 +93,8 @@ export function TextToolPopover({
               <button
                 key={label}
                 onClick={onClick}
-                className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
-                style={{
-                  background: active ? 'var(--accent-muted)' : 'var(--bg)',
-                  color: active ? 'var(--accent)' : 'var(--text-muted)',
-                  border: active ? '1px solid var(--accent)' : '1px solid var(--border)',
-                }}
-                onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--surface-hover)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = active ? 'var(--accent-muted)' : 'var(--bg)' }}
+                data-active={active}
+                className="toggle-btn w-9 h-9 flex items-center justify-center rounded-xl"
               >
                 <Icon size={14} />
               </button>
@@ -121,14 +113,8 @@ export function TextToolPopover({
                 <button
                   key={align}
                   onClick={() => setToolOptions({ textAlign: align })}
-                  className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
-                  style={{
-                    background: isActive ? 'var(--accent-muted)' : 'var(--bg)',
-                    color: isActive ? 'var(--accent)' : 'var(--text-muted)',
-                    border: isActive ? '1px solid var(--accent)' : '1px solid var(--border)',
-                  }}
-                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'var(--surface-hover)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = isActive ? 'var(--accent-muted)' : 'var(--bg)' }}
+                  data-active={isActive}
+                  className="toggle-btn w-9 h-9 flex items-center justify-center rounded-xl"
                 >
                   <Icon size={14} />
                 </button>

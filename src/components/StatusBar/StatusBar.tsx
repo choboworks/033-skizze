@@ -55,14 +55,14 @@ export function StatusBar() {
     >
       {/* Left: Status badges */}
       <div className="flex items-center gap-2 flex-1">
-        <span className="badge badge-accent">
-          Tool: {toolLabels[activeTool] || activeTool}
+        <span className="badge badge-accent" style={{ height: 22, padding: '0 7px', fontSize: 10.5 }}>
+          {toolLabels[activeTool] || activeTool}
         </span>
-        <span className="badge">
-          Zoom: {zoomPercent}%
+        <span className="badge" style={{ height: 22, padding: '0 7px', fontSize: 10.5 }}>
+          {zoomPercent}%
         </span>
-        <span className="badge" style={hasOverride ? { background: 'rgba(240, 160, 48, 0.15)', color: '#f0a030' } : undefined}>
-          <Scaling size={12} />
+        <span className="badge" style={hasOverride ? { height: 22, padding: '0 7px', fontSize: 10.5, background: 'rgba(240, 160, 48, 0.15)', color: '#f0a030' } : { height: 22, padding: '0 7px', fontSize: 10.5 }}>
+          <Scaling size={11} />
           1:{effectiveScale}
           {hasOverride && (
             <button
@@ -71,7 +71,7 @@ export function StatusBar() {
               onClick={() => setScaleOverride(null)}
               title="Druckbereich zurücksetzen (Auto)"
             >
-              <RotateCcw size={11} />
+              <RotateCcw size={10} />
             </button>
           )}
         </span>
@@ -79,36 +79,32 @@ export function StatusBar() {
 
       {/* Center: Zoom controls */}
       <div className="flex items-center gap-1">
-        <button onClick={handleZoomOut} className="icon-btn" style={{ padding: 4 }} title="Herauszoomen">
+        <button onClick={handleZoomOut} className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0 }} title="Herauszoomen">
           <Minus size={14} />
         </button>
         <button
           onClick={resetView}
-          className="min-w-12 text-center px-2 py-1 rounded-lg text-[11px] font-medium transition-colors cursor-pointer"
-          style={{ color: 'var(--text)' }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          className="surface-btn flex items-center justify-center min-w-12 h-7 px-2 rounded-[10px] text-[11px] font-medium"
+          style={{ background: 'transparent' }}
           title="Seite einpassen"
         >
           {zoomPercent}%
         </button>
-        <button onClick={handleZoomIn} className="icon-btn" style={{ padding: 4 }} title="Hineinzoomen">
+        <button onClick={handleZoomIn} className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0 }} title="Hineinzoomen">
           <Plus size={14} />
         </button>
       </div>
 
       {/* Right: Actions */}
-      <div className="flex items-center gap-2 flex-1 justify-end text-[11px]" style={{ color: 'var(--text-muted)' }}>
+      <div className="flex items-center gap-2 flex-1 justify-end text-[11px]" style={{ color: 'var(--text-muted)', opacity: 0.75 }}>
         <span>Scroll = Zoom · Space = Pan</span>
         <button
           onClick={resetView}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] transition-colors"
+          className="icon-btn flex items-center gap-1.5 h-7 px-2 rounded-[10px] text-[11px]"
           style={{ color: 'var(--text-muted)' }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-hover)'; e.currentTarget.style.color = 'var(--text)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
         >
-          <ZoomIn size={14} />
-          Reset View
+          <ZoomIn size={13} />
+          Reset
         </button>
       </div>
     </footer>

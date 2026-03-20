@@ -11,19 +11,22 @@ export function RightSidebar() {
   return (
     <aside
       className="flex flex-col shrink-0 h-full overflow-y-auto z-40"
-      style={{ width: 380, gap: 12 }}
+      style={{ width: 'var(--sidebar-width)', gap: 16 }}
     >
       {/* Ebenen-Manager — eigene Panel-Card */}
       <EbenenPanel />
 
       {/* Tab bar */}
       <div
-        className="grid grid-cols-2 gap-1 p-1 shrink-0"
+        className="grid grid-cols-2 gap-1 shrink-0"
         style={{
+          height: 44,
+          padding: 4,
           borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--border)',
           background: 'var(--surface)',
           backdropFilter: 'var(--glass-blur)',
+          marginBottom: 12,
         }}
       >
         <TabButton label="Library" active={activeTab === 'library'} onClick={() => setActiveTab('library')} />
@@ -40,16 +43,9 @@ function TabButton({ label, active, onClick }: { label: string; active: boolean;
   return (
     <button
       onClick={onClick}
-      className="py-2 text-[12px] font-semibold transition-all"
-      style={{
-        borderRadius: 'var(--radius-md)',
-        background: active ? 'var(--accent)' : 'transparent',
-        color: active ? '#000' : 'var(--text-muted)',
-        border: 'none',
-        cursor: 'pointer',
-      }}
-      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = 'var(--surface-hover)' }}
-      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = 'transparent' }}
+      data-active={active}
+      className="tab-trigger flex items-center justify-center text-[12px] font-semibold"
+      style={{ height: 36, borderRadius: 16 }}
     >
       {label}
     </button>

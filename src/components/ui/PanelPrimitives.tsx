@@ -8,9 +8,9 @@ import type { ReactNode } from 'react'
 /** Section with uppercase title + divider */
 export function PanelSection({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="px-7 pt-7 pb-8" style={{ borderBottom: '1px solid var(--border)' }}>
+    <div style={{ padding: '14px 14px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
       <span
-        className="text-[10px] font-semibold uppercase tracking-widest block mb-7"
+        className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-2"
         style={{ color: 'var(--text-muted)' }}
       >
         {title}
@@ -38,9 +38,9 @@ export function PanelSlider({
 }) {
   return (
     <>
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-2">
         <span className="text-[13px]" style={{ color: 'var(--text)' }}>{label}</span>
-        <span className="text-[13px] font-semibold tabular-nums" style={{ color: 'var(--text)' }}>
+        <span className="text-[11px] font-semibold tabular-nums" style={{ color: 'var(--text)' }}>
           {value}{' '}
           {unit && <span className="font-normal" style={{ color: 'var(--text-muted)' }}>{unit}</span>}
         </span>
@@ -52,7 +52,7 @@ export function PanelSlider({
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full accent-(--accent)"
-        style={{ height: 6 }}
+        style={{ height: 4 }}
       />
     </>
   )
@@ -60,12 +60,12 @@ export function PanelSlider({
 
 /** Spacer between controls */
 export function PanelSpacer() {
-  return <div className="h-10" />
+  return <div className="h-4" />
 }
 
 /** Small spacer after last slider in a section */
 export function PanelSliderEnd() {
-  return <div className="h-6" />
+  return <div className="h-2" />
 }
 
 /** Segmented control (Linie / Striche / Punkte etc.) */
@@ -82,10 +82,15 @@ export function PanelSegmented<T extends string>({
 }) {
   return (
     <>
-      <span className="text-[13px] block mb-4" style={{ color: 'var(--text)' }}>{label}</span>
+      <span className="text-[13px] block mb-2" style={{ color: 'var(--text)' }}>{label}</span>
       <div
-        className="flex p-2 rounded-xl gap-2"
-        style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
+        className="flex gap-1"
+        style={{
+          padding: 4,
+          borderRadius: 14,
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.05)',
+        }}
       >
         {options.map((opt) => {
           const active = value === opt.id
@@ -93,16 +98,14 @@ export function PanelSegmented<T extends string>({
             <button
               key={opt.id}
               onClick={() => onChange(opt.id)}
-              className="flex-1 py-3.5 rounded-lg text-[13px] font-semibold transition-all text-center"
+              data-active={active}
+              className="flex-1 h-9 text-[12px] font-semibold text-center transition-all"
               style={{
-                background: active ? 'var(--accent-muted)' : 'transparent',
-                color: active ? 'var(--accent)' : 'var(--text-muted)',
-              }}
-              onMouseEnter={(e) => {
-                if (!active) e.currentTarget.style.background = 'var(--surface-hover)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = active ? 'var(--accent-muted)' : 'transparent'
+                borderRadius: 10,
+                border: 'none',
+                cursor: 'pointer',
+                background: active ? 'var(--accent)' : 'transparent',
+                color: active ? '#031018' : 'var(--text-muted)',
               }}
             >
               {opt.label}
@@ -116,5 +119,5 @@ export function PanelSegmented<T extends string>({
 
 /** Color picker label */
 export function PanelColorLabel({ label }: { label: string }) {
-  return <span className="text-[13px] block mb-4" style={{ color: 'var(--text)' }}>{label}</span>
+  return <span className="text-[13px] block mb-3" style={{ color: 'var(--text)' }}>{label}</span>
 }

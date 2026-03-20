@@ -209,11 +209,14 @@ export function Toolbar() {
       style={{
         width: 'var(--toolbar-width)',
         borderRadius: 'var(--radius-xl)',
-        padding: '12px 8px',
+        padding: '12px',
       }}
     >
       {/* Section label */}
-      <div className="flex items-center justify-between px-1 mb-2">
+      <div
+        className="flex items-center justify-center"
+        style={{ paddingTop: 8, marginBottom: 12 }}
+      >
         <span
           className="text-[10px] font-medium uppercase tracking-[0.15em]"
           style={{ color: 'var(--text-muted)' }}
@@ -223,7 +226,7 @@ export function Toolbar() {
       </div>
 
       {/* Tool cards */}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2.5">
         {TOOL_GROUPS.map((group) => {
           const currentToolId = activePerGroup[group.id] || group.defaultTool
           const isGroupActive = group.tools.some((t) => t === activeTool)
@@ -238,51 +241,32 @@ export function Toolbar() {
               onPointerUp={handlePointerUp}
               onPointerLeave={handlePointerUp}
               onContextMenu={(e) => { if (group.hasPopover) handleContextMenu(e, group.id) }}
-              className="group flex w-full flex-col items-center gap-1.5 px-1 py-2.5 transition-all"
-              style={{
-                borderRadius: 'var(--radius-lg)',
-                border: isGroupActive
-                  ? '1px solid rgba(56, 189, 248, 0.4)'
-                  : '1px solid var(--border-subtle)',
-                background: isGroupActive ? 'var(--accent-muted)' : 'var(--surface-raised)',
-                boxShadow: isGroupActive ? 'var(--shadow-glow)' : 'none',
-                cursor: 'pointer',
-              }}
-              onMouseEnter={(e) => {
-                if (!isGroupActive) {
-                  e.currentTarget.style.borderColor = 'var(--border)'
-                  e.currentTarget.style.background = 'var(--surface-hover)'
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = isGroupActive
-                  ? 'rgba(56, 189, 248, 0.4)'
-                  : 'var(--border-subtle)'
-                e.currentTarget.style.background = isGroupActive
-                  ? 'var(--accent-muted)'
-                  : 'var(--surface-raised)'
-              }}
+              data-active={isGroupActive}
+              className="tool-btn group flex w-full flex-col items-center gap-1 h-19 justify-center transition-all"
+              style={{ borderRadius: 20 }}
             >
               <div
                 className="flex items-center justify-center transition-colors"
                 style={{
-                  width: 36,
-                  height: 36,
+                  width: 44,
+                  height: 44,
                   borderRadius: 'var(--radius-md)',
-                  background: isGroupActive ? 'var(--accent)' : 'var(--surface)',
-                  color: isGroupActive ? '#000' : 'var(--text-muted)',
+                  background: isGroupActive ? 'rgba(56,189,248,0.14)' : 'var(--surface)',
+                  color: isGroupActive ? 'var(--accent)' : 'var(--text-muted)',
+                  border: isGroupActive ? '1px solid rgba(56,189,248,0.32)' : '1px solid transparent',
+                  boxShadow: isGroupActive ? '0 0 0 1px rgba(56,189,248,0.06)' : 'none',
                 }}
               >
-                {React.createElement(displayIcon, { size: 17 })}
+                {React.createElement(displayIcon, { size: 18 })}
               </div>
               <div className="text-center">
                 <div
-                  className="text-[10px] font-medium leading-tight"
+                  className="text-[11px] font-medium leading-tight"
                   style={{ color: isGroupActive ? 'var(--text)' : 'var(--text-secondary)' }}
                 >
                   {group.label}
                 </div>
-                <div className="text-[9px]" style={{ color: 'var(--text-muted)' }}>
+                <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
                   {group.shortcut}
                 </div>
               </div>

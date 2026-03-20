@@ -33,6 +33,7 @@ export function SketchCanvas() {
   const setEditingTextId = useAppStore((s) => s.setEditingTextId)
   const objects = useAppStore((s) => s.objects)
   const scaleViewport = useAppStore((s) => s.scale.viewport)
+  const theme = useAppStore((s) => s.theme)
   const hasScaleOverride = scaleViewport !== null
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -485,8 +486,8 @@ export function SketchCanvas() {
         background: 'var(--canvas-bg)',
         cursor,
         borderRadius: 'var(--radius-2xl)',
-        border: '1px solid var(--border)',
-        boxShadow: 'var(--shadow-lg)',
+        border: '1px solid var(--border-subtle)',
+        boxShadow: 'var(--shadow-panel)',
       }}
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes('application/smartroad')) {
@@ -555,9 +556,9 @@ export function SketchCanvas() {
       <div
         className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 py-2"
         style={{
-          background: 'rgba(0, 0, 0, 0.3)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
+          background: theme === 'light' ? 'var(--surface)' : 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'var(--glass-blur)',
+          WebkitBackdropFilter: 'var(--glass-blur)',
           borderBottom: '1px solid var(--border-subtle)',
           borderRadius: 'var(--radius-2xl) var(--radius-2xl) 0 0',
           pointerEvents: 'none',
@@ -602,11 +603,11 @@ export function SketchCanvas() {
         {/* A4 Page shadow */}
         <Layer>
           <Rect
-            x={4}
-            y={4}
+            x={6}
+            y={6}
             width={PAGE_WIDTH_PX}
             height={PAGE_HEIGHT_PX}
-            fill="rgba(0,0,0,0.12)"
+            fill={theme === 'light' ? 'rgba(15,23,42,0.14)' : 'rgba(0,0,0,0.20)'}
             cornerRadius={2}
             listening={false}
           />
@@ -750,7 +751,7 @@ export function SketchCanvas() {
                 color: editingObj.fillColor !== 'transparent' ? editingObj.fillColor : '#000000',
                 background: editingObj.textBackground && editingObj.textBackground !== 'transparent'
                   ? editingObj.textBackground
-                  : 'rgba(255,255,255,0.05)',
+                  : 'var(--surface)',
                 border: '1.5px dashed var(--accent)',
                 outline: 'none',
                 resize: 'none',

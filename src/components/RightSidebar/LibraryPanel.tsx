@@ -1,70 +1,26 @@
 import { useState } from 'react'
 import { useAppStore } from '@/store'
-import { LIBRARY_CATEGORIES } from '@/constants/library'
-import { Search, ChevronRight, SlidersHorizontal } from 'lucide-react'
+import {
+  LIBRARY_CATEGORIES,
+  LIBRARY_SUBCATEGORIES,
+  LIBRARY_ITEMS,
+  searchLibrary,
+  getSubcategoryLabel,
+} from '@/constants/library'
+import { Search, ChevronRight } from 'lucide-react'
 import { createDefaultStraightRoad, totalWidth } from '@/smartroads/constants'
 import { PAGE_WIDTH_PX, PAGE_HEIGHT_PX, pixelsToMeters } from '@/utils/scale'
 import type { CanvasObject } from '@/types'
 
-const SUB_CATEGORIES: Record<string, string[]> = {
-  smartroads: ['Alle', 'Geraden', 'Kurven', 'Kreuzungen', 'Kreisverkehr'],
-  vehicles: ['Alle', 'PKW', 'LKW', 'Zweirad', 'Bus', 'Sonder'],
-  infrastructure: ['Alle', 'Gebäude', 'Absperrung', 'Brücken'],
-  'traffic-regulation': ['Alle', 'Ampeln', 'Schilder', 'Zusatzzeichen'],
-  environment: ['Alle', 'Bäume', 'Zäune', 'Möblierung'],
-  markings: ['Alle', 'Spuren', 'Felder', 'Symbole'],
-}
-
-const LIBRARY_ITEMS: Record<string, { name: string; sub: string }[]> = {
-  smartroads: [
-    { name: 'Gerade Straße', sub: 'Geraden' },
-    { name: 'Kurve Straße', sub: 'Kurven' },
-    { name: 'T-Kreuzung', sub: 'Kreuzungen' },
-    { name: 'Kreuzung 4-Arm', sub: 'Kreuzungen' },
-    { name: 'Kreisverkehr', sub: 'Kreisverkehr' },
-  ],
-  vehicles: [
-    { name: 'PKW Limousine', sub: 'PKW' }, { name: 'PKW Kombi', sub: 'PKW' },
-    { name: 'PKW SUV', sub: 'PKW' }, { name: 'Kleinwagen', sub: 'PKW' },
-    { name: 'LKW Solo', sub: 'LKW' }, { name: 'Sattelzug', sub: 'LKW' },
-    { name: 'Kleintransporter', sub: 'LKW' }, { name: 'Motorrad', sub: 'Zweirad' },
-    { name: 'Fahrrad', sub: 'Zweirad' }, { name: 'E-Scooter', sub: 'Zweirad' },
-    { name: 'Linienbus', sub: 'Bus' }, { name: 'Streifenwagen', sub: 'Sonder' },
-    { name: 'RTW', sub: 'Sonder' },
-  ],
-  infrastructure: [
-    { name: 'Gebäude', sub: 'Gebäude' }, { name: 'Bordstein', sub: 'Absperrung' },
-    { name: 'Leitplanke', sub: 'Absperrung' }, { name: 'Poller', sub: 'Absperrung' },
-    { name: 'Absperrung', sub: 'Absperrung' }, { name: 'Brücke', sub: 'Brücken' },
-    { name: 'Bake', sub: 'Absperrung' },
-  ],
-  'traffic-regulation': [
-    { name: 'Ampel', sub: 'Ampeln' }, { name: 'Stoppschild', sub: 'Schilder' },
-    { name: 'Vorfahrt gewähren', sub: 'Schilder' }, { name: 'Tempo 30', sub: 'Schilder' },
-    { name: 'Tempo 50', sub: 'Schilder' }, { name: 'Einbahnstraße', sub: 'Schilder' },
-    { name: 'Fußgängerüberweg', sub: 'Zusatzzeichen' },
-  ],
-  environment: [
-    { name: 'Laubbaum', sub: 'Bäume' }, { name: 'Nadelbaum', sub: 'Bäume' },
-    { name: 'Hecke', sub: 'Zäune' }, { name: 'Zaun', sub: 'Zäune' },
-    { name: 'Mauer', sub: 'Zäune' }, { name: 'Laterne', sub: 'Möblierung' },
-    { name: 'Mast', sub: 'Möblierung' }, { name: 'Bushaltestelle', sub: 'Möblierung' },
-  ],
-  markings: [
-    { name: 'Bremsspur', sub: 'Spuren' }, { name: 'Splitterfeld', sub: 'Felder' },
-    { name: 'Ölspur', sub: 'Spuren' }, { name: 'Kollisionspunkt', sub: 'Symbole' },
-    { name: 'Endlage', sub: 'Symbole' }, { name: 'N-Pfeil', sub: 'Symbole' },
-    { name: 'Foto-Marker', sub: 'Symbole' },
-  ],
-}
-
 export function LibraryPanel() {
   const [activeCategory, setActiveCategory] = useState('smartroads')
-  const [activeFilter, setActiveFilter] = useState('Alle')
+  const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const handleItemClick = (itemName: string) => {
-    if (itemName === 'Gerade Straße') {
+  const isSearchMode = searchQuery.trim().length > 0
+
+  const handleItemClick = (itemId: string) => {
+    if (itemId === 'sr_gerade') {
       const state = createDefaultStraightRoad()
       const editorState = JSON.stringify(state)
       const realWidth = totalWidth(state.strips)
@@ -92,71 +48,88 @@ export function LibraryPanel() {
     }
   }
 
-  const category = LIBRARY_CATEGORIES.find((c) => c.id === activeCategory)
-  const chips = SUB_CATEGORIES[activeCategory] || ['Alle']
-  const allItems = LIBRARY_ITEMS[activeCategory] || []
-  let filteredItems = activeFilter === 'Alle' ? allItems : allItems.filter((item) => item.sub === activeFilter)
-  if (searchQuery.trim()) {
-    const q = searchQuery.toLowerCase()
-    filteredItems = filteredItems.filter((item) => item.name.toLowerCase().includes(q))
-  }
+  // Filter logic
+  const filteredItems = isSearchMode
+    ? searchLibrary(LIBRARY_ITEMS, searchQuery.trim())
+    : LIBRARY_ITEMS.filter(item => {
+        if (item.category !== activeCategory) return false
+        if (activeSubcategory && item.subcategory !== activeSubcategory) return false
+        return true
+      })
+
+  const subcategories = LIBRARY_SUBCATEGORIES[activeCategory] || []
 
   return (
     <div
       className="glass flex flex-col flex-1 min-h-0"
-      style={{ borderRadius: 'var(--radius-lg)' }}
+      style={{ borderRadius: 24 }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0">
+      <div
+        className="flex items-center justify-between px-4 shrink-0"
+        style={{ paddingTop: 16, paddingBottom: 'var(--library-gap-md)' }}
+      >
         <span className="text-[13px] font-semibold tracking-wide" style={{ color: 'var(--text)' }}>
           Objekt-Bibliothek
         </span>
-        <span className="badge" style={{ fontSize: 10, padding: '3px 8px' }}>
-          {LIBRARY_CATEGORIES.length} Kategorien
+        <span
+          className="flex items-center justify-center rounded-full"
+          style={{
+            height: 22,
+            padding: '0 8px',
+            fontSize: 10,
+            background: 'rgba(255,255,255,0.05)',
+            color: 'var(--text-muted)',
+          }}
+        >
+          {filteredItems.length} Objekte
         </span>
       </div>
 
       {/* Search */}
-      <div className="flex items-center gap-2 px-4 pb-3 shrink-0">
-        <div className="relative flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+      <div
+        className="px-4 shrink-0"
+        style={{ paddingBottom: 'var(--library-gap-lg)' }}
+      >
+        <div className="relative">
+          <Search size={14} className="absolute top-1/2 -translate-y-1/2" style={{ left: 14, color: 'var(--text-muted)' }} />
           <input
             placeholder="Objekt suchen …"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="field-input w-full"
-            style={{ paddingLeft: 32, borderRadius: 'var(--radius-md)' }}
+            style={{ paddingLeft: 36, borderRadius: 14, height: 40, fontSize: 12 }}
           />
         </div>
-        <button
-          className="icon-btn shrink-0"
-          style={{
-            padding: 6,
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)',
-            background: 'var(--surface)',
-          }}
-        >
-          <SlidersHorizontal size={14} />
-        </button>
       </div>
 
-      {/* Category badges */}
-      <div className="px-4 pb-2 flex flex-wrap gap-1.5 shrink-0">
+      {/* Primary category chips */}
+      <div
+        className="px-4 flex flex-wrap shrink-0"
+        style={{
+          gap: 'var(--chip-gap-x)',
+          rowGap: 'var(--chip-gap-y)',
+          paddingBottom: 'var(--library-gap-sm)',
+        }}
+      >
         {LIBRARY_CATEGORIES.map((cat) => {
           const isActive = activeCategory === cat.id
           return (
             <button
               key={cat.id}
-              onClick={() => { setActiveCategory(cat.id); setActiveFilter('Alle') }}
-              className="px-3 py-1 rounded-full text-[11px] font-medium transition-colors"
-              style={{
-                background: isActive ? 'var(--accent-muted)' : 'var(--surface)',
-                color: isActive ? 'var(--accent)' : 'var(--text-muted)',
-                border: 'none', cursor: 'pointer',
+              onClick={() => {
+                setActiveCategory(cat.id)
+                setActiveSubcategory(null)
+                setSearchQuery('')
               }}
-              onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = 'var(--surface-hover)' }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = isActive ? 'var(--accent-muted)' : 'var(--surface)' }}
+              data-active={isActive}
+              className="category-chip flex items-center rounded-full font-semibold"
+              style={{
+                height: 'var(--chip-height-primary)',
+                padding: '0 12px',
+                fontSize: 11,
+                ...(isSearchMode ? { opacity: 0.5 } : {}),
+              }}
             >
               {cat.label}
             </button>
@@ -164,38 +137,58 @@ export function LibraryPanel() {
         })}
       </div>
 
+      {/* Secondary subcategory chips (only in browse mode) */}
+      {!isSearchMode && subcategories.length > 0 && (
+        <div
+          className="px-4 flex flex-wrap shrink-0"
+          style={{
+            gap: 'var(--chip-gap-x)',
+            rowGap: 'var(--chip-gap-y)',
+            paddingBottom: 'var(--library-gap-lg)',
+          }}
+        >
+          <button
+            onClick={() => setActiveSubcategory(null)}
+            data-active={activeSubcategory === null}
+            className="subcategory-chip flex items-center rounded-full font-semibold"
+            style={{ height: 'var(--chip-height-secondary)', padding: '0 10px', fontSize: 10.5 }}
+          >
+            Alle
+          </button>
+          {subcategories.map((sub) => (
+            <button
+              key={sub.id}
+              onClick={() => setActiveSubcategory(sub.id)}
+              data-active={activeSubcategory === sub.id}
+              className="subcategory-chip flex items-center rounded-full font-semibold"
+              style={{ height: 'var(--chip-height-secondary)', padding: '0 10px', fontSize: 10.5 }}
+            >
+              {sub.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Items list */}
       <div className="flex-1 overflow-y-auto px-3 pb-3">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col" style={{ gap: 10 }}>
           {filteredItems.map((item) => {
-            const Icon = category?.icon
+            const itemCategory = LIBRARY_CATEGORIES.find(c => c.id === item.category)
+            const Icon = itemCategory?.icon
             return (
               <button
-                key={item.name}
-                className="flex items-center gap-3 p-3 transition-all"
+                key={item.id}
+                className="asset-card flex items-center gap-3 transition-all"
                 style={{
-                  borderRadius: 'var(--radius-lg)',
-                  border: '1px solid var(--border)',
-                  background: 'var(--surface-raised)',
-                  cursor: 'pointer',
+                  minHeight: 'var(--library-card-height)',
+                  padding: 12,
+                  borderRadius: 20,
                 }}
-                onDoubleClick={() => handleItemClick(item.name)}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border)'
-                  e.currentTarget.style.background = 'var(--surface-hover)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--border)'
-                  e.currentTarget.style.background = 'var(--surface-raised)'
-                }}
+                onDoubleClick={() => handleItemClick(item.id)}
               >
                 <div
-                  className="flex h-11 w-11 items-center justify-center shrink-0"
-                  style={{
-                    borderRadius: 'var(--radius-md)',
-                    background: 'var(--surface)',
-                    color: 'var(--accent)',
-                  }}
+                  className="asset-icon-tile flex items-center justify-center shrink-0"
+                  style={{ color: 'var(--accent)' }}
                 >
                   {Icon && <Icon size={18} />}
                 </div>
@@ -204,10 +197,13 @@ export function LibraryPanel() {
                     {item.name}
                   </div>
                   <div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                    {category?.label} · {item.sub}
+                    {isSearchMode
+                      ? `${itemCategory?.label || item.category} · ${getSubcategoryLabel(item.subcategory)}`
+                      : getSubcategoryLabel(item.subcategory)
+                    }
                   </div>
                 </div>
-                <ChevronRight size={14} style={{ color: 'var(--text-muted)', opacity: 0.4 }} />
+                <ChevronRight size={14} style={{ color: 'var(--text-muted)', opacity: 0.35 }} />
               </button>
             )
           })}

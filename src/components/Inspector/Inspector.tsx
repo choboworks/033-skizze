@@ -17,11 +17,9 @@ function Section({
   return (
     <div style={{ borderBottom: '1px solid var(--border)' }}>
       <button
-        className="flex items-center justify-between w-full px-4 py-2.5 transition-colors"
-        style={{ color: 'var(--text-secondary)' }}
+        className="surface-btn flex items-center justify-between w-full px-4 py-2.5"
+        style={{ color: 'var(--text-secondary)', background: 'transparent', border: 'none' }}
         onClick={() => setOpen(!open)}
-        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
-        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
       >
         <span className="text-xs font-semibold uppercase tracking-wider">{title}</span>
         <ChevronDown

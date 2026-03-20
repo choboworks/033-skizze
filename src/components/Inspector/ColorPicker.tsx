@@ -229,14 +229,11 @@ export function ColorPicker({
     <div className="relative" ref={panelRef}>
       {/* Trigger */}
       <div
-        className="flex items-center gap-2.5 cursor-pointer rounded-md px-2.5 py-2 transition-colors"
+        className="surface-btn flex items-center gap-2.5 cursor-pointer rounded-md px-2.5 py-2"
         style={{
           background: 'var(--bg)',
-          border: '1px solid var(--border)',
         }}
         onClick={() => setOpen(!open)}
-        onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--text-muted)')}
-        onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border)')}
       >
         <div
           className="w-7 h-7 rounded-md shrink-0"
@@ -260,7 +257,7 @@ export function ColorPicker({
           style={{
             background: 'var(--surface)',
             border: '1px solid var(--border)',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.45)',
+            boxShadow: 'var(--shadow-lg)',
           }}
         >
           {/* Sat/Bright area */}

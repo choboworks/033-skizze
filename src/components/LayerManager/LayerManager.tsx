@@ -193,11 +193,8 @@ export function LayerManager() {
       {/* Toggle button — mirrors toolbar toggle */}
       <div className="flex shrink-0 mb-1" style={{ justifyContent: 'flex-start', paddingLeft: 6 }}>
         <button
-          className="w-8 h-8 flex items-center justify-center rounded transition-colors mt-2"
-          style={{ color: 'var(--text-muted)' }}
+          className="icon-btn w-8 h-8 flex items-center justify-center rounded mt-2"
           onClick={() => setCollapsed(true)}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-hover)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           title="Ebenen einklappen"
         >
           <PanelRightClose size={16} />
@@ -282,7 +279,7 @@ export function LayerManager() {
                 {/* Color dot */}
                 <span
                   className="shrink-0 w-3.5 h-3.5 rounded-sm"
-                  style={{ background: obj.strokeColor, border: '1.5px solid rgba(255,255,255,0.2)' }}
+                  style={{ background: obj.strokeColor, border: '1.5px solid var(--border)' }}
                 />
                 <span className="shrink-0" style={{ color: isSelected ? 'var(--accent)' : 'var(--text-muted)' }}>
                   <ObjectIcon type={obj.type} />

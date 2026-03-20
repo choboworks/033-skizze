@@ -19,32 +19,30 @@ export function DimensionToolPopover({
   return (
     <div
       data-toolbar-popover
-      className="absolute z-40 overflow-hidden anim-slide-left glass"
+      className="absolute z-40 overflow-hidden anim-slide-left tool-popover"
       style={{
-        width: 320,
         left: 'calc(var(--toolbar-width) + 10px)',
         top: 10,
-        borderRadius: 'var(--radius-lg)',
       }}
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-7 py-5"
-        style={{ borderBottom: '1px solid var(--border)' }}
+        className="flex items-center justify-between"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 10, marginBottom: 12 }}
       >
         <div className="flex items-center gap-3">
-          <Ruler size={18} style={{ color: 'var(--accent)' }} />
-          <span className="text-[16px] font-semibold" style={{ color: 'var(--text)' }}>
+          <Ruler size={16} style={{ color: 'var(--accent)' }} />
+          <span className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>
             Bemaßung
           </span>
         </div>
-        <button className="icon-btn" style={{ padding: 6 }} onClick={onClose}>
+        <button className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0 }} onClick={onClose}>
           <X size={16} />
         </button>
       </div>
 
       {/* Info */}
-      <div className="px-7 pt-5 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
+      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: 12, marginBottom: 12 }}>
         <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
           Klicke zwei Punkte auf dem Canvas, um eine Bemaßungslinie zu erstellen.
           Die Distanz wird automatisch in Metern berechnet.

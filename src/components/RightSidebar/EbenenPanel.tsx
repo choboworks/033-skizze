@@ -2,7 +2,6 @@ import { useAppStore } from '@/store'
 import {
   Eye,
   EyeOff,
-  Trash2,
   Square,
   RectangleHorizontal,
   CircleIcon,
@@ -16,12 +15,9 @@ import {
   Lock,
   Unlock,
   Settings2,
-  GripVertical,
   Ruler,
   Type,
   Route,
-  Search,
-  Plus,
 } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import type { CanvasObject, ShapeType } from '@/types'
@@ -78,7 +74,6 @@ export function EbenenPanel() {
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
-  const [filterText, setFilterText] = useState('')
 
   const [dragId, setDragId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
@@ -92,14 +87,6 @@ export function EbenenPanel() {
   }
 
   const displayOrder = [...objectOrder].reverse()
-  const filteredOrder = filterText.trim()
-    ? displayOrder.filter((id) => {
-        const obj = objects[id]
-        if (!obj) return false
-        const name = obj.label || obj.type
-        return name.toLowerCase().includes(filterText.toLowerCase())
-      })
-    : displayOrder
 
   const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
     setDragId(id)
@@ -143,41 +130,27 @@ export function EbenenPanel() {
   return (
     <div
       className="glass flex flex-col shrink-0"
-      style={{ borderRadius: 'var(--radius-lg)', maxHeight: '45%' }}
+      style={{ borderRadius: 24, maxHeight: 360 }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0">
+      <div className="flex items-center justify-center px-4 pt-4 pb-4 shrink-0 gap-2">
         <span className="text-[13px] font-semibold tracking-wide" style={{ color: 'var(--text)' }}>
           Ebenen-Manager
         </span>
         <span className="badge badge-accent" style={{ fontSize: 10, padding: '3px 8px' }}>
-          {displayOrder.length} Ebenen
+          {displayOrder.length}
         </span>
       </div>
 
-      {/* Search + New */}
-      <div className="flex items-center gap-2 px-4 pb-3 shrink-0">
-        <div className="relative flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
-          <input
-            placeholder="Ebenen filtern …"
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            className="field-input w-full"
-            style={{ paddingLeft: 32, borderRadius: 'var(--radius-md)' }}
-          />
-        </div>
-      </div>
-
       {/* Layer list */}
-      <div className="flex-1 overflow-y-auto px-3 pb-3">
-        {filteredOrder.length === 0 && (
+      <div className="flex-1 overflow-y-auto px-3 pb-4">
+        {displayOrder.length === 0 && (
           <div className="py-4 text-[12px] text-center" style={{ color: 'var(--text-muted)' }}>
             Keine Objekte
           </div>
         )}
         <div className="flex flex-col gap-2">
-          {filteredOrder.map((objId, idx) => {
+          {displayOrder.map((objId, idx) => {
             const obj = objects[objId]
             if (!obj) return null
 
@@ -194,13 +167,12 @@ export function EbenenPanel() {
                 onDragOver={(e) => handleDragOver(e, obj.id)}
                 onDrop={handleDrop}
                 onDragEnd={handleDragEnd}
-                className="relative group cursor-pointer transition-all flex items-center gap-3 p-3"
+                data-selected={isSelected}
+                className="layer-card relative group cursor-pointer transition-all flex items-center p-3"
                 style={{
-                  borderRadius: 'var(--radius-lg)',
-                  border: isSelected
-                    ? '1px solid rgba(56, 189, 248, 0.3)'
-                    : '1px solid var(--border)',
-                  background: isSelected ? 'var(--accent-muted)' : 'var(--surface-raised)',
+                  minHeight: 68,
+                  gap: 10,
+                  borderRadius: 20,
                   opacity: isDragging ? 0.4 : 1,
                 }}
                 onClick={(e) => {
@@ -213,16 +185,6 @@ export function EbenenPanel() {
                     select([obj.id])
                   }
                 }}
-                onMouseEnter={(e) => {
-                  if (!isSelected && !isDragging) {
-                    e.currentTarget.style.borderColor = 'var(--border)'
-                    e.currentTarget.style.background = 'var(--surface-hover)'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = isSelected ? 'rgba(56, 189, 248, 0.3)' : 'var(--border)'
-                  e.currentTarget.style.background = isSelected ? 'var(--accent-muted)' : 'var(--surface-raised)'
-                }}
               >
                 {/* Drop indicators */}
                 {isDropTarget && dropPosition === 'above' && (
@@ -234,8 +196,8 @@ export function EbenenPanel() {
 
                 {/* Color dot */}
                 <div
-                  className="w-3 h-3 rounded-full shrink-0"
-                  style={{ background: isSelected ? 'var(--accent)' : 'var(--text-muted)', opacity: isSelected ? 1 : 0.4 }}
+                  className="rounded-full shrink-0"
+                  style={{ width: 10, height: 10, background: isSelected ? 'var(--accent)' : 'var(--text-muted)', opacity: isSelected ? 1 : 0.4 }}
                 />
 
                 {/* Name + Type */}
