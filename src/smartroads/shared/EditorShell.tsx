@@ -1,5 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog'
-import { X } from 'lucide-react'
+import { X, Route } from 'lucide-react'
 
 // ============================================================
 // EditorShell – Overlay layout for all SmartRoad editors.
@@ -29,73 +29,90 @@ export function EditorShell({
     <Dialog.Root open={open} onOpenChange={(o) => { if (!o) onCancel() }}>
       <Dialog.Portal>
         <Dialog.Overlay
-          className="fixed inset-0 z-10000"
-          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)' }}
+          className="fixed inset-0 z-10000 anim-fade-in"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
         />
         <Dialog.Content
-          className="fixed z-10001 flex flex-col"
+          className="fixed z-10001 flex flex-col anim-scale-in"
           style={{
             top: 20, left: 20, right: 20, bottom: 20,
-            background: 'var(--surface)',
-            borderRadius: 12,
-            border: '1px solid var(--border)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+            background: 'var(--panel-bg-elevated)',
+            borderRadius: 'var(--radius-2xl)',
+            border: '1px solid var(--panel-border)',
+            boxShadow: 'var(--panel-shadow)',
             outline: 'none',
           }}
         >
-          {/* Header — title centered over left sidebar width */}
+          {/* Header */}
           <div
-            className="flex items-center shrink-0 relative"
-            style={{ height: 56, borderBottom: '1px solid var(--border)' }}
+            className="panel-popover-header shrink-0"
+            style={{ height: 56, padding: '0 16px 0 0' }}
           >
-            {/* Title aligned to left sidebar center */}
+            {/* Title aligned to left sidebar */}
             <div
-              className="flex items-center justify-center shrink-0"
-              style={{ width: 280 }}
+              className="flex items-center justify-center gap-3 shrink-0"
+              style={{ width: 280, padding: '0 20px' }}
             >
+              <Route size={18} style={{ color: 'var(--accent)' }} />
               <Dialog.Title className="text-[15px] font-semibold" style={{ color: 'var(--text)' }}>
                 SmartRoad: {title}
               </Dialog.Title>
             </div>
 
-            {/* Close button at far right */}
             <div className="flex-1" />
-            <div className="px-4">
-              <Dialog.Close asChild>
-                <button className="icon-btn" style={{ padding: 8 }} title="Schließen">
-                  <X size={18} />
-                </button>
-              </Dialog.Close>
-            </div>
+
+            {/* Close button */}
+            <Dialog.Close asChild>
+              <button className="panel-header-btn" title="Schließen">
+                <X size={18} />
+              </button>
+            </Dialog.Close>
           </div>
 
           {/* Body: 3 columns */}
           <div className="flex flex-1 overflow-hidden">
-            {/* Left: Element Palette + Presets */}
+            {/* Left: Element Palette */}
             <div
               className="shrink-0 flex flex-col"
               style={{
                 width: 280,
-                borderRight: '1px solid var(--border)',
-                background: 'var(--bg)',
+                borderRight: '1px solid var(--panel-section-border)',
+                padding: 12,
               }}
             >
-              {sidebar}
+              <div
+                className="flex-1 min-h-0 overflow-y-auto flex flex-col"
+                style={{
+                  borderRadius: 20,
+                  background: 'rgba(255,255,255,0.025)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  boxShadow: '0 12px 32px rgba(0,0,0,0.28)',
+                }}
+              >
+                {sidebar}
+              </div>
             </div>
 
-            {/* Center: Editor */}
-            <div className="flex-1 flex flex-col overflow-hidden p-4">
+            {/* Center: Editor — Hero Stage */}
+            <div
+              className="flex-1 flex flex-col overflow-hidden"
+              style={{
+                padding: 'var(--space-lg)',
+                background: 'radial-gradient(circle at center, #0f172a, #020617)',
+              }}
+            >
               {editor}
             </div>
 
-            {/* Right: Quick Settings */}
+            {/* Right: Quick Settings + Layer Manager */}
             {quickSettings && (
               <div
-                className="shrink-0 overflow-y-auto"
+                className="shrink-0 overflow-y-auto flex flex-col"
                 style={{
-                  width: 260,
-                  borderLeft: '1px solid var(--border)',
-                  background: 'var(--bg)',
+                  width: 300,
+                  borderLeft: '1px solid var(--panel-section-border)',
+                  padding: 12,
+                  gap: 12,
                 }}
               >
                 {quickSettings}
@@ -103,50 +120,34 @@ export function EditorShell({
             )}
           </div>
 
-          {/* Footer — buttons centered under the editor (between sidebars) */}
+          {/* Footer — buttons centered under the editor */}
           <div
             className="flex shrink-0"
-            style={{ height: 72, borderTop: '1px solid var(--border)' }}
+            style={{ minHeight: 64, borderTop: '1px solid var(--panel-section-border)' }}
           >
-            {/* Left spacer matching sidebar */}
-            <div className="shrink-0" style={{ width: 280, borderRight: '1px solid var(--border)' }} />
+            {/* Left spacer */}
+            <div className="shrink-0" style={{ width: 280, borderRight: '1px solid var(--panel-section-border)' }} />
 
             {/* Center: buttons */}
-            <div className="flex-1 flex items-center justify-center gap-4">
+            <div className="flex-1 flex items-center justify-center" style={{ gap: 12 }}>
               <button
-                className="rounded-xl text-[14px] font-medium transition-all"
-                style={{
-                  width: 140,
-                  height: 44,
-                  color: 'var(--text-secondary)',
-                  background: 'var(--bg)',
-                  border: '1px solid var(--border)',
-                }}
+                className="surface-btn text-[12px] font-semibold"
+                style={{ height: 36, padding: '0 14px', borderRadius: 14 }}
                 onClick={onCancel}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--surface-hover)'; e.currentTarget.style.borderColor = 'var(--text-muted)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg)'; e.currentTarget.style.borderColor = 'var(--border)' }}
               >
                 Abbrechen
               </button>
               <button
-                className="rounded-xl text-[14px] font-semibold transition-all"
-                style={{
-                  width: 140,
-                  height: 44,
-                  color: '#fff',
-                  background: 'var(--accent)',
-                  boxShadow: '0 2px 8px rgba(74,158,255,0.3)',
-                }}
+                className="primary-btn text-[12px] font-semibold"
+                style={{ height: 36, padding: '0 14px', borderRadius: 14 }}
                 onClick={onFinish}
-                onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(74,158,255,0.4)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(74,158,255,0.3)'; e.currentTarget.style.transform = 'none' }}
               >
                 Fertig
               </button>
             </div>
 
-            {/* Right spacer matching quick settings */}
-            <div className="shrink-0" style={{ width: 260, borderLeft: '1px solid var(--border)' }} />
+            {/* Right spacer */}
+            <div className="shrink-0" style={{ width: 300, borderLeft: '1px solid var(--panel-section-border)' }} />
           </div>
         </Dialog.Content>
       </Dialog.Portal>

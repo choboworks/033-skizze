@@ -61,6 +61,7 @@ export interface DocumentMeta {
   date: string
   officer: string       // Sachbearbeiter
   department: string    // Dienststelle
+  subdivision: string   // Dienstabteilung
   createdAt: number
   updatedAt: number
 }

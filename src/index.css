@@ -78,6 +78,15 @@
   --space-lg: 16px;
   --space-xl: 20px;
 
+  /* Motion */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-fast: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-hover: 120ms;
+  --duration-press: 80ms;
+  --duration-open: 180ms;
+  --duration-close: 140ms;
+  --duration-micro: 100ms;
+
   /* Radii — controlled for glassmorphism */
   --radius-sm: 10px;
   --radius-md: 14px;
@@ -93,6 +102,25 @@
   --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
   --shadow-tooltip: 0 2px 8px rgba(0, 0, 0, 0.5);
   --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.12);
+
+  /* Panel System */
+  --panel-bg-base: linear-gradient(180deg, rgba(22,26,34,0.96), rgba(18,22,30,0.94));
+  --panel-bg-elevated: linear-gradient(180deg, rgba(24,29,38,0.98), rgba(19,23,32,0.96));
+  --panel-border: rgba(255,255,255,0.10);
+  --panel-border-subtle: rgba(255,255,255,0.06);
+  --panel-shadow: 0 24px 60px rgba(0,0,0,0.50), 0 0 0 1px rgba(255,255,255,0.05);
+  --panel-shadow-soft: 0 18px 40px rgba(0,0,0,0.42), 0 0 0 1px rgba(255,255,255,0.04);
+  --panel-header-border: rgba(255,255,255,0.06);
+  --panel-section-border: rgba(255,255,255,0.05);
+  --panel-control-bg: rgba(255,255,255,0.04);
+  --panel-control-bg-hover: rgba(255,255,255,0.07);
+  --panel-control-border: rgba(255,255,255,0.06);
+  --panel-control-active-bg: rgba(56,189,248,0.14);
+  --panel-control-active-border: rgba(56,189,248,0.26);
+  --panel-control-active-text: var(--accent);
+  --panel-radius: 22px;
+  --panel-radius-lg: 24px;
+  --panel-inner-radius: 14px;
 
   /* Library */
   --chip-height-primary: 30px;
@@ -149,6 +177,22 @@
   --shadow-panel: 0 6px 20px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.04);
   --shadow-tooltip: 0 2px 8px rgba(15, 23, 42, 0.12);
   --shadow-glow: none;
+
+  /* Panel System light */
+  --panel-bg-base: #ffffff;
+  --panel-bg-elevated: #ffffff;
+  --panel-border: rgba(15,23,42,0.08);
+  --panel-border-subtle: rgba(15,23,42,0.05);
+  --panel-shadow: 0 16px 48px rgba(15,23,42,0.12), 0 0 0 1px rgba(15,23,42,0.04);
+  --panel-shadow-soft: 0 12px 32px rgba(15,23,42,0.10), 0 0 0 1px rgba(15,23,42,0.03);
+  --panel-header-border: rgba(15,23,42,0.06);
+  --panel-section-border: rgba(15,23,42,0.05);
+  --panel-control-bg: #f1f5f9;
+  --panel-control-bg-hover: #e9eef5;
+  --panel-control-border: rgba(15,23,42,0.06);
+  --panel-control-active-bg: rgba(14,165,233,0.10);
+  --panel-control-active-border: rgba(14,165,233,0.22);
+  --panel-control-active-text: var(--accent);
 }
 
 /* ============================================================
@@ -238,32 +282,32 @@ html, body, #root {
 }
 
 @keyframes popIn {
-  from { opacity: 0; transform: scale(0.94) translateY(4px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .anim-slide-left {
-  animation: slideInLeft 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: slideInLeft var(--duration-open) var(--ease-out-soft) both;
 }
 
 .anim-slide-right {
-  animation: slideInRight 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: slideInRight var(--duration-open) var(--ease-out-soft) both;
 }
 
 .anim-slide-down {
-  animation: slideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: slideDown var(--duration-open) var(--ease-out-soft) both;
 }
 
 .anim-scale-in {
-  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: scaleIn var(--duration-open) var(--ease-out-soft) both;
 }
 
 .anim-pop-in {
-  animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: popIn var(--duration-open) var(--ease-out-soft) both;
 }
 
 .anim-fade-in {
-  animation: fadeIn 0.2s ease both;
+  animation: fadeIn var(--duration-micro) var(--ease-out-fast) both;
 }
 
 /* ============================================================
@@ -311,7 +355,7 @@ html, body, #root {
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background var(--duration-hover) var(--ease-out-fast), color var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast);
 }
 
 .icon-btn:hover {
@@ -322,6 +366,8 @@ html, body, #root {
 
 .icon-btn:active {
   background: var(--surface-active);
+  transform: scale(0.97);
+  transition: var(--duration-press) var(--ease-out-fast);
 }
 
 /* ============================================================
@@ -337,15 +383,42 @@ html, body, #root {
   background: var(--surface-raised);
   border: 1px solid var(--border);
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color var(--duration-hover) var(--ease-out-fast);
 }
 
 .field-input:focus {
-  border-color: var(--accent);
+  border-color: rgba(56,189,248,0.3);
+  box-shadow: 0 0 0 3px rgba(56,189,248,0.08);
 }
 
 .field-input::placeholder {
   color: var(--text-muted);
+}
+
+/* Date input — match app style */
+input[type="date"] {
+  color-scheme: dark;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: opacity var(--duration-hover) var(--ease-out-fast);
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+[data-theme="light"] input[type="date"] {
+  color-scheme: light;
+}
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: 0.5;
+}
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 0.8;
 }
 
 .field-label {
@@ -395,7 +468,7 @@ html, body, #root {
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast), color var(--duration-hover) var(--ease-out-fast);
 }
 .surface-btn:hover {
   background: rgba(255, 255, 255, 0.07);
@@ -403,6 +476,8 @@ html, body, #root {
 }
 .surface-btn:active {
   background: var(--surface-active);
+  transform: scale(0.97);
+  transition: var(--duration-press) var(--ease-out-fast);
 }
 
 /* Primary Button (Export, accent actions) */
@@ -412,26 +487,13 @@ html, body, #root {
   border: 1px solid rgba(125, 211, 252, 0.35);
   box-shadow: 0 8px 20px rgba(14, 165, 233, 0.22);
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
+  transition: background var(--duration-hover) var(--ease-out-fast), box-shadow var(--duration-hover) var(--ease-out-fast);
 }
 .primary-btn:hover {
   background: linear-gradient(180deg, #67d3fb, #22b8f0);
 }
 
 /* Panel Card (layer items, library items) */
-.panel-card {
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
-}
-.panel-card:hover {
-  background: var(--surface-hover);
-}
-.panel-card[data-selected="true"] {
-  background: var(--accent-muted);
-  border-color: rgba(56, 189, 248, 0.28);
-}
 
 /* Tab Trigger (sidebar tabs, segmented controls) */
 .tab-trigger {
@@ -439,7 +501,7 @@ html, body, #root {
   color: var(--text-muted);
   border: none;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background var(--duration-hover) var(--ease-out-fast), color var(--duration-hover) var(--ease-out-fast);
 }
 .tab-trigger:hover {
   background: var(--surface-hover);
@@ -454,7 +516,7 @@ html, body, #root {
   background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.028));
   border: 1px solid rgba(255,255,255,0.07);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+  transition: background var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast), box-shadow var(--duration-hover) var(--ease-out-fast);
 }
 .tool-btn:hover {
   background: rgba(255,255,255,0.075);
@@ -471,7 +533,7 @@ html, body, #root {
   color: var(--text-muted);
   border: 1px solid rgba(255, 255, 255, 0.06);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background var(--duration-hover) var(--ease-out-fast), color var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast);
 }
 .category-chip:hover {
   background: var(--surface-hover);
@@ -487,7 +549,7 @@ html, body, #root {
   color: var(--text-muted);
   border: 1px solid rgba(255, 255, 255, 0.05);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background var(--duration-hover) var(--ease-out-fast), color var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast);
 }
 .subcategory-chip:hover {
   background: var(--surface-hover);
@@ -500,36 +562,127 @@ html, body, #root {
 
 /* Toggle Button (Bold/Italic/Align etc.) */
 .toggle-btn {
-  background: rgba(255,255,255,0.04);
+  background: var(--panel-control-bg);
   color: var(--text-muted);
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid var(--panel-control-border);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background var(--duration-hover) var(--ease-out-fast), color var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast);
 }
 .toggle-btn:hover {
-  background: rgba(255,255,255,0.07);
+  background: var(--panel-control-bg-hover);
+  color: var(--text);
 }
 .toggle-btn[data-active="true"] {
-  background: rgba(56, 189, 248, 0.14);
-  color: var(--accent);
-  border-color: rgba(56, 189, 248, 0.26);
+  background: var(--panel-control-active-bg);
+  color: var(--panel-control-active-text);
+  border-color: var(--panel-control-active-border);
 }
 
 /* ============================================================
-   Tool Popover (shared shell for all tool panels)
+   Panel System (unified shell for popovers & floating panels)
+   ============================================================ */
+
+.panel-shell {
+  background: var(--panel-bg-base);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--panel-shadow-soft);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: var(--panel-radius-lg);
+}
+
+.panel-shell-elevated {
+  background: var(--panel-bg-elevated);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--panel-shadow);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: var(--panel-radius);
+}
+
+[data-theme="light"] .panel-shell,
+[data-theme="light"] .panel-shell-elevated {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Panel Popover Header */
+.panel-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px 16px;
+  border-bottom: 1px solid var(--panel-header-border);
+  user-select: none;
+}
+
+.panel-header-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast), color var(--duration-hover) var(--ease-out-fast);
+  padding: 0;
+}
+.panel-header-btn:hover {
+  background: var(--panel-control-bg-hover);
+  border-color: var(--panel-control-border);
+  color: var(--text);
+}
+
+/* Panel Section */
+.panel-section {
+  padding: 14px 16px 16px 16px;
+  border-bottom: 1px solid var(--panel-section-border);
+}
+.panel-section:last-child {
+  border-bottom: none;
+}
+
+/* Segmented Control */
+.segmented-control {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--panel-inner-radius);
+  background: var(--panel-control-bg);
+  border: 1px solid var(--panel-control-border);
+}
+.segmented-option {
+  flex: 1;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--duration-hover) var(--ease-out-fast);
+}
+.segmented-option:hover {
+  color: var(--text-secondary);
+}
+.segmented-option[data-active="true"] {
+  background: var(--panel-control-active-bg);
+  border-color: var(--panel-control-active-border);
+  color: var(--panel-control-active-text);
+}
+
+/* ============================================================
+   Tool Popover (structural only — visual styling via .panel-shell)
    ============================================================ */
 
 .tool-popover {
   width: 292px;
   padding: 14px;
-  border-radius: 24px;
-  background: rgba(15, 18, 24, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
 }
 
 /* ============================================================
@@ -540,7 +693,7 @@ html, body, #root {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.02));
   border: 1px solid rgba(255, 255, 255, 0.07);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast);
 }
 .layer-card:hover {
   background: rgba(255, 255, 255, 0.06);
@@ -558,10 +711,11 @@ html, body, #root {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.02));
   border: 1px solid rgba(255, 255, 255, 0.07);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast), transform var(--duration-hover) var(--ease-out-fast);
 }
 .asset-card:hover {
   background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
 }
 
 .asset-icon-tile {
@@ -583,7 +737,7 @@ html, body, #root {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -596,6 +750,24 @@ html, body, #root {
 .shape-option[data-active="true"] {
   background: rgba(56, 189, 248, 0.14);
   border-color: rgba(56, 189, 248, 0.28);
+}
+
+/* ============================================================
+   Active/Press feedback (global)
+   ============================================================ */
+
+.primary-btn:active,
+.tool-btn:active,
+.toggle-btn:active,
+.panel-header-btn:active,
+.segmented-option:active,
+.shape-option:active,
+.category-chip:active,
+.subcategory-chip:active,
+.layer-card:active,
+.asset-card:active {
+  transform: scale(0.97);
+  transition: var(--duration-press) var(--ease-out-fast);
 }
 
 /* ============================================================
@@ -659,14 +831,7 @@ html, body, #root {
 }
 
 /* Panel Card: white bg in light mode */
-[data-theme="light"] .panel-card {
-  background: #ffffff;
-  border-color: var(--border-subtle);
-}
-[data-theme="light"] .panel-card[data-selected="true"] {
-  background: var(--accent-muted);
-  border-color: rgba(14, 165, 233, 0.24);
-}
+
 
 /* Segmented Controls (PanelSegmented) active in light mode */
 [data-theme="light"] .tab-trigger[data-active="true"]:not(.tool-btn) {
@@ -674,20 +839,6 @@ html, body, #root {
   color: var(--text);
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-sm);
-}
-
-/* Toggle Button: cleaner in light mode */
-[data-theme="light"] .toggle-btn {
-  background: #f1f5f9;
-  border-color: rgba(15, 23, 42, 0.06);
-}
-[data-theme="light"] .toggle-btn:hover {
-  background: #e9eef5;
-}
-[data-theme="light"] .toggle-btn[data-active="true"] {
-  background: var(--accent-muted);
-  border-color: rgba(14, 165, 233, 0.24);
-  color: var(--accent);
 }
 
 /* Field inputs in light mode */
@@ -725,15 +876,6 @@ html, body, #root {
 }
 [data-theme="light"] .surface-btn:hover {
   background: #e9eef5;
-}
-
-/* Tool Popover: solid in light mode */
-[data-theme="light"] .tool-popover {
-  background: #ffffff;
-  border-color: var(--border);
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
 /* Layer Card: solid in light mode */

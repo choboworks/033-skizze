@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppStore } from '@/store'
 import {
   LIBRARY_CATEGORIES,
@@ -15,7 +15,13 @@ import type { CanvasObject } from '@/types'
 export function LibraryPanel() {
   const [activeCategory, setActiveCategory] = useState('smartroads')
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null)
+  const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchQuery(searchInput), 150)
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
   const isSearchMode = searchQuery.trim().length > 0
 
@@ -66,7 +72,7 @@ export function LibraryPanel() {
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 shrink-0"
+        className="flex items-center justify-center px-4 shrink-0"
         style={{ paddingTop: 16, paddingBottom: 'var(--library-gap-md)' }}
       >
         <span className="text-[13px] font-semibold tracking-wide" style={{ color: 'var(--text)' }}>
@@ -95,8 +101,8 @@ export function LibraryPanel() {
           <Search size={14} className="absolute top-1/2 -translate-y-1/2" style={{ left: 14, color: 'var(--text-muted)' }} />
           <input
             placeholder="Objekt suchen …"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="field-input w-full"
             style={{ paddingLeft: 36, borderRadius: 14, height: 40, fontSize: 12 }}
           />

@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { EditorShell } from '../shared/EditorShell'
 import { ElementPalette } from '../shared/ElementPalette'
 import { QuickSettings } from '../shared/QuickSettings'
-import { PresetList } from '../shared/PresetList'
+import { STRAIGHT_PRESETS } from '../shared/PresetList'
 import { EditorLayerManager } from '../shared/EditorLayerManager'
 import { FloatingEditorProperties } from '../shared/FloatingEditorProperties'
 import { RoadTopView } from '../rendering/RoadTopView'
@@ -139,25 +139,36 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
   const selectedStrip = selectedStripId ? strips.find(s => s.id === selectedStripId) ?? null : null
   const selectedMarking = selectedMarkingId ? markings.find(m => m.id === selectedMarkingId) ?? null : null
 
-  // --- Build sidebar: palette scrolls, presets pinned at bottom ---
+  // --- Build sidebar: unified palette with chips ---
   const sidebar = (
-    <>
-      <div className="flex-1 overflow-y-auto min-h-0">
-        <ElementPalette
-          onAddStrip={handleAddStrip}
-          onAddMarking={handleAddMarking}
-        />
-      </div>
-      <div className="shrink-0">
-        <PresetList onLoadPreset={handleLoadPreset} />
-      </div>
-    </>
+    <ElementPalette
+      onAddStrip={handleAddStrip}
+      onAddMarking={handleAddMarking}
+      onLoadPreset={handleLoadPreset}
+      presets={STRAIGHT_PRESETS}
+    />
   )
 
   // --- Build editor center ---
   const editor = (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 min-h-0">
+    <div className="flex flex-col h-full items-center justify-center">
+      {/* Stage Container */}
+      <div
+        className="flex-1 min-h-0 w-full flex items-center justify-center"
+        style={{
+          padding: 40,
+        }}
+      >
+        <div
+          className="w-full h-full overflow-hidden"
+          style={{
+            borderRadius: 28,
+            background: 'rgba(255,255,255,0.02)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            boxShadow: '0 40px 120px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.03)',
+            filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))',
+          }}
+        >
         <RoadTopView
           strips={strips}
           markings={markings}
@@ -172,6 +183,7 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
           onDoubleClickElement={handleOpenProperties}
           onLengthChange={handleLengthChange}
         />
+        </div>
       </div>
 
       {/* Floating properties modal */}
@@ -187,30 +199,55 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
     </div>
   )
 
-  // --- Build right sidebar: QuickSettings + LayerManager ---
+  // --- Build right sidebar: two separate panels ---
   const quickSettings = (
-    <div className="flex flex-col h-full overflow-y-auto">
-      <QuickSettings
-        strips={strips}
-        length={length}
-        roadClass={roadClass}
-        onUpdateStrips={handleStripsUpdate}
-        onUpdateLength={handleLengthChange}
-        onUpdateRoadClass={handleRoadClassChange}
-      />
-      <EditorLayerManager
-        strips={strips}
-        markings={markings}
-        selectedStripId={selectedStripId}
-        selectedMarkingId={selectedMarkingId}
-        onSelectStrip={setSelectedStripId}
-        onSelectMarking={setSelectedMarkingId}
-        onDeleteStrip={handleDeleteStrip}
-        onDeleteMarking={handleDeleteMarking}
-        onOpenProperties={handleOpenProperties}
-        onReorderStrips={handleStripsUpdate}
-      />
-    </div>
+    <>
+      {/* Quick Settings — elevated panel */}
+      <div
+        className="shrink-0"
+        style={{
+          padding: 16,
+          borderRadius: 22,
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.40)',
+        }}
+      >
+        <QuickSettings
+          strips={strips}
+          length={length}
+          roadClass={roadClass}
+          onUpdateStrips={handleStripsUpdate}
+          onUpdateLength={handleLengthChange}
+          onUpdateRoadClass={handleRoadClassChange}
+        />
+      </div>
+
+      {/* Road Structure — base panel */}
+      <div
+        className="flex-1 min-h-0 overflow-y-auto"
+        style={{
+          padding: '14px 16px',
+          borderRadius: 20,
+          background: 'rgba(255,255,255,0.025)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          boxShadow: '0 12px 32px rgba(0,0,0,0.28)',
+        }}
+      >
+        <EditorLayerManager
+          strips={strips}
+          markings={markings}
+          selectedStripId={selectedStripId}
+          selectedMarkingId={selectedMarkingId}
+          onSelectStrip={setSelectedStripId}
+          onSelectMarking={setSelectedMarkingId}
+          onDeleteStrip={handleDeleteStrip}
+          onDeleteMarking={handleDeleteMarking}
+          onOpenProperties={handleOpenProperties}
+          onReorderStrips={handleStripsUpdate}
+        />
+      </div>
+    </>
   )
 
   return (

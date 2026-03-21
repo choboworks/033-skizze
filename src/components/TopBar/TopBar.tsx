@@ -1,198 +1,144 @@
 import { useAppStore } from '@/store'
 import {
   Settings,
-  ChevronDown,
   Sun,
   Moon,
-  Check,
-  WifiOff,
-  X,
   Undo2,
   Redo2,
   Save,
   Download,
-  Scaling,
 } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
 
 export function TopBar() {
   const theme = useAppStore((s) => s.theme)
   const toggleTheme = useAppStore((s) => s.toggleTheme)
-  const documentName = useAppStore((s) => s.document.name)
-  const document = useAppStore((s) => s.document)
-  const updateDocument = useAppStore((s) => s.updateDocument)
-  const scale = useAppStore((s) => s.scale)
-  const [isOnline, setIsOnline] = useState(navigator.onLine)
-  const [showDocPanel, setShowDocPanel] = useState(false)
-  const panelRef = useRef<HTMLDivElement>(null)
 
-  const hasOverride = scale.viewport !== null
-  const effectiveScale = hasOverride ? Math.round(scale.viewport!.scale) : scale.currentScale
 
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true)
-    const handleOffline = () => setIsOnline(false)
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
+  // Shared button style for icon + secondary buttons
+  const btnBase: React.CSSProperties = {
+    height: 32,
+    minWidth: 32,
+    borderRadius: 10,
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    color: 'var(--text-muted)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    transition: 'background var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast), color var(--duration-hover) var(--ease-out-fast), transform var(--duration-press) var(--ease-out-fast)',
+  }
 
-  // Close panel on outside click
-  useEffect(() => {
-    if (!showDocPanel) return
-    const handleClick = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        setShowDocPanel(false)
-      }
-    }
-    window.addEventListener('mousedown', handleClick)
-    return () => window.removeEventListener('mousedown', handleClick)
-  }, [showDocPanel])
+  const btnHover = (e: React.MouseEvent) => {
+    const t = e.currentTarget as HTMLElement
+    t.style.background = 'rgba(255,255,255,0.08)'
+    t.style.borderColor = 'rgba(255,255,255,0.10)'
+    t.style.color = 'var(--text)'
+  }
+  const btnLeave = (e: React.MouseEvent) => {
+    const t = e.currentTarget as HTMLElement
+    t.style.background = 'rgba(255,255,255,0.04)'
+    t.style.borderColor = 'rgba(255,255,255,0.06)'
+    t.style.color = 'var(--text-muted)'
+  }
 
   return (
     <header
-      className="glass flex items-center select-none shrink-0"
+      className="glass flex items-center justify-between select-none shrink-0"
       style={{
-        borderRadius: 'var(--radius-xl)',
-        padding: '0 var(--space-lg)',
         height: 'var(--topbar-height)',
+        padding: '0 20px',
+        borderRadius: 'var(--radius-xl)',
       }}
     >
-      {/* Left: Logo + App Name */}
-      <div className="flex items-center gap-3 min-w-0 flex-1 relative" ref={panelRef}>
+      {/* Left: Project Info */}
+      <div className="flex items-center gap-3 min-w-0">
         <img
           src="/logo_ohne.png"
           alt="033-Skizze"
-          className="h-9 w-9 rounded-xl shrink-0 object-contain"
+          className="h-8 w-8 rounded-lg shrink-0 object-contain"
         />
-        <div className="min-w-0">
-          <div className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>033-Skizze</div>
-          <div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>by Alex Pohlmeier</div>
+        <div className="min-w-0" style={{ lineHeight: 1.2 }}>
+          <div className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>
+            033-Skizze
+          </div>
+          <div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+            by Alex Pohlmeier
+          </div>
         </div>
       </div>
 
-      {/* Center: Badges */}
-      <div className="hidden lg:flex items-center gap-2">
-        <button
-          onClick={() => setShowDocPanel(!showDocPanel)}
-          className="badge"
-          style={{ cursor: 'pointer', height: 28, fontSize: 11 }}
-        >
-          {documentName}
-          <ChevronDown
-            size={12}
+      {/* Right: Actions — grouped with separators */}
+      <div className="flex items-center" style={{ gap: 6 }}>
+        {/* Undo / Redo */}
+        <div className="flex items-center" style={{ gap: 4 }}>
+          <button style={{ ...btnBase, padding: 0 }} title="Rückgängig" onMouseEnter={btnHover} onMouseLeave={btnLeave}>
+            <Undo2 size={15} />
+          </button>
+          <button style={{ ...btnBase, padding: 0 }} title="Wiederholen" onMouseEnter={btnHover} onMouseLeave={btnLeave}>
+            <Redo2 size={15} />
+          </button>
+        </div>
+
+        <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.08)' }} />
+
+        {/* Save + Export */}
+        <div className="flex items-center" style={{ gap: 6 }}>
+          <button
+            style={{ ...btnBase, padding: '0 12px', borderRadius: 12, gap: 6, color: 'var(--text)', fontSize: 12, fontWeight: 600 }}
+            title="Speichern"
+            onMouseEnter={btnHover}
+            onMouseLeave={(e) => { btnLeave(e); (e.currentTarget as HTMLElement).style.color = 'var(--text)' }}
+          >
+            <Save size={14} />
+            <span>Save</span>
+          </button>
+          <button
             style={{
-              transform: showDocPanel ? 'rotate(180deg)' : 'rotate(0)',
-              transition: 'transform 0.15s',
+              height: 32,
+              padding: '0 14px',
+              borderRadius: 12,
+              background: 'linear-gradient(135deg, rgba(56,189,248,0.9), rgba(14,165,233,0.9))',
+              color: '#fff',
+              fontSize: 12,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(14,165,233,0.3)',
+              transition: 'transform var(--duration-press) var(--ease-out-fast), filter var(--duration-hover) var(--ease-out-fast), box-shadow var(--duration-hover) var(--ease-out-fast)',
             }}
-          />
-        </button>
-
-        <span className="badge badge-accent" style={{ height: 28, fontSize: 11 }}>
-          <Scaling size={12} />
-          {hasOverride ? `1:${effectiveScale} (Override)` : `1:${effectiveScale}`}
-        </span>
-
-        <span className="badge" style={{ gap: 4, height: 28, fontSize: 11 }}>
-          {isOnline ? (
-            <>
-              <Check size={11} style={{ color: 'var(--success)' }} />
-              <span>Gespeichert</span>
-            </>
-          ) : (
-            <>
-              <WifiOff size={11} />
-              <span>Offline</span>
-            </>
-          )}
-        </span>
-      </div>
-
-      {/* Document Properties Dropdown */}
-      {showDocPanel && (
-        <div
-          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 glass anim-slide-down z-50"
-          style={{
-            width: 340,
-            borderRadius: 'var(--radius-lg)',
-          }}
-        >
-          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--border)' }}>
-            <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-              Dokument-Eigenschaften
-            </span>
-            <button className="icon-btn" style={{ padding: 3 }} onClick={() => setShowDocPanel(false)}>
-              <X size={14} />
-            </button>
-          </div>
-          <div className="p-4 flex flex-col gap-3">
-            <DocField label="Dateiname" value={documentName} onChange={(v) => updateDocument({ name: v })} />
-            <DocField label="Aktenzeichen" value={document.caseNumber} onChange={(v) => updateDocument({ caseNumber: v })} />
-            <DocField label="Datum" value={document.date} onChange={(v) => updateDocument({ date: v })} />
-            <DocField label="Sachbearbeiter" value={document.officer} onChange={(v) => updateDocument({ officer: v })} />
-            <DocField label="Dienststelle" value={document.department} onChange={(v) => updateDocument({ department: v })} />
-          </div>
+            title="Exportieren"
+            onMouseEnter={(e) => {
+              const t = e.currentTarget as HTMLElement
+              t.style.filter = 'brightness(1.05)'
+              t.style.boxShadow = '0 6px 18px rgba(14,165,233,0.35)'
+            }}
+            onMouseLeave={(e) => {
+              const t = e.currentTarget as HTMLElement
+              t.style.filter = 'none'
+              t.style.boxShadow = '0 4px 14px rgba(14,165,233,0.3)'
+            }}
+          >
+            <Download size={14} />
+            <span>Export</span>
+          </button>
         </div>
-      )}
 
-      {/* Right: Actions */}
-      <div className="flex items-center gap-2 flex-1 justify-end">
-        <button className="icon-btn" onClick={toggleTheme} title={`${theme === 'dark' ? 'Light' : 'Dark'} Mode`} style={{ width: 32, height: 32, borderRadius: 12 }}>
-          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-        </button>
-        <button className="icon-btn" title="Einstellungen" style={{ width: 32, height: 32, borderRadius: 12 }}>
-          <Settings size={14} />
-        </button>
+        <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.08)' }} />
 
-        <div className="w-px mx-1" style={{ height: 18, background: 'var(--border)', opacity: 0.45 }} />
-
-        <button
-          className="surface-btn flex items-center gap-1.5 h-9 px-3.5 rounded-[14px] text-[12px] font-semibold"
-          title="Rückgängig"
-        >
-          <Undo2 size={14} />
-          <span className="hidden xl:inline">Undo</span>
-        </button>
-        <button
-          className="surface-btn flex items-center gap-1.5 h-9 px-3.5 rounded-[14px] text-[12px] font-semibold"
-          title="Speichern"
-        >
-          <Save size={14} />
-          <span className="hidden xl:inline">Save</span>
-        </button>
-        <button
-          className="primary-btn flex items-center gap-1.5 h-9 px-3.5 rounded-[14px] text-[12px] font-bold"
-          title="Exportieren"
-        >
-          <Download size={14} />
-          <span className="hidden xl:inline">Export</span>
-        </button>
+        {/* Settings + Theme */}
+        <div className="flex items-center" style={{ gap: 4 }}>
+          <button style={{ ...btnBase, padding: 0 }} title="Einstellungen" onMouseEnter={btnHover} onMouseLeave={btnLeave}>
+            <Settings size={15} />
+          </button>
+          <button style={{ ...btnBase, padding: 0 }} onClick={toggleTheme} title={`${theme === 'dark' ? 'Light' : 'Dark'} Mode`} onMouseEnter={btnHover} onMouseLeave={btnLeave}>
+            {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
+        </div>
       </div>
     </header>
-  )
-}
-
-function DocField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <label className="field-label">{label}</label>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="field-input"
-      />
-    </div>
   )
 }

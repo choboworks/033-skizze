@@ -1,12 +1,10 @@
 import { useAppStore } from '@/store'
-import { Minus, Plus, Scaling, RotateCcw, ZoomIn, Settings2 } from 'lucide-react'
+import { Scaling, RotateCcw } from 'lucide-react'
 
 export function StatusBar() {
   const scale = useAppStore((s) => s.scale)
   const viewport = useAppStore((s) => s.viewport)
   const activeTool = useAppStore((s) => s.activeTool)
-  const zoomTo = useAppStore((s) => s.zoomTo)
-  const setViewport = useAppStore((s) => s.setViewport)
   const resetView = useAppStore((s) => s.resetView)
   const setScaleOverride = useAppStore((s) => s.setScaleOverride)
 
@@ -31,18 +29,6 @@ export function StatusBar() {
     'print-area': 'Ausschnitt',
   }
 
-  const handleZoomIn = () => {
-    const newZoom = Math.min(5, viewport.zoom * 1.2)
-    zoomTo(newZoom)
-    setViewport({ zoom: newZoom })
-  }
-
-  const handleZoomOut = () => {
-    const newZoom = Math.max(0.1, viewport.zoom / 1.2)
-    zoomTo(newZoom)
-    setViewport({ zoom: newZoom })
-  }
-
   return (
     <footer
       className="glass flex items-center justify-between select-none shrink-0"
@@ -58,9 +44,14 @@ export function StatusBar() {
         <span className="badge badge-accent" style={{ height: 22, padding: '0 7px', fontSize: 10.5 }}>
           {toolLabels[activeTool] || activeTool}
         </span>
-        <span className="badge" style={{ height: 22, padding: '0 7px', fontSize: 10.5 }}>
+        <button
+          className="badge"
+          style={{ height: 22, padding: '0 7px', fontSize: 10.5, cursor: 'pointer', border: 'none' }}
+          onClick={resetView}
+          title="Ansicht zurücksetzen (100%)"
+        >
           {zoomPercent}%
-        </span>
+        </button>
         <span className="badge" style={hasOverride ? { height: 22, padding: '0 7px', fontSize: 10.5, background: 'rgba(240, 160, 48, 0.15)', color: '#f0a030' } : { height: 22, padding: '0 7px', fontSize: 10.5 }}>
           <Scaling size={11} />
           1:{effectiveScale}
@@ -77,35 +68,9 @@ export function StatusBar() {
         </span>
       </div>
 
-      {/* Center: Zoom controls */}
-      <div className="flex items-center gap-1">
-        <button onClick={handleZoomOut} className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0 }} title="Herauszoomen">
-          <Minus size={14} />
-        </button>
-        <button
-          onClick={resetView}
-          className="surface-btn flex items-center justify-center min-w-12 h-7 px-2 rounded-[10px] text-[11px] font-medium"
-          style={{ background: 'transparent' }}
-          title="Seite einpassen"
-        >
-          {zoomPercent}%
-        </button>
-        <button onClick={handleZoomIn} className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0 }} title="Hineinzoomen">
-          <Plus size={14} />
-        </button>
-      </div>
-
-      {/* Right: Actions */}
-      <div className="flex items-center gap-2 flex-1 justify-end text-[11px]" style={{ color: 'var(--text-muted)', opacity: 0.75 }}>
-        <span>Scroll = Zoom · Space = Pan</span>
-        <button
-          onClick={resetView}
-          className="icon-btn flex items-center gap-1.5 h-7 px-2 rounded-[10px] text-[11px]"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          <ZoomIn size={13} />
-          Reset
-        </button>
+      {/* Right: Version */}
+      <div className="flex items-center flex-1 justify-end text-[10px]" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>
+        <span>033-Skizze v2.0 · © {new Date().getFullYear()} ChoboWorks</span>
       </div>
     </footer>
   )

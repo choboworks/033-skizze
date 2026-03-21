@@ -134,13 +134,14 @@ export function EditorLayerManager({
   const selectedId = selectedStripId || selectedMarkingId
 
   return (
-    <div className="flex flex-col pt-2">
-      {/* Header — more top padding for visual separation */}
+    <div className="flex flex-col">
+      {/* Header */}
       <div
-        className="px-4 pt-5 pb-4 text-[10px] font-bold uppercase tracking-[0.15em] text-center"
-        style={{ color: 'var(--text-muted)', borderTop: '1px solid var(--border)', marginTop: 12 }}
+        className="pb-3 text-[11px] font-semibold flex items-center justify-between"
+        style={{ color: 'var(--text-secondary)' }}
       >
-        Elemente {items.length > 0 && <span style={{ color: 'var(--accent)' }}>({items.length})</span>}
+        <span>Elemente</span>
+        {items.length > 0 && <span style={{ color: 'var(--accent)', fontSize: 10 }}>{items.length}</span>}
       </div>
 
       {items.length === 0 && (
@@ -150,7 +151,7 @@ export function EditorLayerManager({
       )}
 
       {/* Item list — each item is a distinct card-like row */}
-      <div className="flex flex-col gap-2 px-2.5 pb-3">
+      <div className="flex flex-col" style={{ gap: 8 }}>
         {items.map((item) => {
           const isSelected = item.id === selectedId
           const isDragging = dragId === item.id
@@ -165,11 +166,15 @@ export function EditorLayerManager({
               onDragOver={isStrip ? (e) => handleDragOver(e, item.id) : undefined}
               onDrop={isStrip ? handleDrop : undefined}
               onDragEnd={isStrip ? handleDragEnd : undefined}
-              className="relative group cursor-pointer transition-all rounded-lg"
+              className="relative group cursor-pointer"
               style={{
-                background: isSelected ? 'var(--accent-muted)' : 'transparent',
-                border: isSelected ? '1.5px solid var(--accent)' : '1.5px solid var(--border)',
-                opacity: isDragging ? 0.4 : 1,
+                minHeight: 64,
+                padding: 12,
+                borderRadius: 18,
+                background: isSelected ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.03)',
+                border: isSelected ? '1px solid rgba(56,189,248,0.26)' : '1px solid rgba(255,255,255,0.06)',
+                transition: 'background var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast), transform var(--duration-hover) var(--ease-out-fast), box-shadow var(--duration-hover) var(--ease-out-fast)',
+                ...(isDragging ? { transform: 'scale(1.02)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)', opacity: 1 } : {}),
               }}
               onClick={() => {
                 if (isStrip) { onSelectStrip(item.id); onSelectMarking(null) }
@@ -177,14 +182,10 @@ export function EditorLayerManager({
               }}
               onDoubleClick={() => onOpenProperties(item.kind, item.id)}
               onMouseEnter={(e) => {
-                if (!isSelected && !isDragging) {
-                  e.currentTarget.style.borderColor = 'var(--text-muted)'
-                  e.currentTarget.style.background = 'var(--surface-hover)'
-                }
+                if (!isSelected && !isDragging) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = isSelected ? 'var(--accent)' : 'var(--border)'
-                e.currentTarget.style.background = isSelected ? 'var(--accent-muted)' : 'transparent'
+                if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
               }}
             >
               {/* Drop indicators */}
@@ -196,7 +197,7 @@ export function EditorLayerManager({
               )}
 
               {/* Main row */}
-              <div className="flex items-center gap-2.5 px-3" style={{ height: 46 }}>
+              <div className="flex items-center" style={{ gap: 10 }}>
                 {isStrip ? (
                   <GripVertical
                     size={14}
@@ -215,24 +216,24 @@ export function EditorLayerManager({
                   {item.icon}
                 </span>
                 <span
-                  className="text-[12px] truncate flex-1"
+                  className="text-[13px] truncate flex-1"
                   style={{
                     color: isSelected ? 'var(--text)' : 'var(--text-secondary)',
-                    fontWeight: isSelected ? 600 : 400,
+                    fontWeight: isSelected ? 600 : 500,
                   }}
                 >
                   {item.label}
                 </span>
 
                 {/* Inline actions (always visible on hover) */}
-                <div className="flex items-center gap-1 shrink-0">
-                  <button className="icon-btn" style={{ padding: 5 }} onClick={(e) => {
+                <div className="flex items-center shrink-0" style={{ gap: 4 }}>
+                  <button className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0 }} onClick={(e) => {
                     e.stopPropagation()
                     onOpenProperties(item.kind, item.id)
                   }} title="Eigenschaften">
                     <Settings2 size={14} />
                   </button>
-                  <button className="icon-btn" style={{ padding: 5, color: 'var(--danger, #e05050)' }} onClick={(e) => {
+                  <button className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0, color: 'var(--danger, #e05050)' }} onClick={(e) => {
                     e.stopPropagation()
                     if (isStrip) onDeleteStrip(item.id)
                     else onDeleteMarking(item.id)

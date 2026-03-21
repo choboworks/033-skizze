@@ -2,6 +2,74 @@
 
 ---
 
+## Session 6 – 21.03.2026
+
+**Teilnehmer**: Alex + Claude Opus 4.6
+**Fokus**: UI-Remake — Glassmorphism Design-Overhaul Phase 2
+
+### Canvas Zoom
+- **Zoom Snap-to-100%**: Padding auf 0 reduziert, Zoom snappt auf 1.0 wenn im Bereich 0.98–1.02. Canvas-Overlay-Bar entfernt (Info war redundant mit StatusBar).
+- **Zoom-Bug gefixt**: Doppelter Store-Update (`setViewport` + `zoomTo`) im Wheel-Handler verursachte Race Conditions beim Pannen. `zoomTo` komplett aus SketchCanvas entfernt.
+
+### Unified Panel System (Neue Architektur)
+- **18 neue `--panel-*` CSS-Tokens** (Dark + Light Mode): `panel-bg-base`, `panel-bg-elevated`, `panel-border`, `panel-shadow`, `panel-control-bg/hover/border/active-*`, `panel-radius`, `panel-inner-radius`
+- **6 neue CSS-Klassen**: `.panel-shell` (base), `.panel-shell-elevated`, `.panel-popover-header`, `.panel-header-btn`, `.panel-section`, `.segmented-control` + `.segmented-option`
+- **PanelPrimitives.tsx**: Neues `PanelHeader` Komponente (icon, title, subtitle, onClose, onMouseDown für Drag). `PanelSection` + `PanelSegmented` auf CSS-Klassen umgestellt.
+- **Tool-Popovers** (Freihand, Formen, Text, Bemaßung): Alle auf `panel-shell` + `PanelHeader` migriert, manuelle Header entfernt.
+- **FloatingProperties**: Auf `panel-shell-elevated` + `PanelHeader` mit Drag-Support migriert.
+- `.tool-popover` auf structural-only reduziert (nur width/padding), `.toggle-btn` auf Token-basiert.
+- Redundante Light-Mode Overrides entfernt.
+
+### Interaction Quality System
+- **7 Motion-Tokens**: `--ease-out-soft`, `--ease-out-fast`, `--duration-hover` (120ms), `--duration-press` (80ms), `--duration-open` (180ms), `--duration-close` (140ms), `--duration-micro` (100ms)
+- **Alle ~15 Transitions** von `0.15s` auf Token-basiert (`var(--duration-hover) var(--ease-out-fast)`)
+- **Active/Press States**: Globale `scale(0.97)` mit 80ms für alle klickbaren Elemente
+- **Focus Ring**: Dark-Mode `box-shadow: 0 0 0 3px rgba(56,189,248,0.08)` für `.field-input`
+- **Panel-Animationen**: `popIn` Keyframe verfeinert (translateY(6px) scale(0.98)), alle auf `180ms ease-out-soft`
+- **Library Card Hover**: `translateY(-1px)` Lift-Effekt
+- **Library Search Debounce**: 150ms Debounce auf Suchfeld
+
+### SmartRoad Editor Redesign (Komplett)
+- **EditorShell**: `panel-bg-elevated`, `radius-2xl` (28px), `panel-shadow`, Entry-Animation `anim-scale-in`. Footer-Buttons auf `surface-btn`/`primary-btn` (36px, radius 14).
+- **Bühne (Center)**: `radial-gradient(circle at center, #0f172a, #020617)`, Stage-Container mit `border-radius: 28px`, `box-shadow: 0 40px 120px`, `drop-shadow`.
+- **ElementPalette → Chip-System**: Accordion komplett ersetzt durch Kategorie-Chips (Streifen/Markierungen/Presets) + Unterkategorie-Chips + gefilterte 60px Element-Cards mit Icon + Titel + Sublabel. Integrierte Searchbar (40px, 150ms Debounce). Presets als Tab integriert.
+- **QuickSettings**: Segmented-Control für Straßentyp, Toggle-Buttons (26px) für Seitenoptionen, NumberStepper auf `toggle-btn` Tokens (28px). Kompakte 28px Controls.
+- **EditorLayerManager**: 64px Items, `border-radius: 18px`, accent Selection, Drag Lift (`scale(1.02)` + Shadow statt Opacity), 28×28 Action-Icons.
+- **Rechte Sidebar**: Zwei visuell getrennte Panel-Container (Quick Settings elevated + Road Structure base) mit 12px Gap, unterschiedlicher Shadow-Stärke.
+- **Linke Sidebar**: Panel-Container mit `border-radius: 20px`, matching right side.
+- **FloatingEditorProperties**: `width: 320px`, `border-radius: 20px`, Gradient-Shell, `blur(18px)`.
+- **Strip/Marking Properties**: Variant-Buttons als Pills (28px, `border-radius: 9999`), Labels 11px/500, 14px Section-Gap.
+- **Spacing Harmonisierung**: Strikte Skala (4, 6, 8, 10, 12, 14, 16, 20, 24px). Typography: 10px eyebrow, 11px meta, 12px buttons, 13px titles.
+
+### TopBar Redesign
+- **Layout vereinfacht**: Center-Badges entfernt (Dokumentname, Maßstab, Gespeichert-Status). Nur noch Links: Logo + Projektinfo, Rechts: Actions.
+- **Alle Buttons auf 32px**: Einheitlicher Base-Style mit `rgba(255,255,255,0.04)` bg, konsistente Hover/Active States.
+- **Button-Gruppen**: [Undo/Redo] | [Save/Export] | [Settings/Theme] mit 1px Separatoren.
+- **Export**: Gradient-Primary mit `box-shadow`, brightness-Hover.
+- **Glass-Background**: Gleicher `.glass` Style wie Toolbar und rechte Sidebar.
+
+### StatusBar Vereinfachung
+- **Entfernt**: Center Zoom Controls (+/- Buttons, % Anzeige), Reset-Button.
+- **Zoom-Badge klickbar**: Klick auf Zoom% → `resetView()`.
+- **Rechts**: Version + Copyright ("033-Skizze v2.0 · © 2026 ChoboWorks") statt Keyboard-Hints.
+
+### Metadaten-Panel (Komplett neu)
+- **Inhalt bereinigt**: Nur noch 6 Felder (Überschrift, Vorgangsnummer, Datum, Dienststelle, Dienstabteilung, Sachbearbeiter/in). Alle technischen Inhalte entfernt (Canvas, Zoom, Grid, Snap, Maßstab).
+- **3 Section-Cards**: Vorgang, Zuständigkeit, Bearbeitung. Gradient-Surface (`rgba(255,255,255,0.035)→0.02`), `inset box-shadow`, `border-radius: 16px`.
+- **Premium Inputs**: 36px height, `border-radius: 12px`, Hover + Focus States (accent ring `3px`).
+- **Panel Header**: Titel + Subtitle ("Falldaten & Zuständigkeit").
+- **Date-Picker**: Nativer `type="date"` mit Dark/Light-Mode Styling.
+- **Neues Feld**: `subdivision` (Dienstabteilung) in `DocumentMeta` Typ + Store.
+
+### Cleanup
+- **Gelöschte Dateien**: `Inspector.tsx` (orphaned), `LibrarySidebar.tsx` (orphaned).
+- **PresetList.tsx**: UI-Komponente entfernt, nur noch `STRAIGHT_PRESETS` Export.
+- **Unbenutzte Imports bereinigt**: ArrowDown (ElementPalette), ObjectIcon + removeObject + idx (EbenenPanel), STRIP_LABELS + VARIANT_LABELS (ElementPalette).
+- **Unbenutzte CSS-Klasse**: `.panel-card` + Light-Mode Overrides entfernt.
+- **0 ESLint Fehler, 0 TypeScript Fehler**.
+
+---
+
 ## Session 5 – 19.03.2026
 
 **Teilnehmer**: Alex + Claude Opus 4.6

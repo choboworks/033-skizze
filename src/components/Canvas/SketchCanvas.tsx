@@ -20,7 +20,7 @@ export function SketchCanvas() {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewport = useAppStore((s) => s.viewport)
   const setViewport = useAppStore((s) => s.setViewport)
-  const zoomTo = useAppStore((s) => s.zoomTo)
+
   const setCanvasSize = useAppStore((s) => s.setCanvasSize)
   const canvasSize = useAppStore((s) => s.canvasSize)
   const activeTool = useAppStore((s) => s.activeTool)
@@ -133,21 +133,21 @@ export function SketchCanvas() {
 
       if (!hasCentered.current) {
         hasCentered.current = true
-        const padding = 40
-        const zoom = Math.min(
+        const padding = 0
+        let zoom = Math.min(
           (width - padding * 2) / PAGE_WIDTH_PX,
           (height - padding * 2) / PAGE_HEIGHT_PX
         )
+        if (zoom >= 0.98 && zoom <= 1.02) zoom = 1
         const x = (width - PAGE_WIDTH_PX * zoom) / 2
         const y = (height - PAGE_HEIGHT_PX * zoom) / 2
         setViewport({ x, y, zoom })
-        zoomTo(zoom)
       }
     })
 
     observer.observe(container)
     return () => observer.disconnect()
-  }, [setViewport, zoomTo, setCanvasSize])
+  }, [setViewport, setCanvasSize])
 
   // Wheel zoom (visual only, no print-area scroll zoom)
   const handleWheel = useCallback(
@@ -174,9 +174,8 @@ export function SketchCanvas() {
         x: pointer.x - mousePointTo.x * newZoom,
         y: pointer.y - mousePointTo.y * newZoom,
       })
-      zoomTo(newZoom)
     },
-    [viewport, setViewport, zoomTo]
+    [viewport, setViewport]
   )
 
   // Mouse handlers
@@ -552,41 +551,6 @@ export function SketchCanvas() {
         }
       }}
     >
-      {/* Tool Context Bar */}
-      <div
-        className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 py-2"
-        style={{
-          background: theme === 'light' ? 'var(--surface)' : 'rgba(0, 0, 0, 0.3)',
-          backdropFilter: 'var(--glass-blur)',
-          WebkitBackdropFilter: 'var(--glass-blur)',
-          borderBottom: '1px solid var(--border-subtle)',
-          borderRadius: 'var(--radius-2xl) var(--radius-2xl) 0 0',
-          pointerEvents: 'none',
-        }}
-      >
-        <div className="flex items-center gap-2" style={{ pointerEvents: 'auto' }}>
-          <span className="badge badge-accent" style={{ fontSize: 10, padding: '3px 8px' }}>
-            {(() => {
-              const labels: Record<string, string> = {
-                select: 'Auswahl', freehand: 'Freihand', rect: 'Rechteck',
-                'rounded-rect': 'Abgerundet', ellipse: 'Ellipse', triangle: 'Dreieck',
-                polygon: 'Polygon', star: 'Stern', line: 'Linie', arrow: 'Pfeil',
-                path: 'Pfad', text: 'Text', dimension: 'Bemaßung', 'print-area': 'Ausschnitt',
-              }
-              return `Aktiv: ${labels[activeTool] || activeTool}`
-            })()}
-          </span>
-          {hasScaleOverride && (
-            <span className="badge" style={{ fontSize: 10, padding: '3px 8px', background: 'rgba(240, 160, 48, 0.15)', color: '#f0a030' }}>
-              Ausschnitt-Override
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2 text-[10px]" style={{ color: 'var(--text-muted)' }}>
-          Scroll = Zoom · Space = Pan
-        </div>
-      </div>
-
       <Stage
         ref={stageRef}
         width={canvasSize.width}

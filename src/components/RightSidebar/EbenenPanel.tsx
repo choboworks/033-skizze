@@ -2,44 +2,12 @@ import { useAppStore } from '@/store'
 import {
   Eye,
   EyeOff,
-  Square,
-  RectangleHorizontal,
-  CircleIcon,
-  Triangle,
-  Minus,
-  ArrowUpRight,
-  Hexagon,
-  Spline,
-  Star,
-  Pencil,
   Lock,
   Unlock,
   Settings2,
-  Ruler,
-  Type,
-  Route,
 } from 'lucide-react'
 import { useState, useCallback } from 'react'
-import type { CanvasObject, ShapeType } from '@/types'
-
-function ObjectIcon({ type }: { type: ShapeType }) {
-  switch (type) {
-    case 'rect': return <Square size={15} />
-    case 'rounded-rect': return <RectangleHorizontal size={15} />
-    case 'ellipse': return <CircleIcon size={15} />
-    case 'triangle': return <Triangle size={15} />
-    case 'line': return <Minus size={15} />
-    case 'arrow': return <ArrowUpRight size={15} />
-    case 'polygon': return <Hexagon size={15} />
-    case 'path': return <Spline size={15} />
-    case 'star': return <Star size={15} />
-    case 'freehand': return <Pencil size={15} />
-    case 'text': return <Type size={15} />
-    case 'dimension': return <Ruler size={15} />
-    case 'smartroad': return <Route size={15} />
-    default: return <Square size={15} />
-  }
-}
+import type { CanvasObject } from '@/types'
 
 function objectDisplayName(obj: CanvasObject, index: number): string {
   if (obj.label) return obj.label
@@ -68,7 +36,6 @@ export function EbenenPanel() {
   const selection = useAppStore((s) => s.selection)
   const select = useAppStore((s) => s.select)
   const updateObject = useAppStore((s) => s.updateObject)
-  const removeObject = useAppStore((s) => s.removeObject)
   const openProperties = useAppStore((s) => s.openProperties)
   const reorderObjects = useAppStore((s) => s.reorderObjects)
 
@@ -150,7 +117,7 @@ export function EbenenPanel() {
           </div>
         )}
         <div className="flex flex-col gap-2">
-          {displayOrder.map((objId, idx) => {
+          {displayOrder.map((objId) => {
             const obj = objects[objId]
             if (!obj) return null
 

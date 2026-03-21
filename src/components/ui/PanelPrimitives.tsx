@@ -4,11 +4,54 @@
  */
 
 import type { ReactNode } from 'react'
+import { X } from 'lucide-react'
+
+/** Unified panel header with icon, title, optional subtitle, and close button */
+export function PanelHeader({
+  icon,
+  title,
+  subtitle,
+  onClose,
+  onMouseDown,
+  className = '',
+}: {
+  icon?: ReactNode
+  title: string
+  subtitle?: string
+  onClose: () => void
+  onMouseDown?: (e: React.MouseEvent) => void
+  className?: string
+}) {
+  return (
+    <div
+      className={`panel-popover-header ${className}`}
+      onMouseDown={onMouseDown}
+      style={onMouseDown ? { cursor: 'grab' } : undefined}
+    >
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        {icon}
+        <div className="min-w-0">
+          <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--text)' }}>
+            {title}
+          </div>
+          {subtitle && (
+            <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+              {subtitle}
+            </div>
+          )}
+        </div>
+      </div>
+      <button className="panel-header-btn" onClick={onClose}>
+        <X size={16} />
+      </button>
+    </div>
+  )
+}
 
 /** Section with uppercase title + divider */
 export function PanelSection({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div style={{ padding: '14px 14px 16px 14px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+    <div className="panel-section">
       <span
         className="text-[10px] font-bold uppercase tracking-[0.08em] block mb-2"
         style={{ color: 'var(--text-muted)' }}
@@ -83,35 +126,17 @@ export function PanelSegmented<T extends string>({
   return (
     <>
       <span className="text-[13px] block mb-2" style={{ color: 'var(--text)' }}>{label}</span>
-      <div
-        className="flex gap-1"
-        style={{
-          padding: 4,
-          borderRadius: 14,
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.05)',
-        }}
-      >
-        {options.map((opt) => {
-          const active = value === opt.id
-          return (
-            <button
-              key={opt.id}
-              onClick={() => onChange(opt.id)}
-              data-active={active}
-              className="flex-1 h-9 text-[12px] font-semibold text-center transition-all"
-              style={{
-                borderRadius: 10,
-                border: 'none',
-                cursor: 'pointer',
-                background: active ? 'var(--accent)' : 'transparent',
-                color: active ? '#031018' : 'var(--text-muted)',
-              }}
-            >
-              {opt.label}
-            </button>
-          )
-        })}
+      <div className="segmented-control">
+        {options.map((opt) => (
+          <button
+            key={opt.id}
+            onClick={() => onChange(opt.id)}
+            data-active={value === opt.id}
+            className="segmented-option"
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
     </>
   )

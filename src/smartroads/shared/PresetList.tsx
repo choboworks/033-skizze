@@ -1,9 +1,8 @@
-import { Save, FolderOpen } from 'lucide-react'
 import type { StraightRoadState } from '../types'
 import { createStrip, generateLaneMarkings } from '../constants'
 
 // ============================================================
-// PresetList – Large touch-ready preset grid + save/load
+// Preset definitions for straight road segments
 // ============================================================
 
 interface PresetDef {
@@ -12,7 +11,7 @@ interface PresetDef {
   create: () => StraightRoadState
 }
 
-const STRAIGHT_PRESETS: PresetDef[] = [
+export const STRAIGHT_PRESETS: PresetDef[] = [
   {
     id: 'residential', label: 'Erschließungsstr.',
     create: () => {
@@ -84,73 +83,3 @@ const STRAIGHT_PRESETS: PresetDef[] = [
     },
   },
 ]
-
-interface Props {
-  onLoadPreset: (state: StraightRoadState) => void
-}
-
-export function PresetList({ onLoadPreset }: Props) {
-  return (
-    <div className="px-4 pb-4 flex flex-col gap-3" style={{ borderTop: '1px solid var(--border)' }}>
-      {/* Header */}
-      <div className="pt-4 text-[10px] font-bold uppercase tracking-[0.15em] text-center" style={{ color: 'var(--text-muted)' }}>
-        Presets
-      </div>
-
-      {/* Preset grid — 2 columns, large touch targets */}
-      <div className="grid grid-cols-2 gap-2">
-        {STRAIGHT_PRESETS.map((p) => (
-          <button
-            key={p.id}
-            className="flex items-center justify-center rounded-lg text-[12px] font-medium transition-colors text-center"
-            style={{
-              height: 40,
-              background: 'var(--surface)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-muted)',
-            }}
-            onClick={() => onLoadPreset(p.create())}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.background = 'var(--accent-muted)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'var(--surface)' }}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Save / Load actions */}
-      <div className="flex gap-2 pt-1">
-        <button
-          className="flex-1 flex items-center justify-center gap-2 rounded-lg text-[12px] font-medium transition-colors"
-          style={{
-            height: 40,
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            color: 'var(--text-muted)',
-          }}
-          title="Aktuellen Querschnitt als Preset speichern"
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.background = 'var(--accent-muted)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'var(--surface)' }}
-        >
-          <Save size={14} />
-          Speichern
-        </button>
-        <button
-          className="flex-1 flex items-center justify-center gap-2 rounded-lg text-[12px] font-medium transition-colors"
-          style={{
-            height: 40,
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            color: 'var(--text-muted)',
-          }}
-          title="Gespeichertes Preset laden"
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.background = 'var(--accent-muted)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'var(--surface)' }}
-        >
-          <FolderOpen size={14} />
-          Laden
-        </button>
-      </div>
-    </div>
-  )
-}

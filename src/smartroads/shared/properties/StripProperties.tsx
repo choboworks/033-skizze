@@ -8,7 +8,6 @@ import { STRIP_LABELS, STRIP_MIN_WIDTHS, FIXED_WIDTH_STRIPS, VARIANT_LABELS } fr
 // StripProperties – Properties panel for a selected strip
 // ============================================================
 
-// Variant options per strip type
 const STRIP_VARIANT_OPTIONS: Partial<Record<string, { value: StripVariant; label: string }[]>> = {
   lane: [
     { value: 'standard', label: 'Standard' },
@@ -42,7 +41,6 @@ const STRIP_VARIANT_OPTIONS: Partial<Record<string, { value: StripVariant; label
   ],
 }
 
-// --- Width stepper ---
 function WidthStepper({ value, onChange, min }: { value: number; onChange: (v: number) => void; min: number }) {
   const [editing, setEditing] = useState(false)
   const [editValue, setEditValue] = useState(String(value))
@@ -54,13 +52,10 @@ function WidthStepper({ value, onChange, min }: { value: number; onChange: (v: n
   }
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center" style={{ gap: 8 }}>
       <button
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+        className="toggle-btn w-8 h-8 rounded-lg flex items-center justify-center"
         onClick={() => onChange(Math.max(min, Math.round((value - 0.25) * 100) / 100))}
-        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)' }}
-        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)' }}
       >
         <Minus size={13} />
       </button>
@@ -72,25 +67,20 @@ function WidthStepper({ value, onChange, min }: { value: number; onChange: (v: n
           onBlur={commit}
           onKeyDown={(e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
           className="w-16 h-8 text-center text-[13px] font-mono rounded-lg"
-          style={{ background: 'var(--bg)', border: '1px solid var(--accent)', color: 'var(--text)', outline: 'none' }}
+          style={{ background: 'var(--panel-control-bg)', border: '1px solid var(--accent)', color: 'var(--text)', outline: 'none' }}
         />
       ) : (
         <button
-          className="w-16 h-8 text-center text-[13px] font-mono rounded-lg transition-colors"
-          style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
+          className="toggle-btn w-16 h-8 text-center text-[13px] font-mono rounded-lg"
+          style={{ color: 'var(--text)' }}
           onClick={() => { setEditValue(String(value)); setEditing(true) }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--text-muted)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)' }}
         >
           {value}m
         </button>
       )}
       <button
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+        className="toggle-btn w-8 h-8 rounded-lg flex items-center justify-center"
         onClick={() => onChange(Math.round((value + 0.25) * 100) / 100)}
-        onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)' }}
-        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)' }}
       >
         <Plus size={13} />
       </button>
@@ -111,7 +101,7 @@ export function StripProperties({ strip, onUpdate }: Props) {
   const hasDirection = strip.type === 'lane' || strip.type === 'bus'
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col" style={{ gap: 14 }}>
       {/* Type label */}
       <div className="text-[13px] font-semibold text-center" style={{ color: 'var(--text)' }}>
         {label}
@@ -120,12 +110,12 @@ export function StripProperties({ strip, onUpdate }: Props) {
       {/* Width */}
       {!isFixed ? (
         <div className="flex items-center justify-between">
-          <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>Breite</span>
+          <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>Breite</span>
           <WidthStepper value={strip.width} onChange={(w) => onUpdate({ width: w })} min={minWidth} />
         </div>
       ) : (
         <div className="flex items-center justify-between">
-          <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>Breite</span>
+          <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>Breite</span>
           <span className="text-[13px] font-mono" style={{ color: 'var(--text-muted)' }}>{strip.width}m (fix)</span>
         </div>
       )}
@@ -133,32 +123,26 @@ export function StripProperties({ strip, onUpdate }: Props) {
       {/* Direction (lanes only) */}
       {hasDirection && (
         <div className="flex items-center justify-between">
-          <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>Richtung</span>
+          <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>Richtung</span>
           <ToggleGroup.Root
             type="single"
             value={strip.direction || 'up'}
             onValueChange={(v) => { if (v) onUpdate({ direction: v as 'up' | 'down' }) }}
-            className="flex gap-1"
+            className="flex" style={{ gap: 6 }}
           >
             <ToggleGroup.Item
               value="up"
-              className="w-10 h-8 text-[14px] rounded-lg flex items-center justify-center transition-colors"
-              style={{
-                background: strip.direction === 'up' ? 'var(--accent-muted)' : 'var(--surface)',
-                color: strip.direction === 'up' ? 'var(--accent)' : 'var(--text-muted)',
-                border: strip.direction === 'up' ? '1px solid var(--accent)' : '1px solid var(--border)',
-              }}
+              className="toggle-btn flex items-center justify-center"
+              style={{ width: 28, height: 28, borderRadius: 9999, fontSize: 14 }}
+              data-active={strip.direction === 'up'}
             >
               ↑
             </ToggleGroup.Item>
             <ToggleGroup.Item
               value="down"
-              className="w-10 h-8 text-[14px] rounded-lg flex items-center justify-center transition-colors"
-              style={{
-                background: strip.direction === 'down' ? 'var(--accent-muted)' : 'var(--surface)',
-                color: strip.direction === 'down' ? 'var(--accent)' : 'var(--text-muted)',
-                border: strip.direction === 'down' ? '1px solid var(--accent)' : '1px solid var(--border)',
-              }}
+              className="toggle-btn flex items-center justify-center"
+              style={{ width: 28, height: 28, borderRadius: 9999, fontSize: 14 }}
+              data-active={strip.direction === 'down'}
             >
               ↓
             </ToggleGroup.Item>
@@ -169,24 +153,21 @@ export function StripProperties({ strip, onUpdate }: Props) {
       {/* Variant */}
       {variants && variants.length > 1 && (
         <div className="flex flex-col gap-2">
-          <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>Variante</span>
+          <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>Variante</span>
           <ToggleGroup.Root
             type="single"
             value={strip.variant}
             onValueChange={(v) => { if (v) onUpdate({ variant: v as StripVariant }) }}
-            className="flex flex-wrap gap-1"
+            className="flex flex-wrap"
+            style={{ gap: 6, rowGap: 8 }}
           >
             {variants.map((v) => (
               <ToggleGroup.Item
                 key={v.value}
                 value={v.value}
-                className="flex-1 h-8 text-[11px] font-medium rounded-lg flex items-center justify-center transition-colors"
-                style={{
-                  minWidth: 70,
-                  background: strip.variant === v.value ? 'var(--accent-muted)' : 'var(--surface)',
-                  color: strip.variant === v.value ? 'var(--accent)' : 'var(--text-muted)',
-                  border: strip.variant === v.value ? '1px solid var(--accent)' : '1px solid var(--border)',
-                }}
+                className="toggle-btn flex items-center justify-center"
+                style={{ height: 28, padding: '0 10px', borderRadius: 9999, fontSize: 10.5, fontWeight: 600 }}
+                data-active={strip.variant === v.value}
                 title={VARIANT_LABELS[v.value] || v.label}
               >
                 {v.label}

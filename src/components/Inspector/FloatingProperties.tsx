@@ -1,9 +1,10 @@
 import { useAppStore } from '@/store'
-import { X, GripHorizontal, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline } from 'lucide-react'
+import { GripHorizontal, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline } from 'lucide-react'
 import { ColorPicker } from './ColorPicker'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { CanvasObject, ShapeType } from '@/types'
 import {
+  PanelHeader,
   PanelSection,
   PanelSlider,
   PanelSpacer,
@@ -103,36 +104,21 @@ export function FloatingProperties() {
 
   return (
     <div
-      className="fixed z-50 select-none overflow-hidden anim-pop-in"
+      className="fixed z-50 select-none overflow-hidden anim-pop-in panel-shell-elevated"
       style={{
         left: pos.x,
         top: pos.y,
         width: PANEL_W,
-        borderRadius: 22,
-        background: 'linear-gradient(180deg, rgba(20,24,32,0.96), rgba(14,18,24,0.94))',
-        border: '1px solid rgba(255,255,255,0.10)',
-        boxShadow: '0 24px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04)',
       }}
     >
-      {/* Title Bar */}
-      <div
-        className="flex items-center gap-3 cursor-grab active:cursor-grabbing"
-        style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+      <PanelHeader
+        icon={<GripHorizontal size={16} style={{ color: 'var(--text-muted)' }} />}
+        title={displayName}
+        subtitle={`${typeLabel(obj.type)} – Eigenschaften`}
+        onClose={closeProperties}
         onMouseDown={onDragStart}
-      >
-        <GripHorizontal size={16} style={{ color: 'var(--text-muted)' }} />
-        <div className="flex-1 min-w-0">
-          <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--text)' }}>
-            {displayName}
-          </div>
-          <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
-            {typeLabel(obj.type)} – Eigenschaften
-          </div>
-        </div>
-        <button className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0 }} onClick={closeProperties}>
-          <X size={16} />
-        </button>
-      </div>
+        className="active:cursor-grabbing"
+      />
 
       {/* Content */}
       <div className="max-h-[65vh] overflow-y-auto">

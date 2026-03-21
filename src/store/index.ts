@@ -14,6 +14,7 @@ const createDefaultDocument = (): DocumentMeta => ({
   date: new Date().toISOString().split('T')[0],
   officer: '',
   department: '',
+  subdivision: '',
   createdAt: Date.now(),
   updatedAt: Date.now(),
 })
@@ -96,11 +97,12 @@ export const useAppStore = create<AppState>()(
       resetView: () =>
         set((state) => {
           const { width, height } = state.canvasSize
-          const padding = 40
-          const zoom = Math.min(
+          const padding = 0
+          let zoom = Math.min(
             (width - padding * 2) / PAGE_WIDTH_PX,
             (height - padding * 2) / PAGE_HEIGHT_PX
           )
+          if (zoom >= 0.98 && zoom <= 1.02) zoom = 1
           const x = (width - PAGE_WIDTH_PX * zoom) / 2
           const y = (height - PAGE_HEIGHT_PX * zoom) / 2
           return { viewport: { x, y, zoom } }
