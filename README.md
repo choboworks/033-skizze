@@ -2,7 +2,7 @@
   <img src="public/logo.png" alt="033-Skizze" width="100" />
 </p>
 
-<h1 align="center">033-Skizze V2</h1>
+<h1 align="center">033-Skizze</h1>
 
 <p align="center">
   <strong>Professionelle Verkehrsunfallskizzen fur den polizeilichen Einsatz</strong><br>
@@ -217,14 +217,12 @@ Single Zustand Store. Canvas, Ebenen-Manager, Properties, Toolbar und SmartRoad-
 
 ## Roadmap
 
-- [x] **Phase 1** — Foundation (Canvas, Viewport, Layout, Theme)
-- [x] **Phase 2** — Zeichenwerkzeuge (Freihand, 9 Formen, Text, Bemassung)
-- [x] **Phase 3** — SmartRoads Constrained Editor (Gerade)
-- [x] **Phase 3b** — Ausschnitt-Tool, Masstab-Verfeinerung, Editor Properties
-- [x] **Phase 3c** — Light Mode, Undo/Redo, UX-Features, Metadaten, Auto-Header
+- [x] **Phase 1** — Canvas, Viewport, Layout, Theme
+- [x] **Phase 2** — Zeichenwerkzeuge, Formen, Text, Bemassung
+- [x] **Phase 3** — SmartRoads, Ausschnitt-Tool, Metadaten, UX
 - [ ] **Phase 4** — SmartRoads: Kurven, Kreuzungen, Kreisverkehre
-- [ ] **Phase 5** — SVG-Fahrzeuge + Objekt-Bibliothek
-- [ ] **Phase 6** — Export (PDF/PNG/SVG), Save/Load, Auto-Save
+- [ ] **Phase 5** — SVG-Elemente + Objekt-Bibliothek
+- [ ] **Phase 6** — Export, Save/Load
 
 ---
 
