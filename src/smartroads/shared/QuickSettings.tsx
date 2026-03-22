@@ -69,8 +69,7 @@ function NumberStepper({ value, onChange, min = 1, max = 999, step = 1, unit = '
       ) : (
         <button
           className="toggle-btn text-center text-[11px] font-semibold font-mono"
-        style={{ width: 48, height: 28, borderRadius: 10 }}
-          style={{ color: 'var(--text)' }}
+          style={{ width: 48, height: 28, borderRadius: 10, color: 'var(--text)' }}
           onClick={() => { setEditValue(String(value)); setEditing(true) }}
         >
           {value}{unit}

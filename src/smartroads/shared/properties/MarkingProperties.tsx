@@ -1,24 +1,10 @@
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import type { Marking, MarkingVariant } from '../../types'
+import { MARKING_TYPE_LABELS } from '@/constants/shared'
 
 // ============================================================
 // MarkingProperties – Properties panel for a selected marking
 // ============================================================
-
-const MARKING_TYPE_LABELS: Record<string, string> = {
-  centerline: 'Leitlinie',
-  laneboundary: 'Begrenzung',
-  crosswalk: 'Zebrastreifen',
-  stopline: 'Haltelinie',
-  arrow: 'Richtungspfeil',
-  'blocked-area': 'Sperrfläche',
-  'yield-line': 'Wartelinie',
-  'bike-crossing': 'Radfurt',
-  'bus-stop': 'Bushaltestelle',
-  'speed-limit': 'Tempo',
-  'parking-marking': 'Parkfläche',
-  'free-line': 'Freie Linie',
-}
 
 const MARKING_VARIANT_OPTIONS: Partial<Record<string, { value: MarkingVariant; label: string }[]>> = {
   centerline: [

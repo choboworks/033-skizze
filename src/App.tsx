@@ -44,6 +44,8 @@ export default function App() {
     const realWidth = totalWidth(state.strips)
     const realHeight = state.length
 
+    let targetId: string | undefined
+
     if (roadEditor?.roadId === '__new__') {
       const newObj: CanvasObject = {
         id: crypto.randomUUID(),
@@ -53,7 +55,7 @@ export default function App() {
         layerId: '',
         label: 'Straße',
         x: 0, y: 0,
-        xMeters: 0, yMeters: 0, // temporary, centered after scale calc
+        xMeters: 0, yMeters: 0,
         width: realWidth,
         height: realHeight,
         rotation: 0,
@@ -68,41 +70,27 @@ export default function App() {
         realHeight,
       }
       store.addObject(newObj)
-      store.recalculateScale()
-      // Center on A4 page at the NEW scale
-      const newScale = useAppStore.getState().scale.currentScale
-      const pageWidthM = pixelsToMeters(PAGE_WIDTH_PX, newScale)
-      const pageHeightM = pixelsToMeters(PAGE_HEIGHT_PX, newScale)
-      store.updateObject(newObj.id, {
-        xMeters: (pageWidthM - realWidth) / 2,
-        yMeters: (pageHeightM - realHeight) / 2,
-      })
       store.select([newObj.id])
+      targetId = newObj.id
     } else if (roadEditor?.roadId) {
-      // Update existing SmartRoad object
       store.updateObject(roadEditor.roadId, {
         editorState,
         realWidth,
         realHeight,
       })
+      targetId = roadEditor.roadId
     }
 
-    // Recalculate scale and re-center all SmartRoads
+    // Recalculate scale and center the affected road
     store.recalculateScale()
-    const finalScale = useAppStore.getState().scale.currentScale
-    const pgW = pixelsToMeters(PAGE_WIDTH_PX, finalScale)
-    const pgH = pixelsToMeters(PAGE_HEIGHT_PX, finalScale)
-
-    // Re-center the affected road
-    const targetId = roadEditor?.roadId === '__new__' ? store.objectOrder[store.objectOrder.length - 1] : roadEditor?.roadId
     if (targetId) {
-      const obj = useAppStore.getState().objects[targetId]
-      if (obj?.type === 'smartroad') {
-        store.updateObject(targetId, {
-          xMeters: (pgW - (obj.realWidth || 0)) / 2,
-          yMeters: (pgH - (obj.realHeight || 0)) / 2,
-        })
-      }
+      const finalScale = useAppStore.getState().scale.currentScale
+      const pgW = pixelsToMeters(PAGE_WIDTH_PX, finalScale)
+      const pgH = pixelsToMeters(PAGE_HEIGHT_PX, finalScale)
+      store.updateObject(targetId, {
+        xMeters: (pgW - realWidth) / 2,
+        yMeters: (pgH - realHeight) / 2,
+      })
     }
 
     store.closeRoadEditor()

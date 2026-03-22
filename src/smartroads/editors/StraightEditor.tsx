@@ -56,18 +56,24 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
   }, [])
 
   const handleDeleteStrip = useCallback((id: string) => {
-    setStrips(prev => prev.filter(s => s.id !== id))
+    setStrips(prev => {
+      const updated = prev.filter(s => s.id !== id)
+      const newMarkings = generateLaneMarkings(updated, markings, length, roadClass)
+      setMarkings(newMarkings)
+      return updated
+    })
     if (selectedStripId === id) { setSelectedStripId(null); setPropertiesOpen(false) }
-  }, [selectedStripId])
+  }, [selectedStripId, markings, length, roadClass])
 
   const handleAddStrip = useCallback((type: StripType, variant: StripVariant, side: 'left' | 'right') => {
     const newStrip = createStrip(type, variant)
-    if (side === 'left') {
-      setStrips(prev => [newStrip, ...prev])
-    } else {
-      setStrips(prev => [...prev, newStrip])
-    }
-  }, [])
+    setStrips(prev => {
+      const updated = side === 'left' ? [newStrip, ...prev] : [...prev, newStrip]
+      const newMarkings = generateLaneMarkings(updated, markings, length, roadClass)
+      setMarkings(newMarkings)
+      return updated
+    })
+  }, [markings, length, roadClass])
 
   // --- Marking operations ---
   const handleAddMarking = useCallback((type: MarkingType, variant: MarkingVariant) => {

@@ -53,8 +53,9 @@ export function useKeyboard() {
         // Delete / Backspace
         if (key === 'delete' || key === 'backspace') {
           e.preventDefault()
+          const objects = useAppStore.getState().objects
           for (const id of selection) {
-            removeObject(id)
+            if (!objects[id]?.locked) removeObject(id)
           }
           clearSelection()
           return

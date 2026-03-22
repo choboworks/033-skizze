@@ -29,7 +29,7 @@ function TextShape({
       rectRef.current.height(textRef.current.height())
       rectRef.current.getLayer()?.batchDraw()
     }
-  })
+  }, [hasBg, obj.text, obj.fontSize, obj.fontStyle, obj.width])
 
   return (
     <Group
@@ -201,6 +201,7 @@ function ShapeRenderer({
   const updateObject = useAppStore((s) => s.updateObject)
   const editingTextId = useAppStore((s) => s.editingTextId)
   const activeTool = useAppStore((s) => s.activeTool)
+  const hasViewportOverride = useAppStore((s) => !!s.scale.viewport)
 
   const registerRef = useCallback(
     (node: Konva.Node | null) => {
@@ -219,7 +220,7 @@ function ShapeRenderer({
     y: obj.y,
     rotation: obj.rotation,
     opacity: obj.opacity,
-    draggable: !obj.locked && (activeTool === 'select' || (activeTool === 'print-area' && !!useAppStore.getState().scale.viewport)),
+    draggable: !obj.locked && (activeTool === 'select' || (activeTool === 'print-area' && hasViewportOverride)),
     onClick: (e: Konva.KonvaEventObject<MouseEvent>) => onSelect(obj.id, e),
     onDblClick: () => onDoubleClick(obj.id),
     onDblTap: () => onDoubleClick(obj.id),

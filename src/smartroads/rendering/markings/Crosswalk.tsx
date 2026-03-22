@@ -15,7 +15,7 @@ interface Props {
 
 export function Crosswalk({ marking, draggable, selected, snapPositions, onDragEnd, onClick, onDoubleClick, onDragging }: Props) {
   const width = marking.width || 10
-  const depth = Math.max(3.0, marking.width ? 4.0 : 4.0)
+  const depth = 4.0
   const stripeW = 0.50
   const gap = 0.50
 

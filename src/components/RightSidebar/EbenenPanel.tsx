@@ -8,17 +8,7 @@ import {
 } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import type { CanvasObject } from '@/types'
-
-function objectDisplayName(obj: CanvasObject, index: number): string {
-  if (obj.label) return obj.label
-  const typeNames: Record<string, string> = {
-    rect: 'Rechteck', 'rounded-rect': 'Abgerundet', ellipse: 'Ellipse',
-    triangle: 'Dreieck', line: 'Linie', arrow: 'Pfeil', polygon: 'Polygon',
-    path: 'Pfad', star: 'Stern', freehand: 'Freihand', text: 'Text',
-    image: 'Bild', dimension: 'Bemaßung', smartroad: 'Straße',
-  }
-  return `${typeNames[obj.type] || obj.type} ${index + 1}`
-}
+import { objectDisplayName } from '@/utils/objectHelpers'
 
 function objectTypeName(obj: CanvasObject): string {
   const types: Record<string, string> = {

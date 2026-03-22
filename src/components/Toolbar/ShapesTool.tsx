@@ -20,12 +20,7 @@ import {
   PanelColorLabel,
 } from '@/components/ui/PanelPrimitives'
 import type { LucideIcon } from 'lucide-react'
-
-const LINE_STYLES = [
-  { id: 'solid' as const, label: 'Linie' },
-  { id: 'dashed' as const, label: 'Striche' },
-  { id: 'dotted' as const, label: 'Punkte' },
-]
+import { LINE_STYLES } from '@/constants/shared'
 
 interface ShapeDef {
   id: string

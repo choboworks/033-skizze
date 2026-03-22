@@ -5,20 +5,12 @@ import {
 } from 'lucide-react'
 import type { Strip, Marking } from '../types'
 import { STRIP_LABELS, STRIP_COLORS } from '../constants'
+import { MARKING_TYPE_LABELS } from '@/constants/shared'
 
 // ============================================================
 // EditorLayerManager – Ebenen-Manager inside the SmartRoad editor
 // Mirrors the main app's LayerManager design.
 // ============================================================
-
-const MARKING_LABELS: Record<string, string> = {
-  centerline: 'Leitlinie',
-  laneboundary: 'Begrenzung',
-  crosswalk: 'Zebrastreifen',
-  stopline: 'Haltelinie',
-  arrow: 'Richtungspfeil',
-  'blocked-area': 'Sperrfläche',
-}
 
 // --- Icons ---
 function StripIcon({ type }: { type: string }) {
@@ -78,7 +70,7 @@ export function EditorLayerManager({
     ...markings.map((m) => ({
       id: m.id,
       kind: 'marking' as const,
-      label: MARKING_LABELS[m.type] || m.type,
+      label: MARKING_TYPE_LABELS[m.type] || m.type,
       icon: <MarkingIcon type={m.type} />,
       color: '#ffffff',
     })),

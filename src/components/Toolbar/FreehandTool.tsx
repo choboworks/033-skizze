@@ -10,12 +10,7 @@ import {
   PanelSegmented,
   PanelColorLabel,
 } from '@/components/ui/PanelPrimitives'
-
-const LINE_STYLES = [
-  { id: 'solid' as const, label: 'Linie' },
-  { id: 'dashed' as const, label: 'Striche' },
-  { id: 'dotted' as const, label: 'Punkte' },
-]
+import { LINE_STYLES } from '@/constants/shared'
 
 export function FreehandToolPopover({
   onClose,

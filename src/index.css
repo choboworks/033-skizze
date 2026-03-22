@@ -15,20 +15,6 @@
    033-Skizze – Design Tokens (Glassmorphism)
    ============================================================ */
 
-@theme {
-  --color-bg: #0b0d12;
-  --color-surface: rgba(255, 255, 255, 0.05);
-  --color-surface-hover: rgba(255, 255, 255, 0.08);
-  --color-accent: #38bdf8;
-  --color-border: rgba(255, 255, 255, 0.10);
-  --color-text: rgba(255, 255, 255, 0.95);
-  --color-text-muted: rgba(255, 255, 255, 0.45);
-  --color-canvas-bg: #0f1218;
-  --color-paper: #ffffff;
-  --color-danger: #ef4444;
-  --color-success: #34d399;
-}
-
 /* ============================================================
    CSS Custom Properties for runtime theme switching
    ============================================================ */
@@ -84,7 +70,6 @@
   --duration-hover: 120ms;
   --duration-press: 80ms;
   --duration-open: 180ms;
-  --duration-close: 140ms;
   --duration-micro: 100ms;
 
   /* Radii — controlled for glassmorphism */
@@ -290,14 +275,6 @@ html, body, #root {
   animation: slideInLeft var(--duration-open) var(--ease-out-soft) both;
 }
 
-.anim-slide-right {
-  animation: slideInRight var(--duration-open) var(--ease-out-soft) both;
-}
-
-.anim-slide-down {
-  animation: slideDown var(--duration-open) var(--ease-out-soft) both;
-}
-
 .anim-scale-in {
   animation: scaleIn var(--duration-open) var(--ease-out-soft) both;
 }
@@ -317,28 +294,6 @@ html, body, #root {
 ::selection {
   background: var(--accent);
   color: white;
-}
-
-/* ============================================================
-   Panel Section Headers (reusable)
-   ============================================================ */
-
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-sm) var(--space-md);
-  min-height: 36px;
-  border-bottom: 1px solid var(--border);
-  user-select: none;
-}
-
-.panel-header-title {
-  font-size: var(--font-size-section);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
 }
 
 /* ============================================================
@@ -450,12 +405,6 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background: rgba(56, 189, 248, 0.14);
   color: var(--accent);
   border-color: rgba(56, 189, 248, 0.20);
-}
-
-.badge-success {
-  background: rgba(52, 211, 153, 0.15);
-  color: var(--success);
-  border-color: rgba(52, 211, 153, 0.20);
 }
 
 /* ============================================================

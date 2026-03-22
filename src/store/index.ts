@@ -1,10 +1,7 @@
 import { create } from 'zustand'
 import { temporal } from 'zundo'
 import { PAGE_WIDTH_PX, PAGE_HEIGHT_PX, calculateAutoScale } from '@/utils/scale'
-import type { AppState, Layer, CanvasObject, Theme, ToolType, ViewportState, PanelStates, ScaleState, ScaleViewportOverride, DocumentMeta } from '@/types'
-
-// --- Default Layers (empty – objects are shown directly) ---
-const DEFAULT_LAYERS: Layer[] = []
+import type { AppState, CanvasObject, Theme, ToolType, ViewportState, PanelStates, ScaleState, ScaleViewportOverride, DocumentMeta } from '@/types'
 
 // --- Default Document ---
 const createDefaultDocument = (): DocumentMeta => ({
@@ -45,8 +42,7 @@ export const useAppStore = create<AppState>()(
       // Canvas container size (updated by SketchCanvas)
       canvasSize: { width: 800, height: 600 },
 
-      // Objects & Layers
-      layers: DEFAULT_LAYERS,
+      // Objects
       objects: {},
       objectOrder: [],
       selection: [],
@@ -149,46 +145,12 @@ export const useAppStore = create<AppState>()(
             objects: remaining,
             objectOrder: state.objectOrder.filter((oid) => oid !== id),
             selection: state.selection.filter((sid) => sid !== id),
+            propertiesPanelId: state.propertiesPanelId === id ? null : state.propertiesPanelId,
           }
         }),
 
       reorderObjects: (orderedIds: string[]) =>
         set({ objectOrder: orderedIds }),
-
-      // Layers
-      addLayer: (layer: Layer) =>
-        set((state) => ({ layers: [...state.layers, layer] })),
-
-      updateLayer: (id: string, changes: Partial<Layer>) =>
-        set((state) => ({
-          layers: state.layers.map((l) => (l.id === id ? { ...l, ...changes } : l)),
-        })),
-
-      removeLayer: (id: string) =>
-        set((state) => ({
-          layers: state.layers.filter((l) => l.id !== id),
-        })),
-
-      reorderLayers: (layerIds: string[]) =>
-        set((state) => {
-          const layerMap = new Map(state.layers.map((l) => [l.id, l]))
-          const reordered = layerIds.map((id) => layerMap.get(id)).filter(Boolean) as Layer[]
-          return { layers: reordered }
-        }),
-
-      toggleLayerVisibility: (id: string) =>
-        set((state) => ({
-          layers: state.layers.map((l) =>
-            l.id === id ? { ...l, visible: !l.visible } : l
-          ),
-        })),
-
-      toggleLayerLock: (id: string) =>
-        set((state) => ({
-          layers: state.layers.map((l) =>
-            l.id === id ? { ...l, locked: !l.locked } : l
-          ),
-        })),
 
       // Panels
       setPanels: (panels: Partial<PanelStates>) =>
@@ -272,14 +234,11 @@ export const useAppStore = create<AppState>()(
       setEditingTextId: (id: string | null) => set({ editingTextId: id }),
     }),
     {
-      // zundo config: exclude UI-only state from undo history
+      // zundo config: only persist meaningful state changes (not UI/tool state)
       partialize: (state) => ({
         document: state.document,
-        layers: state.layers,
         objects: state.objects,
         objectOrder: state.objectOrder,
-        selection: state.selection,
-        activeTool: state.activeTool,
         toolOptions: state.toolOptions,
         scale: state.scale,
       }),

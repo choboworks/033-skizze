@@ -145,16 +145,6 @@ export interface CanvasObject {
   groupId?: string
 }
 
-// --- Layer ---
-export interface Layer {
-  id: string
-  name: string
-  visible: boolean
-  locked: boolean
-  color: string
-  objectIds: string[]
-}
-
 // --- Panel States ---
 export interface PanelStates {
   leftSidebarCollapsed: boolean
@@ -199,8 +189,7 @@ export interface AppState {
   scale: ScaleState
   canvasSize: { width: number; height: number }
 
-  // Objects & Layers (SmartRoads live here too, as type: 'smartroad')
-  layers: Layer[]
+  // Objects (SmartRoads live here too, as type: 'smartroad')
   objects: Record<string, CanvasObject>
   objectOrder: string[]  // z-order: first = bottom, last = top
   selection: string[]
@@ -238,14 +227,6 @@ export interface AppState {
   updateObject: (id: string, changes: Partial<CanvasObject>) => void
   removeObject: (id: string) => void
   reorderObjects: (orderedIds: string[]) => void
-
-  // Actions – Layers
-  addLayer: (layer: Layer) => void
-  updateLayer: (id: string, changes: Partial<Layer>) => void
-  removeLayer: (id: string) => void
-  reorderLayers: (layerIds: string[]) => void
-  toggleLayerVisibility: (id: string) => void
-  toggleLayerLock: (id: string) => void
 
   // Actions – Panels
   setPanels: (panels: Partial<PanelStates>) => void

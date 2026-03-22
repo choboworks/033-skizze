@@ -18,15 +18,14 @@ const DRAWING_TOOLS: Set<string> = new Set([
 ])
 
 function getTargetLayerId(): string {
-  const layers = useAppStore.getState().layers
-  return layers.length > 0 ? layers[layers.length - 1].id : 'default'
+  return 'default'
 }
 
 /** Convert lineStyle to Konva dash array */
 function getLineDash(style: string, strokeWidth: number): number[] | undefined {
   switch (style) {
     case 'dashed': return [strokeWidth * 5, strokeWidth * 4]
-    case 'dotted': return [strokeWidth, strokeWidth * 3]
+    case 'dotted': return [0.1, strokeWidth * 3]
     default: return undefined
   }
 }

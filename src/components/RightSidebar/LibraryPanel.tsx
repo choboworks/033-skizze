@@ -127,6 +127,7 @@ export function LibraryPanel() {
                 setActiveCategory(cat.id)
                 setActiveSubcategory(null)
                 setSearchQuery('')
+                setSearchInput('')
               }}
               data-active={isActive}
               className="category-chip flex items-center rounded-full font-semibold"

@@ -5,20 +5,12 @@ import { STRIP_LABELS } from '../constants'
 import { StripProperties } from './properties/StripProperties'
 import { MarkingProperties } from './properties/MarkingProperties'
 import { PanelHeader } from '@/components/ui/PanelPrimitives'
+import { MARKING_TYPE_LABELS } from '@/constants/shared'
 
 // ============================================================
 // FloatingEditorProperties – Draggable properties modal
 // Same pattern as main app's FloatingProperties.
 // ============================================================
-
-const MARKING_TYPE_LABELS: Record<string, string> = {
-  centerline: 'Leitlinie',
-  laneboundary: 'Begrenzung',
-  crosswalk: 'Zebrastreifen',
-  stopline: 'Haltelinie',
-  arrow: 'Richtungspfeil',
-  'blocked-area': 'Sperrfläche',
-}
 
 interface Props {
   strip: Strip | null
@@ -37,12 +29,6 @@ export function FloatingEditorProperties({ strip, marking, onUpdateStrip, onUpda
   }))
   const dragging = useRef(false)
   const dragOffset = useRef({ x: 0, y: 0 })
-
-  const prevId = useRef(strip?.id || marking?.id)
-  const currentId = strip?.id || marking?.id
-  if (currentId !== prevId.current) {
-    prevId.current = currentId
-  }
 
   const onDragStart = useCallback((e: React.MouseEvent) => {
     dragging.current = true

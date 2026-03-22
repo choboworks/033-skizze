@@ -34,6 +34,7 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
   const groupRef = useRef<Konva.Group>(null)
   const updateObject = useAppStore((s) => s.updateObject)
   const activeTool = useAppStore((s) => s.activeTool)
+  const hasViewportOverride = useAppStore((s) => !!s.scale.viewport)
 
   // Register ref for SelectionTransformer
   useEffect(() => {
@@ -110,7 +111,7 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
       scaleY={scaleFactor}
       opacity={obj.opacity}
       visible={obj.visible}
-      draggable={!obj.locked && (activeTool === 'select' || (activeTool === 'print-area' && !!useAppStore.getState().scale.viewport))}
+      draggable={!obj.locked && (activeTool === 'select' || (activeTool === 'print-area' && hasViewportOverride))}
       onClick={(e) => onSelect?.(obj.id, e)}
       onTap={(e) => onSelect?.(obj.id, e)}
       onDblClick={() => onDoubleClick?.(obj.id)}

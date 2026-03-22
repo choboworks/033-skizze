@@ -51,6 +51,7 @@ function lineStyleToDash(style: string, strokeWidth: number): number[] | undefin
 export function FloatingProperties() {
   const propertiesPanelId = useAppStore((s) => s.propertiesPanelId)
   const objects = useAppStore((s) => s.objects)
+  const objectOrder = useAppStore((s) => s.objectOrder)
   const updateObject = useAppStore((s) => s.updateObject)
   const closeProperties = useAppStore((s) => s.closeProperties)
 
@@ -100,7 +101,7 @@ export function FloatingProperties() {
   if (!obj) return null
 
   const update = (changes: Record<string, unknown>) => updateObject(obj.id, changes)
-  const displayName = obj.label || `${typeLabel(obj.type)} ${Object.keys(objects).indexOf(obj.id) + 1}`
+  const displayName = obj.label || `${typeLabel(obj.type)} ${objectOrder.indexOf(obj.id) + 1}`
 
   return (
     <div
