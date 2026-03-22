@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude --version)",
+      "Bash(npm list:*)",
+      "Bash(claude.exe --version)",
+      "Bash(where claude:*)",
+      "Read(//c/033-Skizze V 2.0/$LOCALAPPDATA/Programs/**)",
+      "Read(//c/033-Skizze V 2.0/$LOCALAPPDATA/**)",
+      "Read(//c/Users/Alex/AppData/Local/**)",
+      "Read(//c/Users/Alex/.claude/**)",
+      "Read(//c/033-Skizze V 2.0/$APPDATA/claude/**)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(node -e \"console.log\\(require.resolve\\(''vite/bin/vite.js''\\)\\)\")",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Read(//c/033-Skizze V 2.0/**)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d.get\\(''''result'''',''''''''\\)[:3000] if isinstance\\(d,dict\\) else str\\(d\\)[:3000]\\)\")",
+      "Bash(done)",
+      "Bash(wc -l *.jsonl)",
+      "Bash(grep -l \"result\" *.jsonl)",
+      "Bash(xargs -I{} grep \"result\" {})",
+      "Bash(npx tsc:*)",
+      "Bash(npx eslint:*)"
+    ]
+  }
+}

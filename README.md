@@ -5,8 +5,8 @@
 <h1 align="center">033-Skizze</h1>
 
 <p align="center">
-  <strong>Professionelle Verkehrsunfallskizzen fur den polizeilichen Einsatz</strong><br>
-  <sub>Figma-Style Web-App — offline-fahig, datenschutzkonform, massstabsgetreu</sub>
+  <strong>Professionelle Verkehrsunfallskizzen für den polizeilichen Einsatz</strong><br>
+  <sub>Figma-Style Web-App — offline-fähig, datenschutzkonform, maßstabsgetreu</sub>
 </p>
 
 <p align="center">
@@ -28,9 +28,9 @@
 
 ## Was ist 033-Skizze?
 
-Ein spezialisiertes Zeichentool fur massstabsgetreue Verkehrsunfallskizzen. Kombiniert die Bedienbarkeit von Figma/Photoshop mit fachspezifischen Features: normkonforme Strassenquerschnitte, automatische Massstabsberechnung, Dienststellen-Datenbank und vorkonfigurierte Objektbibliothek.
+Ein spezialisiertes Zeichentool für maßstabsgetreue Verkehrsunfallskizzen. Kombiniert die Bedienbarkeit von Figma/Photoshop mit fachspezifischen Features: normkonforme Straßenquerschnitte, automatische Maßstabsberechnung, Dienststellen-Datenbank und vorkonfigurierte Objektbibliothek.
 
-> **Drei Komplexitatsschichten** — sofort nutzbar mit Defaults, schnell anpassbar uber Toggles, voll konfigurierbar fur Experten.
+> **Drei Komplexitätsschichten** — sofort nutzbar mit Defaults, schnell anpassbar über Toggles, voll konfigurierbar für Experten.
 
 ---
 
@@ -41,7 +41,7 @@ Ein spezialisiertes Zeichentool fur massstabsgetreue Verkehrsunfallskizzen. Komb
 <td width="50%">
 
 ### SmartRoads
-Geführter Strasseneditor mit garantierter Korrektheit. Strip-System fur Fahrstreifen, Gehwege, Radwege. 6 Presets, RMS-1 konforme Markierungen, interaktive Draufsicht.
+Geführter Straßeneditor mit garantierter Korrektheit. Strip-System für Fahrstreifen, Gehwege, Radwege. 6 Presets, RMS-1-konforme Markierungen, interaktive Draufsicht.
 
 </td>
 <td width="50%">
@@ -55,13 +55,13 @@ Automatisch generierter Dokumentkopf aus Metadaten: Dienststelle, Vorgangsnummer
 <td>
 
 ### Dark & Light Mode
-Glassmorphism-Design mit vollstandigem Light Mode. CSS-Token-System fur konsistente Themes. Professionelle Asthetik in beiden Modi.
+Glassmorphism-Design mit vollständigem Light Mode. CSS-Token-System für konsistente Themes. Professionelle Ästhetik in beiden Modi.
 
 </td>
 <td>
 
 ### Undo/Redo
-Intelligentes Undo-System mit Debounce — bündelt schnelle Anderungen zu einem Eintrag. Ctrl+Z/Y, 50-Schritte-History, Flush-before-Undo.
+Intelligentes Undo-System mit Debounce — bündelt schnelle Änderungen zu einem Eintrag. Ctrl+Z/Y, 50-Schritte-History, Flush-before-Undo.
 
 </td>
 </tr>
@@ -76,41 +76,41 @@ Intelligentes Undo-System mit Debounce — bündelt schnelle Anderungen zu einem
 | Shortcut | Tool | Beschreibung |
 |:--------:|------|-------------|
 | `V` | **Auswahl** | Einzel-/Mehrfachauswahl, Verschieben, Skalieren, Drehen |
-| `P` | **Freihand** | RDP-Glaettung, Strichart, Staerke, Farbe |
+| `P` | **Freihand** | RDP-Glättung, Strichart, Stärke, Farbe |
 | `O` | **Formen** | 9 Shapes: Rechteck, Ellipse, Dreieck, Polygon, Stern, Linie, Pfeil, Pfad |
 | `T` | **Text** | Inline-Editor, Bold/Italic/Underline, Ausrichtung, Farbe + Hintergrund |
-| `M` | **Bemassung** | DIN-Style Zwei-Klick, automatische Meterangabe |
+| `M` | **Bemaßung** | DIN-Style Zwei-Klick, automatische Meterangabe |
 | `A` | **Ausschnitt** | Druckbereich auf A4 definieren, Frame verschieben/skalieren |
 
 ### Tastatur
 
 | Shortcut | Aktion |
 |----------|--------|
-| `Strg+Z` | Rückgangig |
+| `Strg+Z` | Rückgängig |
 | `Strg+Y` / `Strg+Shift+Z` | Wiederholen |
 | `Strg+D` | Duplizieren |
-| `Strg+A` | Alles auswahlen |
+| `Strg+A` | Alles auswählen |
 | `Strg+0` | Ansicht einpassen |
 | `Strg+1` | 100% Zoom |
 | `Leertaste` | Canvas verschieben (halten) |
 | `Shift` | 45°/90°-Snap |
-| `Delete` | Loschen |
-| `Escape` | Abwahlen / Tool zurucksetzen |
-| `Rechtsklick` | Kontextmenu |
+| `Delete` | Löschen |
+| `Escape` | Abwählen / Tool zurücksetzen |
+| `Rechtsklick` | Kontextmenü |
 
 ### Canvas & Viewport
 
 - **DIN A4** — 794 x 1123px, korrektes Seitenformat
 - **Infinite Viewport** — Grauer Arbeitsbereich, Spacebar-Pan, Scroll-Zoom, Mittelmaus-Pan
-- **25 Massstabsstufen** — 1:10 bis 1:5000, vollautomatisch berechnet
+- **25 Maßstabsstufen** — 1:10 bis 1:5000, vollautomatisch berechnet
 - **Zoom-Controls** — +/- Buttons, Einpassen, Klick auf % zum Reset
 
 ### Metadaten & Dokumentkopf
 
-- **Dienststellen-Suche** — Autocomplete uber ~300 niedersachsische Polizeidienststellen
+- **Dienststellen-Suche** — Autocomplete über ~300 niedersächsische Polizeidienststellen
 - **Pflichtfeld-Validierung** — Visuelles Feedback bei leeren Pflichtfeldern
 - **Auto-Header** — Konva-Rendering: Dienststelle, Adresse, Telefon, Vorgangsnummer, Datum, Sachbearbeiter
-- **Unterschriftenblock** — Draggable/resizable, separate vom Header
+- **Unterschriftenblock** — Draggable/resizable, separat vom Header
 
 ### Objekt-Bibliothek
 
@@ -118,18 +118,18 @@ Intelligentes Undo-System mit Debounce — bündelt schnelle Anderungen zu einem
 |-----------|-----------|
 | **SmartRoads** | Gerade, Kurve, Kreuzung, Kreisverkehr |
 | **Fahrzeuge** | PKW, LKW, Zweirad, Bus, Sonderfahrzeuge |
-| **Infrastruktur** | Gebaude, Bordsteine, Leitplanken, Poller |
+| **Infrastruktur** | Gebäude, Bordsteine, Leitplanken, Poller |
 | **Verkehrsregelung** | Ampeln, Verkehrszeichen, Zusatzzeichen |
-| **Umgebung** | Baume, Hecken, Laternen, Bushaltestellen |
+| **Umgebung** | Bäume, Hecken, Laternen, Bushaltestellen |
 | **Markierungen** | Bremsspuren, Splitterfelder, Kollisionspunkte |
 
 ### UX
 
 - **Tooltips** mit Shortcut-Hints auf allen Buttons
-- **Kontextmenu** — Rechtsklick: Duplizieren, Loschen, Vordergrund/Hintergrund, Eigenschaften
+- **Kontextmenü** — Rechtsklick: Duplizieren, Löschen, Vordergrund/Hintergrund, Eigenschaften
 - **Toast-Benachrichtigungen** — Success/Info/Error mit Auto-Dismiss
 - **Ebenen-Manager** — Type-Icons, Drag & Drop Z-Order, Inline-Rename
-- **Floating Properties** — Draggbares Modal mit HSV Color Picker
+- **Floating Properties** — Draggbares Modal mit HSV-Color-Picker
 
 ---
 
@@ -145,13 +145,13 @@ Intelligentes Undo-System mit Debounce — bündelt schnelle Anderungen zu einem
 | | **Tailwind CSS 4** | Utility-First + CSS Custom Properties |
 | | **Radix UI** | Accessible Primitives (Dialog, Accordion, ToggleGroup) |
 | | **Lucide React** | Konsistente Icon-Bibliothek |
-| | **PWA** | Offline-fahig via Precaching |
+| | **PWA** | Offline-fähig via Precaching |
 
 ---
 
 ## Projekt-Struktur
 
-```
+```text
 src/
 ├── components/
 │   ├── Canvas/              # SketchCanvas, CanvasObjects, PageHeader, ContextMenu
@@ -159,7 +159,7 @@ src/
 │   ├── RightSidebar/        # EbenenPanel, LibraryPanel, MetadataPanel, Dienststellen
 │   ├── Inspector/           # FloatingProperties, ColorPicker
 │   ├── TopBar/              # Header mit Actions (Undo/Redo, Save, Export)
-│   ├── StatusBar/           # Zoom-Controls, Masstab, Auswahl-Info
+│   ├── StatusBar/           # Zoom-Controls, Maßstab, Auswahl-Info
 │   └── ui/                  # PanelPrimitives, Toast, Tooltip
 │
 ├── smartroads/              # SmartRoads Constrained Editor
@@ -187,7 +187,7 @@ npm install
 npm run dev
 ```
 
-Offnet `http://localhost:5173` im Browser.
+Öffnet `http://localhost:5173` im Browser.
 
 | Script | Beschreibung |
 |--------|-------------|
@@ -207,18 +207,18 @@ Offnet `http://localhost:5173` im Browser.
 | **Beispiele** | Freihand, Shapes, Text | SmartRoads, Fahrzeuge |
 | **Koordinaten** | Page-Pixel (px) | Meter (m) |
 | **Skalierung** | Frei per Handles | Parametrisch im Editor |
-| **Masstab** | Irrelevant | Bestimmt Darstellungsgrosse |
+| **Maßstab** | Irrelevant | Bestimmt Darstellungsgröße |
 
 ### State
 
-Single Zustand Store. Canvas, Ebenen-Manager, Properties, Toolbar und SmartRoad-Editor rendern dieselben Daten. Kein Sync notig. Undo/Redo via zundo Temporal Middleware mit custom Debounce.
+Single Zustand Store. Canvas, Ebenen-Manager, Properties, Toolbar und SmartRoad-Editor rendern dieselben Daten. Kein Sync nötig. Undo/Redo via zundo Temporal Middleware mit custom Debounce.
 
 ---
 
 ## Roadmap
 
 - [x] **Phase 1** — Canvas, Viewport, Layout, Theme
-- [x] **Phase 2** — Zeichenwerkzeuge, Formen, Text, Bemassung
+- [x] **Phase 2** — Zeichenwerkzeuge, Formen, Text, Bemaßung
 - [x] **Phase 3** — SmartRoads, Ausschnitt-Tool, Metadaten, UX
 - [ ] **Phase 4** — SmartRoads: Kurven, Kreuzungen, Kreisverkehre
 - [ ] **Phase 5** — SVG-Elemente + Objekt-Bibliothek
@@ -226,14 +226,14 @@ Single Zustand Store. Canvas, Ebenen-Manager, Properties, Toolbar und SmartRoad-
 
 ---
 
-## Grundsatze
+## Grundsätze
 
 | Prinzip | Umsetzung |
 |---------|-----------|
 | **Einfachheit** | Drei Schichten: Zero Config → Quick Adjust → Full Custom |
 | **Datenschutz** | Null externe Verbindungen. Keine Telemetrie, keine CDN-Fonts |
 | **Offline-first** | Nach dem Laden komplett autark. PWA mit Precaching |
-| **Massstabstreue** | Strassenelemente nach RASt 06, RAL 2012, ERA 2010, RMS-1 |
+| **Maßstabstreue** | Straßenelemente nach RASt 06, RAL 2012, ERA 2010, RMS-1 |
 
 ---
 
