@@ -206,8 +206,8 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
               borderRadius: 14,
               height: 40,
               fontSize: 12,
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.06)',
+              background: 'var(--panel-control-bg)',
+              border: '1px solid var(--panel-control-border)',
             }}
           />
         </div>
@@ -313,8 +313,8 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
                       width: 36,
                       height: 36,
                       borderRadius: 10,
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.06)',
+                      background: 'var(--panel-control-bg)',
+                      border: '1px solid var(--panel-control-border)',
                       color: 'var(--accent)',
                     }}
                   >

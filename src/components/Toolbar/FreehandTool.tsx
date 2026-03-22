@@ -68,7 +68,7 @@ export function FreehandToolPopover({
       {/* FARBE */}
       <PanelSection title="Farbe">
         <PanelColorLabel label="Strichfarbe" />
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: 10 }}>
+        <div className="color-picker-well">
           <ColorPicker
             value={toolOptions.strokeColor}
             onChange={(c) => setToolOptions({ strokeColor: c })}

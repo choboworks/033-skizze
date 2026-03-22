@@ -81,11 +81,9 @@ export function EditorShell({
               }}
             >
               <div
-                className="flex-1 min-h-0 overflow-y-auto flex flex-col"
+                className="flex-1 min-h-0 overflow-y-auto flex flex-col editor-panel-card"
                 style={{
                   borderRadius: 20,
-                  background: 'rgba(255,255,255,0.025)',
-                  border: '1px solid rgba(255,255,255,0.06)',
                   boxShadow: '0 12px 32px rgba(0,0,0,0.28)',
                 }}
               >
@@ -98,7 +96,7 @@ export function EditorShell({
               className="flex-1 flex flex-col overflow-hidden"
               style={{
                 padding: 'var(--space-lg)',
-                background: 'radial-gradient(circle at center, #0f172a, #020617)',
+                background: 'var(--editor-bg)',
               }}
             >
               {editor}

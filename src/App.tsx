@@ -10,6 +10,7 @@ import { SketchCanvas } from '@/components/Canvas/SketchCanvas'
 import { RightSidebar } from '@/components/RightSidebar/RightSidebar'
 import { FloatingProperties } from '@/components/Inspector/FloatingProperties'
 import { StatusBar } from '@/components/StatusBar/StatusBar'
+import { Toasts } from '@/components/ui/Toast'
 import { PAGE_WIDTH_PX, PAGE_HEIGHT_PX, pixelsToMeters } from '@/utils/scale'
 import type { StraightRoadState } from '@/smartroads/types'
 import type { CanvasObject } from '@/types'
@@ -154,6 +155,9 @@ export default function App() {
           onCancel={handleEditorCancel}
         />
       )}
+
+      {/* Toast Notifications */}
+      <Toasts />
     </div>
   )
 }

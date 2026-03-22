@@ -5,10 +5,41 @@ import {
   Lock,
   Unlock,
   Settings2,
+  Square,
+  RectangleHorizontal,
+  Circle,
+  Triangle,
+  Minus,
+  ArrowRight,
+  Hexagon,
+  Spline,
+  Star,
+  Pencil,
+  Type,
+  Image,
+  Ruler,
+  Route,
 } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import type { CanvasObject } from '@/types'
 import { objectDisplayName } from '@/utils/objectHelpers'
+
+const TYPE_ICONS: Record<string, React.ComponentType<{ size?: number }>> = {
+  rect: Square,
+  'rounded-rect': RectangleHorizontal,
+  ellipse: Circle,
+  triangle: Triangle,
+  line: Minus,
+  arrow: ArrowRight,
+  polygon: Hexagon,
+  path: Spline,
+  star: Star,
+  freehand: Pencil,
+  text: Type,
+  image: Image,
+  dimension: Ruler,
+  smartroad: Route,
+}
 
 function objectTypeName(obj: CanvasObject): string {
   const types: Record<string, string> = {
@@ -151,11 +182,23 @@ export function EbenenPanel() {
                   <div className="absolute -bottom-1 left-3 right-3 h-0.5 rounded-full" style={{ background: 'var(--accent)', zIndex: 10 }} />
                 )}
 
-                {/* Color dot */}
-                <div
-                  className="rounded-full shrink-0"
-                  style={{ width: 10, height: 10, background: isSelected ? 'var(--accent)' : 'var(--text-muted)', opacity: isSelected ? 1 : 0.4 }}
-                />
+                {/* Type icon */}
+                {(() => {
+                  const Icon = TYPE_ICONS[obj.type] || Square
+                  return (
+                    <div
+                      className="flex items-center justify-center shrink-0 rounded-lg"
+                      style={{
+                        width: 28,
+                        height: 28,
+                        background: isSelected ? 'var(--accent-muted)' : 'var(--surface)',
+                        color: isSelected ? 'var(--accent)' : 'var(--text-muted)',
+                      }}
+                    >
+                      <Icon size={14} />
+                    </div>
+                  )
+                })()}
 
                 {/* Name + Type */}
                 <div className="flex-1 min-w-0">

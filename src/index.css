@@ -88,6 +88,8 @@
   --shadow-tooltip: 0 2px 8px rgba(0, 0, 0, 0.5);
   --shadow-glow: 0 0 30px rgba(56, 189, 248, 0.12);
 
+  --editor-bg: radial-gradient(circle at center, #0f172a, #020617);
+
   /* Panel System */
   --panel-bg-base: linear-gradient(180deg, rgba(22,26,34,0.96), rgba(18,22,30,0.94));
   --panel-bg-elevated: linear-gradient(180deg, rgba(24,29,38,0.98), rgba(19,23,32,0.96));
@@ -128,7 +130,7 @@
 
 [data-theme="light"] {
   /* Light Mode — solid, structured, no glass */
-  --bg: #f6f7f9;
+  --bg: #f4f5f7;
   --bg-gradient: none;
   --surface: #ffffff;
   --surface-hover: #f3f5f8;
@@ -138,12 +140,12 @@
   --accent-hover: #0284c7;
   --accent-strong: #0369a1;
   --accent-muted: rgba(14, 165, 233, 0.12);
-  --border: rgba(15, 23, 42, 0.08);
-  --border-subtle: rgba(15, 23, 42, 0.04);
+  --border: rgba(15, 23, 42, 0.10);
+  --border-subtle: rgba(15, 23, 42, 0.06);
   --text: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
-  --canvas-bg: #eef1f5;
+  --canvas-bg: #e8eaee;
   --paper: #ffffff;
   --danger: #ef4444;
   --success: #22c55e;
@@ -158,8 +160,8 @@
   /* Shadows light — soft, structural */
   --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.05);
   --shadow-md: 0 6px 20px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 16px 48px rgba(15, 23, 42, 0.12);
-  --shadow-panel: 0 6px 20px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 20px 60px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(15, 23, 42, 0.05);
+  --shadow-panel: 0 8px 32px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(15, 23, 42, 0.06);
   --shadow-tooltip: 0 2px 8px rgba(15, 23, 42, 0.12);
   --shadow-glow: none;
 
@@ -168,7 +170,7 @@
   --panel-bg-elevated: #ffffff;
   --panel-border: rgba(15,23,42,0.08);
   --panel-border-subtle: rgba(15,23,42,0.05);
-  --panel-shadow: 0 16px 48px rgba(15,23,42,0.12), 0 0 0 1px rgba(15,23,42,0.04);
+  --panel-shadow: 0 8px 32px rgba(15,23,42,0.12), 0 0 0 1px rgba(15,23,42,0.06);
   --panel-shadow-soft: 0 12px 32px rgba(15,23,42,0.10), 0 0 0 1px rgba(15,23,42,0.03);
   --panel-header-border: rgba(15,23,42,0.06);
   --panel-section-border: rgba(15,23,42,0.05);
@@ -178,6 +180,8 @@
   --panel-control-active-bg: rgba(14,165,233,0.10);
   --panel-control-active-border: rgba(14,165,233,0.22);
   --panel-control-active-text: var(--accent);
+
+  --editor-bg: radial-gradient(circle at center, #e2e8f0, #cbd5e1);
 }
 
 /* ============================================================
@@ -201,6 +205,94 @@ html, body, #root {
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   Utility Classes (theme-aware)
+   ============================================================ */
+
+/* Meta input — replaces imperative JS hover handlers in MetadataPanel */
+.meta-input {
+  height: 36px;
+  border-radius: 12px;
+  padding: 0 12px;
+  font-size: 13px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  outline: none;
+  transition: border-color var(--duration-hover) var(--ease-out-fast),
+              background var(--duration-hover) var(--ease-out-fast),
+              box-shadow var(--duration-hover) var(--ease-out-fast);
+}
+.meta-input:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+.meta-input:focus {
+  border-color: rgba(56, 189, 248, 0.42);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.10);
+}
+[data-theme="light"] .meta-input {
+  background: var(--panel-control-bg);
+  border-color: var(--panel-control-border);
+}
+[data-theme="light"] .meta-input:hover {
+  background: var(--panel-control-bg-hover);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+[data-theme="light"] .meta-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.12);
+}
+
+/* Editor panel card — reusable container for SmartRoad editor panels */
+.editor-panel-card {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-lg);
+}
+[data-theme="light"] .editor-panel-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Value display — stepper readouts that need strong contrast */
+.value-display {
+  background: var(--panel-control-bg);
+  border: 1px solid var(--panel-control-border);
+  color: var(--text);
+  font-weight: 600;
+}
+[data-theme="light"] .value-display {
+  background: #e9eef5;
+  border-color: rgba(15, 23, 42, 0.10);
+  color: #0f172a;
+}
+
+/* Color picker well — wrapper for color pickers in tool popovers */
+.color-picker-well {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 10px;
+}
+[data-theme="light"] .color-picker-well {
+  background: var(--panel-control-bg);
+  border-color: var(--panel-control-border);
+}
+
+/* Vertical divider — used in TopBar between button groups */
+.divider-v {
+  width: 1px;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+[data-theme="light"] .divider-v {
+  background: rgba(15, 23, 42, 0.08);
 }
 
 /* ============================================================
@@ -742,6 +834,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   box-shadow: var(--shadow-sm);
 }
 
+/* Tool Button: structured bg in light mode */
+[data-theme="light"] .tool-btn {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.06);
+}
+[data-theme="light"] .tool-btn:hover {
+  background: #e9eef5;
+  border-color: rgba(15, 23, 42, 0.10);
+}
 /* Tool Button: no glow shadow in light mode */
 [data-theme="light"] .tool-btn[data-active="true"] {
   box-shadow: none;
@@ -825,6 +926,17 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 [data-theme="light"] .surface-btn:hover {
   background: #e9eef5;
+}
+
+/* Toggle Button: structured in light mode */
+[data-theme="light"] .toggle-btn {
+  background: var(--panel-control-bg);
+  border-color: var(--panel-control-border);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .toggle-btn:hover {
+  background: var(--panel-control-bg-hover);
+  border-color: rgba(15, 23, 42, 0.10);
 }
 
 /* Layer Card: solid in light mode */

@@ -17,6 +17,7 @@ import { FreehandToolPopover } from './FreehandTool'
 import { ShapesToolPopover } from './ShapesTool'
 import { TextToolPopover } from './TextTool'
 import { DimensionToolPopover } from './DimensionTool'
+import { Tooltip } from '@/components/ui/Tooltip'
 
 // --- Tool group definitions ---
 
@@ -233,44 +234,45 @@ export function Toolbar() {
           const displayIcon = group.id === 'shapes' ? getShapeIcon(currentToolId) : group.icon
 
           return (
-            <button
-              key={group.id}
-              data-toolbar-group={group.id}
-              onClick={() => handleGroupClick(group)}
-              onPointerDown={() => { if (group.hasPopover) handlePointerDown(group.id) }}
-              onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerUp}
-              onContextMenu={(e) => { if (group.hasPopover) handleContextMenu(e, group.id) }}
-              data-active={isGroupActive}
-              className="tool-btn group flex w-full flex-col items-center gap-1 h-19 justify-center transition-all"
-              style={{ borderRadius: 20 }}
-            >
-              <div
-                className="flex items-center justify-center transition-colors"
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 'var(--radius-md)',
-                  background: isGroupActive ? 'rgba(56,189,248,0.14)' : 'var(--surface)',
-                  color: isGroupActive ? 'var(--accent)' : 'var(--text-muted)',
-                  border: isGroupActive ? '1px solid rgba(56,189,248,0.32)' : '1px solid transparent',
-                  boxShadow: isGroupActive ? '0 0 0 1px rgba(56,189,248,0.06)' : 'none',
-                }}
+            <Tooltip key={group.id} content={group.label} shortcut={group.shortcut} side="right">
+              <button
+                data-toolbar-group={group.id}
+                onClick={() => handleGroupClick(group)}
+                onPointerDown={() => { if (group.hasPopover) handlePointerDown(group.id) }}
+                onPointerUp={handlePointerUp}
+                onPointerLeave={handlePointerUp}
+                onContextMenu={(e) => { if (group.hasPopover) handleContextMenu(e, group.id) }}
+                data-active={isGroupActive}
+                className="tool-btn group flex w-full flex-col items-center gap-1 h-19 justify-center transition-all"
+                style={{ borderRadius: 20 }}
               >
-                {React.createElement(displayIcon, { size: 18 })}
-              </div>
-              <div className="text-center">
                 <div
-                  className="text-[11px] font-medium leading-tight"
-                  style={{ color: isGroupActive ? 'var(--text)' : 'var(--text-secondary)' }}
+                  className="flex items-center justify-center transition-colors"
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 'var(--radius-md)',
+                    background: isGroupActive ? 'rgba(56,189,248,0.14)' : 'var(--surface)',
+                    color: isGroupActive ? 'var(--accent)' : 'var(--text-muted)',
+                    border: isGroupActive ? '1px solid rgba(56,189,248,0.32)' : '1px solid transparent',
+                    boxShadow: isGroupActive ? '0 0 0 1px rgba(56,189,248,0.06)' : 'none',
+                  }}
                 >
-                  {group.label}
+                  {React.createElement(displayIcon, { size: 18 })}
                 </div>
-                <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                  {group.shortcut}
+                <div className="text-center">
+                  <div
+                    className="text-[11px] font-medium leading-tight"
+                    style={{ color: isGroupActive ? 'var(--text)' : 'var(--text-secondary)' }}
+                  >
+                    {group.label}
+                  </div>
+                  <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                    {group.shortcut}
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
+            </Tooltip>
           )
         })}
       </div>

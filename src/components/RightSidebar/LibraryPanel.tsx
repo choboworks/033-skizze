@@ -84,7 +84,7 @@ export function LibraryPanel() {
             height: 22,
             padding: '0 8px',
             fontSize: 10,
-            background: 'rgba(255,255,255,0.05)',
+            background: 'var(--surface)',
             color: 'var(--text-muted)',
           }}
         >

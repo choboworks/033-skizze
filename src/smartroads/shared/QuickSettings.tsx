@@ -68,8 +68,8 @@ function NumberStepper({ value, onChange, min = 1, max = 999, step = 1, unit = '
         />
       ) : (
         <button
-          className="toggle-btn text-center text-[11px] font-semibold font-mono"
-          style={{ width: 48, height: 28, borderRadius: 10, color: 'var(--text)' }}
+          className="value-display text-center text-[11px] font-semibold font-mono flex items-center justify-center cursor-pointer"
+          style={{ width: 48, height: 28, borderRadius: 10 }}
           onClick={() => { setEditValue(String(value)); setEditing(true) }}
         >
           {value}{unit}
@@ -206,8 +206,8 @@ export function QuickSettings({ strips, length, roadClass, onUpdateStrips, onUpd
             <Minus size={13} />
           </button>
           <span
-            className="text-center text-[11px] font-semibold font-mono flex items-center justify-center"
-            style={{ width: 48, height: 28, borderRadius: 10, background: 'var(--panel-control-bg)', border: '1px solid var(--panel-control-border)', color: 'var(--text)' }}
+            className="value-display text-center text-[11px] font-semibold font-mono flex items-center justify-center"
+            style={{ width: 48, height: 28, borderRadius: 10 }}
           >
             {laneCount}
           </span>

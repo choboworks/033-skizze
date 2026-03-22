@@ -485,7 +485,7 @@ export function RoadTopView({
         <KonvaLine
           key={`edge-${i}`}
           points={[edgeX, 0, edgeX, length]}
-          stroke="rgba(255,255,255,0.15)"
+          stroke="rgba(128,128,128,0.2)"
           strokeWidth={0.3 / displayScale}
           listening={false}
         />

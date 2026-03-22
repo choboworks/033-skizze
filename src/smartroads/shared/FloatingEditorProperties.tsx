@@ -64,9 +64,9 @@ export function FloatingEditorProperties({ strip, marking, onUpdateStrip, onUpda
         top: pos.y,
         width: PANEL_W,
         borderRadius: 20,
-        background: 'linear-gradient(180deg, rgba(24,28,38,0.96), rgba(18,22,30,0.94))',
-        border: '1px solid rgba(255,255,255,0.10)',
-        boxShadow: '0 24px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.04)',
+        background: 'var(--panel-bg-elevated)',
+        border: '1px solid var(--panel-border)',
+        boxShadow: 'var(--panel-shadow)',
         backdropFilter: 'blur(18px)',
       }}
     >

@@ -6,11 +6,13 @@ import type { AppState, CanvasObject, Theme, ToolType, ViewportState, PanelState
 // --- Default Document ---
 const createDefaultDocument = (): DocumentMeta => ({
   id: crypto.randomUUID(),
-  name: 'Neue Skizze',
+  name: 'Verkehrsunfallskizze',
   caseNumber: '',
   date: new Date().toISOString().split('T')[0],
   officer: '',
   department: '',
+  departmentAddress: '',
+  departmentPhone: '',
   subdivision: '',
   createdAt: Date.now(),
   updatedAt: Date.now(),
@@ -24,6 +26,14 @@ const getInitialTheme = (): Theme => {
     if (window.matchMedia('(prefers-color-scheme: light)').matches) return 'light'
   }
   return 'dark'
+}
+
+// --- Undo debounce state (module-level, accessible from useUndoRedo) ---
+export const _undoDebounce = {
+  timeout: null as ReturnType<typeof setTimeout> | null,
+  firstPastState: null as unknown,
+  /** Call to immediately save any pending debounced entry */
+  flush: null as (() => void) | null,
 }
 
 // --- Store ---
@@ -242,6 +252,31 @@ export const useAppStore = create<AppState>()(
         toolOptions: state.toolOptions,
         scale: state.scale,
       }),
+      // Max 50 undo steps to prevent unbounded memory growth
+      limit: 50,
+      // Debounce: batch rapid set() calls into one undo entry.
+      // flush() is exposed so useUndoRedo can force-save before undo.
+      handleSet: (internalHandleSet) => {
+        return (pastState, replace, currentState, deltaState) => {
+          if (_undoDebounce.firstPastState === null) {
+            _undoDebounce.firstPastState = pastState
+          }
+          if (_undoDebounce.timeout) clearTimeout(_undoDebounce.timeout)
+
+          // Save a flush function that captures latest args
+          const savedFirst = _undoDebounce.firstPastState
+          _undoDebounce.flush = () => {
+            internalHandleSet(savedFirst as Parameters<typeof internalHandleSet>[0], replace, currentState, deltaState)
+            _undoDebounce.firstPastState = null
+            _undoDebounce.timeout = null
+            _undoDebounce.flush = null
+          }
+
+          _undoDebounce.timeout = setTimeout(() => {
+            _undoDebounce.flush?.()
+          }, 150)
+        }
+      },
     }
   )
 )

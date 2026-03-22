@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useAppStore } from '@/store'
+import { undoAction, redoAction } from '@/hooks/useUndoRedo'
 import type { ToolType } from '@/types'
 
 // Maps shortcut key → tool to activate
@@ -76,6 +77,45 @@ export function useKeyboard() {
 
       // Ctrl shortcuts
       if (e.ctrlKey || e.metaKey) {
+        // Undo: Ctrl+Z (without Shift)
+        if (key === 'z' && !e.shiftKey) {
+          e.preventDefault()
+          undoAction()
+          return
+        }
+        // Redo: Ctrl+Shift+Z
+        if (key === 'z' && e.shiftKey) {
+          e.preventDefault()
+          redoAction()
+          return
+        }
+        // Redo: Ctrl+Y
+        if (key === 'y') {
+          e.preventDefault()
+          redoAction()
+          return
+        }
+        // Duplicate: Ctrl+D
+        if (key === 'd') {
+          e.preventDefault()
+          const state = useAppStore.getState()
+          const newIds: string[] = []
+          for (const id of state.selection) {
+            const obj = state.objects[id]
+            if (!obj) continue
+            const newObj = {
+              ...obj,
+              id: crypto.randomUUID(),
+              x: obj.x + 20,
+              y: obj.y + 20,
+              label: obj.label ? `${obj.label} (Kopie)` : '',
+            }
+            state.addObject(newObj)
+            newIds.push(newObj.id)
+          }
+          if (newIds.length > 0) state.select(newIds)
+          return
+        }
         if (key === 'a') {
           e.preventDefault()
           const state = useAppStore.getState()

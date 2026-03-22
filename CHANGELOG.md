@@ -2,6 +2,88 @@
 
 ---
 
+## Session 7 – 22.03.2026
+
+**Teilnehmer**: Alex + Claude Opus 4.6
+**Fokus**: Code Review, Light Mode, UX-Features, Metadaten-System, Auto-Header
+
+### Code Review & Cleanup
+- **40+ Findings** identifiziert, **21 Bugs gefixt** (duplicate style props, stale getState, locked delete, space key stuck, etc.)
+- **~2.000 Zeilen Dead Code entfernt**: `LayerManager.tsx`, `StripEditor.tsx`, Layer-System aus Store/Types, dead CSS-Klassen, `@theme` Block
+- **Code-Duplikation eliminiert**: `objectDisplayName` → `src/utils/objectHelpers.ts`, `MARKING_TYPE_LABELS` + `LINE_STYLES` → `src/constants/shared.ts`
+- **Undo-History optimiert**: `selection`/`activeTool` aus zundo `partialize` entfernt
+- **CLAUDE.md** schlank umgeschrieben (200 → 95 Zeilen, fokussiert auf nicht-ableitbaren Kontext)
+
+### Light Mode Redesign
+- **57 hardcoded `rgba(255,255,255,...)` Werte** in 11 TSX-Dateien durch CSS-Tokens ersetzt
+- **Neue CSS-Klassen**: `.meta-input`, `.editor-panel-card`, `.color-picker-well`, `.divider-v`, `.value-display`
+- **Light-Mode Token-Palette getuned**: Wärmeres Bg, stärkere Borders/Shadows, neuer `--editor-bg` Token
+- **Fehlende Light-Overrides ergänzt**: `.tool-btn`, `.toggle-btn` + Hover-States
+- **Imperative JS-Hover-Handler** in MetadataPanel/TopBar durch CSS-Klassen ersetzt
+- Dark Mode bleibt unverändert
+
+### Undo/Redo System
+- **zundo + custom Hook** (`src/hooks/useUndoRedo.ts`): Manual Past/Future Stack Management wegen Zustand v5 Inkompatibilität
+- **Debounced handleSet** (150ms): Bündelt schnelle `set()` Calls zu einem Undo-Eintrag (addObject + recalculateScale = 1 Entry)
+- **Flush-before-Undo**: Pending Debounce wird sofort gespeichert vor Undo (kein State-Verlust)
+- **Pause/Resume**: Undo/Redo-Operationen erzeugen keine neuen History-Einträge
+- **Selection-Cleanup**: Verwaiste Selections und `propertiesPanelId` werden nach Undo aufgeräumt
+- **History-Limit**: Max 50 Einträge
+- TopBar-Buttons + Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y
+
+### UX-Features
+- **Tooltips**: Alle TopBar + Toolbar Buttons mit Label + Shortcut-Hint (500ms Delay, Portal-basiert)
+- **Kontextmenü**: Rechtsklick auf Canvas → Duplizieren, Löschen, Vordergrund/Hintergrund, Eigenschaften, Alles auswählen, Ansicht einpassen
+- **Toast-Benachrichtigungen**: `src/hooks/useToast.ts` + `src/components/ui/Toast.tsx` — Success/Info/Error, Auto-Dismiss 2.5s
+- **Zoom-Controls in StatusBar**: +/- Buttons, Einpassen-Button (Maximize2), Zoom-% klickbar
+- **Auswahl-Info in StatusBar**: "1 Objekt" / "3 Objekte" oder Gesamtzahl
+- **Leerer Canvas Hinweis**: "Ziehen Sie eine Straße aus der Bibliothek oder wählen Sie ein Werkzeug"
+- **Ebenen-Manager Type-Icons**: Rechteck/Kreis/Stift/Text/Straßen-Icons statt Farbpunkt
+- **Ctrl+D**: Duplizieren mit +20px Offset + "(Kopie)" Label
+- **UI-Sprache Deutsch**: "von Alex Pohlmeier", alle Tooltips, "Laden"/"Speichern"/"Exportieren" Buttons
+
+### Metadaten-System
+- **DocumentMeta erweitert**: `departmentAddress`, `departmentPhone` Felder
+- **Dienststellen-Autocomplete**: Kontextsuche über ~300 Dienststellen aus 7 JSON-Dateien (PD Hannover, Braunschweig, Göttingen, Osnabrück, Lüneburg, Oldenburg, Sonder)
+- **Pflichtfeld-Validierung**: Rotes `*`, roter Border + Glow bei leeren Pflichtfeldern (Vorgangsnummer, Datum, Dienststelle, Sachbearbeiter)
+- **Zusatzfelder**: Adresse + Telefon erscheinen bei manueller Dienststellen-Eingabe
+- **Export-Validation vorbereitet**: `src/utils/validation.ts` mit `isMetadataComplete()` + `getMissingFields()`
+
+### Auto-Header auf A4 Canvas
+- **PageHeader** (`src/components/Canvas/PageHeader.tsx`): Konva-Rendering, `listening={false}`
+  - Rahmenbox mit 2-Spalten Layout (Dienststelle/Vorgangsnr. links, Adresse/Datum/Tel./Sachbearbeiter rechts)
+  - Dynamische Höhe — passt sich an Anzahl gefüllter Felder an
+  - Überschrift zentriert unterhalb (aus "Überschrift"-Feld, Default: "Verkehrsunfallskizze")
+  - Header-Box erscheint erst bei erster Eingabe (Dienststelle/Vorgangsnr./Sachbearbeiter)
+- **SignatureBlock**: Linie + Sachbearbeiter-Name, Linie passt sich Textbreite an
+  - Standard Konva Transformer (Rotation + Resize)
+  - Klick selektiert, Klick daneben deselektiert
+  - Nicht im Ebenen-Manager
+- Font: Inter (statt Serif)
+
+### Neue Dateien
+| Datei | Zweck |
+|-------|-------|
+| `src/components/Canvas/PageHeader.tsx` | Auto-Header + SignatureBlock auf A4 Canvas |
+| `src/components/Canvas/ContextMenu.tsx` | Rechtsklick-Kontextmenü |
+| `src/components/ui/Toast.tsx` | Toast-Benachrichtigungs-Renderer |
+| `src/components/ui/Tooltip.tsx` | Hover-Tooltips mit Shortcut-Hints |
+| `src/hooks/useToast.ts` | Toast Mini-Store (useSyncExternalStore) |
+| `src/hooks/useUndoRedo.ts` | Custom Undo/Redo mit Debounce-Flush |
+| `src/utils/objectHelpers.ts` | Shared `objectDisplayName()` |
+| `src/utils/validation.ts` | Metadaten-Pflichtfeld-Prüfung (für Export) |
+| `src/constants/shared.ts` | Shared `LINE_STYLES`, `MARKING_TYPE_LABELS` |
+
+### Gelöschte Dateien
+| Datei | Grund |
+|-------|-------|
+| `src/components/LayerManager/LayerManager.tsx` | Verwaist, ersetzt durch EbenenPanel |
+| `src/smartroads/shared/StripEditor.tsx` | 277 Zeilen, nie importiert |
+| `SMARTROADS.md` | Entfernt durch User |
+| `033_skizze_ui_mockup.jsx` | Entfernt durch User |
+
+---
+
 ## Session 6 – 21.03.2026
 
 **Teilnehmer**: Alex + Claude Opus 4.6

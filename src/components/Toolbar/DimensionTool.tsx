@@ -33,7 +33,7 @@ export function DimensionToolPopover({
       />
 
       {/* Info */}
-      <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: 12, marginBottom: 12 }}>
+      <div className="color-picker-well" style={{ marginBottom: 12 }}>
         <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
           Klicke zwei Punkte auf dem Canvas, um eine Bemaßungslinie zu erstellen.
           Die Distanz wird automatisch in Metern berechnet.

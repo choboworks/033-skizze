@@ -1,0 +1,254 @@
+[
+  {
+    "id": "PDBS PI BRAUNSCHWEIG",
+    "name": "Polizeiinspektion Braunschweig",
+    "adresse": "Friedrich-Voigtländer-Straße 41, 38104 Braunschweig",
+    "telefon": "+49 531 476 0"
+  },
+  {
+    "id": "PDBS_AP_BRAUNSCHWEIG",
+    "name": "Autobahnpolizei Braunschweig",
+    "adresse": "Benzstraße 3b, 38112 Braunschweig",
+    "telefon": "+49 531 476 3715"
+  },
+  {
+    "id": "PDBS_PST_HEIDBERG",
+    "name": "Polizeistation Heidberg",
+    "adresse": "Thüringenplatz 13, 38124 Braunschweig",
+    "telefon": "+49 531 476 3615"
+  },
+  {
+    "id": "PDBS_PST_LEHNDORF",
+    "name": "Polizeistation Lehndorf",
+    "adresse": "Saarplatz 3, 38116 Braunschweig",
+    "telefon": "+49 531 476 3590"
+  },
+  {
+    "id": "PDBS_PK_MITTE",
+    "name": "Polizeikommissariat Braunschweig-Mitte",
+    "adresse": "Münzstraße 1, 38100 Braunschweig",
+    "telefon": "+49 531 476 3115"
+  },
+  {
+    "id": "PDBS_PK_NORD",
+    "name": "Polizeikommissariat Nord",
+    "adresse": "Guntherstraße 2, 38112 Braunschweig",
+    "telefon": "+49 531 476 3315"
+  },
+  {
+    "id": "PDBS_PST_QUERUM",
+    "name": "Polizeistation Querum",
+    "adresse": "Querumer Straße 21/22, 38104 Braunschweig",
+    "telefon": "+49 531 476 3415"
+  },
+  {
+    "id": "PDBS_PST_RUENINGEN",
+    "name": "Polizeistation Rüningen",
+    "adresse": "Am Westerberge 56, 38122 Braunschweig",
+    "telefon": "+49 531 476 3690"
+  },
+  {
+    "id": "PDBS_PK_SUED",
+    "name": "Polizeikommissariat Süd",
+    "adresse": "Alsterplatz 3, 38120 Braunschweig",
+    "telefon": "+49 531 476 3515"
+  },
+  {
+    "id": "PDBS_PST_SUEDSTADT",
+    "name": "Polizeistation Südstadt",
+    "adresse": "Welfenplatz 17, 38126 Braunschweig",
+    "telefon": "+49 531 476 3670"
+  },
+  {
+    "id": "PDBS_VUD_BRAUNSCHWEIG",
+    "name": "Verkehrsunfalldienst Braunschweig",
+    "adresse": "Altewiekring 20b, 38102 Braunschweig",
+    "telefon": "+49 531 476 3935"
+  },
+  {
+    "id": "PDBS_PST_VOLKMARODE",
+    "name": "Polizeistation Volkmarode",
+    "adresse": "Am Feuerteich 7, 38114 Braunschweig",
+    "telefon": "+49 531 476 3450"
+  },
+  {
+    "id": "PDBS_PST_WAGGUM",
+    "name": "Polizeistation Waggum",
+    "adresse": "Feuerbrunnen 1, 38110 Braunschweig",
+    "telefon": "+49 531 476 3440"
+  },
+  {
+    "id": "PDBS_PST_WENDEN",
+    "name": "Polizeistation Wenden",
+    "adresse": "Hauptstraße 14, 38110 Braunschweig",
+    "telefon": "+49 531 476 3370"
+  },
+  {
+    "id": "PDBS_PST_WATENBUETTEL",
+    "name": "Polizeistation Watenbüttel",
+    "adresse": "Konradstraße 1/Ecke Peiner Straße, 38112 Braunschweig",
+    "telefon": "+49 531 476 3360"
+  },
+  {
+    "id": "PDBS_ZKD_KDD_BS",
+    "name": "Zentraler Kriminaldienst und Kriminaldauerdienst",
+    "adresse": "Friedrich-Voigtländer-Straße 41, 38104 Braunschweig",
+    "telefon": "+49 531 476 2516"
+  },
+  {
+    "id": "PDBS PI GIFHORN",
+    "name": "Polizeiinspektion Gifhorn",
+    "adresse": "Hindenburgstraße 2, 38518 Gifhorn",
+    "telefon": "+49 5371 980 0"
+  },
+  {
+    "id": "PDBS_PST_WEYHAUSEN",
+    "name": "Polizeistation Weyhausen",
+    "adresse": "Bokensdorfer Straße 1, 638554 Weyhausen",
+    "telefon": "+49 5362 94798 0"
+  },
+  {
+    "id": "PDBS_PST_WESTERBECK",
+    "name": "Polizeistation Westerbeck",
+    "adresse": "Hauptstraße 33 A, 38524 Sassenburg",
+    "telefon": "+49 5371 93829 0"
+  },
+  {
+    "id": "PDBS_PST_WESENDORF",
+    "name": "Polizeistation Wesendorf",
+    "adresse": "Lessingstraße 1, 29392 Wesendorf",
+    "telefon": "+49 5376 97656 0"
+  },
+  {
+    "id": "PDBS_PK_MEINE",
+    "name": "Polizeikommissariat Meine",
+    "adresse": "Hauptstraße 13, 38527 Meine",
+    "telefon": "+49 5304 9113 0"
+  },
+  {
+    "id": "PDBS_PK_MEINERSEN",
+    "name": "Polizeikommissariat Meinersen",
+    "adresse": "Dalldorfer Straße 7, 38536 Meinersen",
+    "telefon": "+49 5372 9733 0"
+  },
+  {
+    "id": "PDBS_PK_WITTINGEN",
+    "name": "Polizeikommissariat Wittingen",
+    "adresse": "Grüner Weg 15, 29378 Wittingen",
+    "telefon": "+49 5831 2520 0"
+  },
+  {
+    "id": "PDBS PI GOSLAR",
+    "name": "Polizeiinspektion Goslar",
+    "adresse": "Heinrich-Pieper-Straße 1, 38640 Goslar",
+    "telefon": "+49 5321 339 0"
+  },
+  {
+    "id": "PDBS_PK_BAD_HARZBURG",
+    "name": "Polizeikommissariat Bad Harzburg",
+    "adresse": "Herzog-Wilhelm-Straße 47, 38667 Bad Harzburg",
+    "telefon": "+49 5322 5548 0"
+  },
+  {
+    "id": "PDBS_PK_OBERHARZ",
+    "name": "Polizeikommissariat Oberharz",
+    "adresse": "Berliner Str. 10, 38678 Clausthal-Zellerfeld",
+    "telefon": "+49 5323 9531 0"
+  },
+  {
+    "id": "PDBS_PK_SEESEN",
+    "name": "Polizeikommissariat Seesen",
+    "adresse": "Frankfurter Str. 4, 38723 Seesen",
+    "telefon": "+49 5381 9440"
+  },
+  {
+    "id": "PDBS PI Salzgitter Peine Wolfenbüttel",
+    "name": "Polizeiinspektion Salzgitter/Peine/Wolfenbüttel",
+    "adresse": "Joachim-Campe-Straße 21, 38226 Salzgitter",
+    "telefon": "+49 5341 1897 0"
+  },
+  {
+    "id": "PDBS_PK_PEINE",
+    "name": "Polizeikommissariat Peine",
+    "adresse": "Schäferstraße 87, 31224 Peine",
+    "telefon": "+49 5171 999 0"
+  },
+  {
+    "id": "PDBS_PK_WOLFENBUETTEL",
+    "name": "Polizeikommissariat Wolfenbüttel",
+    "adresse": "Lindener Straße 22, 38300 Wolfenbüttel",
+    "telefon": "+49 5331 933 0"
+  },
+  {
+    "id": "PDBS_PK_SALZGITTER_BAD",
+    "name": "Polizeikommissariat Salzgitter-Bad",
+    "adresse": "Am Pfingstanger 2, 38259 Salzgitter",
+    "telefon": "+49 5341 825 0"
+  },
+  {
+    "id": "PDBS PI Wolfsburg Helmstedt",
+    "name": "Polizeiinspektion Wolfsburg/Helmstedt",
+    "adresse": "Heßlinger Straße 27, 38440 Wolfsburg",
+    "telefon": "+49 5361 4646 0"
+  },
+  {
+    "id": "PDBS_PK_KOENIGSLUTTER",
+    "name": "Polizeikommissariat Königslutter",
+    "adresse": "Gerichtsweg 5, 38154 Königslutter",
+    "telefon": "+49 5353 91970"
+  },
+  {
+    "id": "PDBS_PST_LEHRE",
+    "name": "Polizeistation Lehre",
+    "adresse": "Marktstraße 1, 38165 Lehre",
+    "telefon": "+49 5308 990930"
+  },
+  {
+    "id": "PDBS_PK_SCHOENINGEN",
+    "name": "Polizeikommissariat Schöningen",
+    "adresse": "Burgplatz 2, 38364 Schöningen",
+    "telefon": "+49 5352 9683 0"
+  },
+  {
+    "id": "PDBS_PST_BUEDDENSTEDT",
+    "name": "Polizeistation Büddenstedt",
+    "adresse": "Martin-Luther-Platz 5, 38372 Büddenstedt",
+    "telefon": "+49 5352 968800"
+  },
+  {
+    "id": "PDBS_PST_JERXHEIM",
+    "name": "Polizeistation Jerxheim",
+    "adresse": "Helmstedter Straße 6, 38381 Jerxheim",
+    "telefon": "+49 5354 994980"
+  },
+  {
+    "id": "PDBS_PK_HELMSTEDT",
+    "name": "Polizeikommissariat Helmstedt",
+    "adresse": "Am Ludgerihof 2, 38350 Helmstedt",
+    "telefon": "+49 5351 521 0"
+  },
+  {
+    "id": "PDBS_PST_GRASLEBEN",
+    "name": "Polizeistation Grasleben",
+    "adresse": "Bahnhofstraße 4, 38368 Grasleben",
+    "telefon": "+49 5357 992260"
+  },
+  {
+    "id": "PDBS_PST_SUEPPLINGEN",
+    "name": "Polizeistation Süpplingen",
+    "adresse": "Thymianstraße 1, 38373 Süpplingen",
+    "telefon": "+49 5355 910880"
+  },
+  {
+    "id": "PDBS_PST_VELPKE",
+    "name": "Polizeistation Velpke",
+    "adresse": "Oebisfelder Str. 16, 38458 Velpke",
+    "telefon": "+49 5364 947220"
+  },
+  {
+    "id": "PDBS PD BRAUNSCHWEIG",
+    "name": "Polizeidirektion Braunschweig",
+    "adresse": "Friedrich-Voigtländer-Straße 41, 38104 Braunschweig",
+    "telefon": "+49 531 476 0"
+  }
+]

@@ -169,9 +169,9 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
           className="w-full h-full overflow-hidden"
           style={{
             borderRadius: 28,
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(255,255,255,0.06)',
-            boxShadow: '0 40px 120px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.03)',
+            background: 'var(--surface)',
+            border: '1px solid var(--panel-control-border)',
+            boxShadow: '0 40px 120px rgba(0,0,0,0.6), inset 0 0 0 1px var(--border-subtle)',
             filter: 'drop-shadow(0 8px 20px rgba(0,0,0,0.35))',
           }}
         >
@@ -214,8 +214,8 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
         style={{
           padding: 16,
           borderRadius: 22,
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.08)',
+          background: 'var(--panel-control-bg)',
+          border: '1px solid var(--border)',
           boxShadow: '0 20px 60px rgba(0,0,0,0.40)',
         }}
       >
@@ -231,12 +231,10 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
 
       {/* Road Structure — base panel */}
       <div
-        className="flex-1 min-h-0 overflow-y-auto"
+        className="flex-1 min-h-0 overflow-y-auto editor-panel-card"
         style={{
           padding: '14px 16px',
           borderRadius: 20,
-          background: 'rgba(255,255,255,0.025)',
-          border: '1px solid rgba(255,255,255,0.06)',
           boxShadow: '0 12px 32px rgba(0,0,0,0.28)',
         }}
       >

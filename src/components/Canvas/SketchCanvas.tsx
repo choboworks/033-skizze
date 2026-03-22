@@ -6,6 +6,8 @@ import { useAusschnitt } from '@/hooks/useAusschnitt'
 import { PrintAreaFrame, PrintAreaPreview } from '@/components/Toolbar/PrintAreaTool'
 import { snapTo45 } from '@/utils/snapAngle'
 import { CanvasObjects } from './CanvasObjects'
+import { PageHeader, SignatureBlock } from './PageHeader'
+import { ContextMenu } from './ContextMenu'
 import { createDefaultStraightRoad, totalWidth } from '@/smartroads/constants'
 import { shapeRefs } from './shapeRefs'
 import { useDrawing } from '@/hooks/useDrawing'
@@ -34,6 +36,7 @@ export function SketchCanvas() {
   const objects = useAppStore((s) => s.objects)
   const scaleViewport = useAppStore((s) => s.scale.viewport)
   const theme = useAppStore((s) => s.theme)
+  const documentMeta = useAppStore((s) => s.document)
   const hasScaleOverride = scaleViewport !== null
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -66,6 +69,15 @@ export function SketchCanvas() {
 
   // Drawing
   const { isDrawingTool, onDrawStart, onDrawMove, onDrawEnd, isDrawing } = useDrawing()
+
+  // Context menu
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null)
+  const selection = useAppStore((s) => s.selection)
+  const objectOrder = useAppStore((s) => s.objectOrder)
+  const reorderObjects = useAppStore((s) => s.reorderObjects)
+  const selectAction = useAppStore((s) => s.select)
+  const resetView = useAppStore((s) => s.resetView)
+  const openProperties = useAppStore((s) => s.openProperties)
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -482,6 +494,80 @@ export function SketchCanvas() {
           : 'default'
 
   const editingObj = editingTextId ? objects[editingTextId] : null
+  const isEmpty = objectOrder.length === 0
+
+  // --- Context menu handlers ---
+  const handleContextMenuEvent = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setContextMenu({ x: e.clientX, y: e.clientY })
+  }, [])
+
+  const closeContextMenu = useCallback(() => setContextMenu(null), [])
+
+  const handleDuplicate = useCallback(() => {
+    const store = useAppStore.getState()
+    const sel = store.selection
+    const newIds: string[] = []
+    for (const id of sel) {
+      const obj = store.objects[id]
+      if (!obj) continue
+      const newId = crypto.randomUUID()
+      const clone: CanvasObject = {
+        ...obj,
+        id: newId,
+        x: obj.x + 20,
+        y: obj.y + 20,
+        label: obj.label,
+      }
+      store.addObject(clone)
+      newIds.push(newId)
+    }
+    if (newIds.length > 0) store.select(newIds)
+  }, [])
+
+  const handleDelete = useCallback(() => {
+    const store = useAppStore.getState()
+    const sel = [...store.selection]
+    for (const id of sel) {
+      store.removeObject(id)
+    }
+  }, [])
+
+  const handleBringToFront = useCallback(() => {
+    const store = useAppStore.getState()
+    const sel = new Set(store.selection)
+    const rest = store.objectOrder.filter((id) => !sel.has(id))
+    const selected = store.objectOrder.filter((id) => sel.has(id))
+    reorderObjects([...rest, ...selected])
+  }, [reorderObjects])
+
+  const handleSendToBack = useCallback(() => {
+    const store = useAppStore.getState()
+    const sel = new Set(store.selection)
+    const rest = store.objectOrder.filter((id) => !sel.has(id))
+    const selected = store.objectOrder.filter((id) => sel.has(id))
+    reorderObjects([...selected, ...rest])
+  }, [reorderObjects])
+
+  const handleProperties = useCallback(() => {
+    const store = useAppStore.getState()
+    if (store.selection.length > 0) {
+      openProperties(store.selection[0])
+    }
+  }, [openProperties])
+
+  const handleSelectAll = useCallback(() => {
+    const store = useAppStore.getState()
+    const allIds = store.objectOrder.filter((id) => {
+      const obj = store.objects[id]
+      return obj && obj.visible && !obj.locked
+    })
+    selectAction(allIds)
+  }, [selectAction])
+
+  const handleFitView = useCallback(() => {
+    resetView()
+  }, [resetView])
 
   return (
     <div
@@ -494,6 +580,7 @@ export function SketchCanvas() {
         border: '1px solid var(--border-subtle)',
         boxShadow: 'var(--shadow-panel)',
       }}
+      onContextMenu={handleContextMenuEvent}
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes('application/smartroad')) {
           e.preventDefault()
@@ -608,6 +695,11 @@ export function SketchCanvas() {
           />
         </Layer>
 
+        {/* Document header & footer */}
+        <Layer listening={false}>
+          <PageHeader document={documentMeta} />
+        </Layer>
+
         {/* Objects layer — clips to content frame when override active */}
         {(() => {
           const fX = hasScaleOverride ? (scaleViewport!.frameX * MM_TO_PX) : 0
@@ -620,6 +712,11 @@ export function SketchCanvas() {
             </Layer>
           )
         })()}
+
+        {/* Signature block — draggable/rotatable, not in layer manager */}
+        <Layer>
+          <SignatureBlock document={documentMeta} stageRef={stageRef} />
+        </Layer>
 
         {/* Dimension preview line */}
         {dimStart && dimEnd && (
@@ -679,6 +776,23 @@ export function SketchCanvas() {
           </Layer>
         )}
       </Stage>
+
+      {/* Empty canvas hint */}
+      {isEmpty && !isDrawing && (
+        <div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          style={{ zIndex: 10 }}
+        >
+          <div className="text-center" style={{ opacity: 0.4 }}>
+            <div className="text-[14px] font-medium" style={{ color: 'var(--text-muted)' }}>
+              Ziehen Sie eine Straße aus der Bibliothek
+            </div>
+            <div className="text-[12px] mt-1" style={{ color: 'var(--text-muted)' }}>
+              oder wählen Sie ein Werkzeug aus der Toolbar
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Inline text editor overlay */}
       {editingTextId && editingObj && (() => {
@@ -744,6 +858,24 @@ export function SketchCanvas() {
           </>
         )
       })()}
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={closeContextMenu}
+          hasSelection={selection.length > 0}
+          selectionCount={selection.length}
+          onDuplicate={handleDuplicate}
+          onDelete={handleDelete}
+          onBringToFront={handleBringToFront}
+          onSendToBack={handleSendToBack}
+          onProperties={handleProperties}
+          onSelectAll={handleSelectAll}
+          onFitView={handleFitView}
+        />
+      )}
     </div>
   )
 }

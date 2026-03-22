@@ -163,8 +163,8 @@ export function EditorLayerManager({
                 minHeight: 64,
                 padding: 12,
                 borderRadius: 18,
-                background: isSelected ? 'rgba(56,189,248,0.12)' : 'rgba(255,255,255,0.03)',
-                border: isSelected ? '1px solid rgba(56,189,248,0.26)' : '1px solid rgba(255,255,255,0.06)',
+                background: isSelected ? 'var(--accent-muted)' : 'var(--surface)',
+                border: isSelected ? '1px solid var(--panel-control-active-border)' : '1px solid var(--panel-control-border)',
                 transition: 'background var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast), transform var(--duration-hover) var(--ease-out-fast), box-shadow var(--duration-hover) var(--ease-out-fast)',
                 ...(isDragging ? { transform: 'scale(1.02)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)', opacity: 1 } : {}),
               }}
@@ -174,10 +174,10 @@ export function EditorLayerManager({
               }}
               onDoubleClick={() => onOpenProperties(item.kind, item.id)}
               onMouseEnter={(e) => {
-                if (!isSelected && !isDragging) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
+                if (!isSelected && !isDragging) e.currentTarget.style.background = 'var(--surface-hover)'
               }}
               onMouseLeave={(e) => {
-                if (!isSelected) e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+                if (!isSelected) e.currentTarget.style.background = 'var(--surface)'
               }}
             >
               {/* Drop indicators */}
@@ -202,7 +202,7 @@ export function EditorLayerManager({
                 {/* Color dot */}
                 <span
                   className="shrink-0 w-3.5 h-3.5 rounded-sm"
-                  style={{ background: item.color, border: '1.5px solid rgba(255,255,255,0.2)' }}
+                  style={{ background: item.color, border: '1.5px solid var(--border)' }}
                 />
                 <span className="shrink-0" style={{ color: isSelected ? 'var(--accent)' : 'var(--text-muted)' }}>
                   {item.icon}

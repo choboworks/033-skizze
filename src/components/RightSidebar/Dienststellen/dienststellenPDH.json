@@ -1,0 +1,362 @@
+[
+  {
+    "id": "PDH PI BESONDERE_DIENSTE",
+    "name": "Polizeiinspektion Besondere Dienste",
+    "adresse": "Am Welfenplatz 1, 30161 Hannover",
+    "telefon": "+49 511 109 1623"
+  },
+  {
+    "id": "PDH PI BURGdorf",
+    "name": "Polizeiinspektion Burgdorf",
+    "adresse": "Vor dem Celler Tor 45, 31303 Burgdorf",
+    "telefon": "+49 5136 961 4115"
+  },
+  {
+    "id": "PDH_PST_UETZE",
+    "name": "Polizeistation Uetze",
+    "adresse": "Kaiserstraße 29, 31311 Uetze",
+    "telefon": "+49 5173 92543 0"
+  },
+  {
+    "id": "PDH_PK_GROSSBURGWEDEL",
+    "name": "Polizeikommissariat Großburgwedel",
+    "adresse": "Hannoversche Str. 25, 30938 Burgwedel",
+    "telefon": "+49 5139 991 115"
+  },
+  {
+    "id": "PDH_PST_ALTWARMBUECHEN",
+    "name": "Polizeistation Altwarmbüchen",
+    "adresse": "Bothfelder Str. 20, 30916 Isernhagen",
+    "telefon": "+49 511 123282 0"
+  },
+  {
+    "id": "PDH_PK_LANGENHAGEN",
+    "name": "Polizeikommissariat Langenhagen",
+    "adresse": "Ostpassage 5, 30853 Langenhagen",
+    "telefon": "+49 511 109 4215"
+  },
+  {
+    "id": "PDH_PK_LEHRTE",
+    "name": "Polizeikommissariat Lehrte",
+    "adresse": "Osterstraße 16a, 31275 Lehrte",
+    "telefon": "+49 5132 827 115"
+  },
+  {
+    "id": "PDH_PST_SEHNDE",
+    "name": "Polizeistation Sehnde",
+    "adresse": "Nordstr. 17, 31319 Sehnde",
+    "telefon": "+49 5138 70970 0"
+  },
+  {
+    "id": "PDH_PK_MELLENDORF",
+    "name": "Polizeikommissariat Mellendorf",
+    "adresse": "Wedemarkstr. 71, 30900 Wedemark",
+    "telefon": "+49 5130 977 115"
+  },
+  {
+    "id": "PDH PI GARBSEN",
+    "name": "Polizeiinspektion Garbsen",
+    "adresse": "Meyenfelder Straße 3, 30823 Garbsen",
+    "telefon": "+49 5131 473 4515"
+  },
+  {
+    "id": "PDH_PST_BERENBOSTEL",
+    "name": "Polizeistation Berenbostel",
+    "adresse": "Rote Reihe 19, 30827 Garbsen O.T. Berenbostel",
+    "telefon": "+49 5131 46319 0"
+  },
+  {
+    "id": "PDH_PK_BARSINGHAUSEN",
+    "name": "Polizeikommissariat Barsinghausen",
+    "adresse": "Knappschaftsstraße 1, 30890 Barsinghausen",
+    "telefon": "+49 5105 523 0"
+  },
+  {
+    "id": "PDH_PK_NEUSTADT",
+    "name": "Polizeikommissariat Neustadt",
+    "adresse": "Theodor-Heuss-Straße 14, 31535 Neustadt",
+    "telefon": "+49 5032 8018 115"
+  },
+  {
+    "id": "PDH_PST_MANDELSLOH",
+    "name": "Polizeistation Mandelsloh",
+    "adresse": "Mandelsloher Straße 37, 31535 Neustadt",
+    "telefon": "+49 5072 77208 0"
+  },
+  {
+    "id": "PDH_PK_RONNENBERG",
+    "name": "Polizeikommissariat Ronnenberg",
+    "adresse": "Hamelner Straße 3, 30952 Ronnenberg",
+    "telefon": "+49 5109 517 0"
+  },
+  {
+    "id": "PDH_PST_EMPELDE",
+    "name": "Polizeistation Empelde",
+    "adresse": "Am Rathaus 14, 30952 Ronnenberg",
+    "telefon": "+49 511 123209 0"
+  },
+  {
+    "id": "PDH_PST_GEHRDEN",
+    "name": "Polizeistation Gehrden",
+    "adresse": "Neue Straße 19, 30989 Gehrden",
+    "telefon": "+49 5108 92281 0"
+  },
+  {
+    "id": "PDH_PST_HEMMINGEN_ARNUM",
+    "name": "Polizeistation Hemmingen-Arnum",
+    "adresse": "Göttinger Straße 65a, 30966 Hemmingen - Arnum",
+    "telefon": "+49 5101 85433 0"
+  },
+  {
+    "id": "PDH_PST_WENNIGSEN",
+    "name": "Polizeistation Wennigsen",
+    "adresse": "Hauptstraße 31a, 30974 Wennigsen",
+    "telefon": "+49 5103 92794 0"
+  },
+  {
+    "id": "PDH_PK_SEELZE",
+    "name": "Polizeikommissariat Seelze",
+    "adresse": "Goethestraße 41, 30926 Seelze",
+    "telefon": "+49 5137 827 0"
+  },
+  {
+    "id": "PDH_PK_SPRINGE",
+    "name": "Polizeikommissariat Springe",
+    "adresse": "Auf dem Burghof 3, 31832 Springe",
+    "telefon": "+49 5041 7708 115"
+  },
+  {
+    "id": "PDH_PST_BENNIGSEN",
+    "name": "Polizeistation Bennigsen",
+    "adresse": "Am Bahnhof 2, 31832 Springe",
+    "telefon": "+49 5045 91240 0"
+  },
+  {
+    "id": "PDH_PST_PATTENSEN",
+    "name": "Polizeistation Pattensen",
+    "adresse": "Dammstraße 8, 30982 Pattensen",
+    "telefon": "+49 5101 85595 0"
+  },
+  {
+    "id": "PDH_PK_WUNSTORF",
+    "name": "Polizeikommissariat Wunstorf",
+    "adresse": "Amtsstraße 2, 31515 Wunstorf",
+    "telefon": "+49 5031 9694 0"
+  },
+  {
+    "id": "PDH_PST_STEINHUDE",
+    "name": "Polizeistation Steinhude",
+    "adresse": "Jägergang 1, 31515 Wunstorf",
+    "telefon": "+49 5033 98188 0"
+  },
+  {
+    "id": "PDH PI HANNOVER",
+    "name": "Polizeiinspektion Hannover",
+    "adresse": "Am Welfenplatz 2, 30161 Hannover",
+    "telefon": "+49 511 109 2715"
+  },
+  {
+    "id": "PDH_PK_LAHE",
+    "name": "Polizeikommissariat Lahe",
+    "adresse": "Podbielskistraße 395, 30659 Hannover",
+    "telefon": "+49 511 109 3315"
+  },
+  {
+    "id": "PDH_PST_SAHLKAMP_VAHRENHEIDE",
+    "name": "Polizeistation Sahlkamp/Vahrenheide",
+    "adresse": "Tempelhofweg 4, 30179 Hannover",
+    "telefon": "+49 511 109 3445"
+  },
+  {
+    "id": "PDH_PK_NORDSTADT",
+    "name": "Polizeikommissariat Hannover-Nordstadt",
+    "adresse": "Bodestraße 6, 30167 Hannover",
+    "telefon": "+49 511 109 3115"
+  },
+  {
+    "id": "PDH_PST_VINNHORST",
+    "name": "Polizeistation Vinnhorst",
+    "adresse": "Spierenweg 3, 30419 Hannover",
+    "telefon": "+49 511 109 3191 bis 3199"
+  },
+  {
+    "id": "PDH_PK_DOEHREN",
+    "name": "Polizeikommissariat Döhren",
+    "adresse": "Kastanienallee 1, 30519 Hannover",
+    "telefon": "+49 511 109 3615"
+  },
+  {
+    "id": "PDH_PST_BEMERODE",
+    "name": "Polizeistation Bemerode",
+    "adresse": "Bemeroder Str. 91, 30539 Hannover",
+    "telefon": "+49 511 109 3735"
+  },
+  {
+    "id": "PDH_PST_MESSE",
+    "name": "Polizeistation Messe",
+    "adresse": "Europaallee 7, 30521 Hannover",
+    "telefon": "+49 511 109 3771 bis 3784"
+  },
+  {
+    "id": "PDH_PST_MITTELFELD",
+    "name": "Polizeistation Mittelfeld",
+    "adresse": "Hohe Linde 2, 30519 Hannover",
+    "telefon": "+49 511 109 3701 bis 3709"
+  },
+  {
+    "id": "PDH_PK_LAATZEN",
+    "name": "Polizeikommissariat Laatzen",
+    "adresse": "Marktstraße 6a, 30880 Laatzen",
+    "telefon": "+49 511 109 4315"
+  },
+  {
+    "id": "PDH_PK_MISBURG",
+    "name": "Polizeikommissariat Misburg",
+    "adresse": "Waldstraße 9, 30629 Hannover",
+    "telefon": "+49 511 109 3515"
+  },
+  {
+    "id": "PDH_PK_SUEDSTADT",
+    "name": "Polizeikommissariat Hannover-Südstadt",
+    "adresse": "Albert-Niemann-Straße 10/11, 30171 Hannover",
+    "telefon": "+49 511 109 3215"
+  },
+  {
+    "id": "PDH_PST_KLEEFELD",
+    "name": "Polizeistation Kleefeld",
+    "adresse": "Fuhrberger Str. 4, 30625 Hannover",
+    "telefon": "+49 511 109 3295"
+  },
+  {
+    "id": "PDH_PK_LIMMER",
+    "name": "Polizeikommissariat Limmer",
+    "adresse": "Wunstorfer Str. 20, 30453 Hannover",
+    "telefon": "+49 511 109 3915"
+  },
+  {
+    "id": "PDH_PST_DAVENSTEDT",
+    "name": "Polizeistation Davenstedt",
+    "adresse": "Lehmannstraße 1, 30455 Hannover",
+    "telefon": "+49 511 109 3471 bis 3475"
+  },
+  {
+    "id": "PDH_PST_SCHUETZENPLATZ",
+    "name": "Polizeistation Schützenplatz",
+    "adresse": "Waterloostraße 7, 30169 Hannover",
+    "telefon": "+49 511 109 2515"
+  },
+  {
+    "id": "PDH_PK_RICKLINGEN",
+    "name": "Polizeikommissariat Ricklingen",
+    "adresse": "Göttinger Chaussee 175, 30459 Hannover",
+    "telefon": "+49 511 109 3015"
+  },
+  {
+    "id": "PDH_PK_STOECKEN",
+    "name": "Polizeikommissariat Stöcken",
+    "adresse": "Stöckener Str. 85, 30419 Hannover",
+    "telefon": "+49 511 109 3815"
+  },
+  {
+    "id": "PDH_PK_MITTE",
+    "name": "Polizeikommissariat Hannover-Mitte",
+    "adresse": "Herschelstraße 1, 30159 Hannover",
+    "telefon": "+49 511 109 2815"
+  },
+  {
+    "id": "PDH_PST_RASCHPLATZ",
+    "name": "Polizeistation Raschplatz",
+    "adresse": "Raschplatz 5, 30161 Hannover",
+    "telefon": "+49 511 109 2915"
+  },
+  {
+    "id": "PDH_ZKD_HAUPTDIENSTGEBAEUDE",
+    "name": "Zentraler Kriminaldienst - Hauptdienstgebäude",
+    "adresse": "Waterloostraße 9, 30169 Hannover",
+    "telefon": "+49 511 109 0"
+  },
+  {
+    "id": "PDH_ZKD_HANOMAG",
+    "name": "Zentraler Kriminaldienst - Dienstgebäude Hanomag",
+    "adresse": "Marianne-Baecker-Allee 11, 30449 Hannover",
+    "telefon": "+49 511 109 0"
+  },
+  {
+    "id": "PDH_ZKD_GARBSEN",
+    "name": "Zentraler Kriminaldienst - Dienstgebäude Garbsen",
+    "adresse": "Meyenfelder Straße 3, 30823 Garbsen",
+    "telefon": "+49 511 109 0"
+  },
+  {
+    "id": "PDH_KFI_1",
+    "name": "Kriminalfachinspektion 1",
+    "adresse": "Waterloostr. 9, 30169 Hannover",
+    "telefon": "+49 511 109 5103"
+  },
+  {
+    "id": "PDH_KFI_2",
+    "name": "Kriminalfachinspektion 2",
+    "adresse": "Waterloostr. 9, 30169 Hannover",
+    "telefon": "+49 511 109 5203"
+  },
+  {
+    "id": "PDH_KFI_3",
+    "name": "Kriminalfachinspektion 3",
+    "adresse": "Marianne-Baecker-Allee 11, 30449 Hannover",
+    "telefon": "+49 511 109 5303"
+  },
+  {
+    "id": "PDH_KFI_4",
+    "name": "Kriminalfachinspektion 4",
+    "adresse": "Waterloostr. 9, 30169 Hannover",
+    "telefon": "+49 511 109 5403"
+  },
+  {
+    "id": "PDH_KFI_5",
+    "name": "Kriminalfachinspektion 5",
+    "adresse": "Marianne-Baecker-Allee 11, 30449 Hannover",
+    "telefon": "+49 511 109 5503"
+  },
+  {
+    "id": "PDH_ZVD_HANNOVER",
+    "name": "Zentraler Verkehrsdienst Hannover",
+    "adresse": "Am Welfenplatz 1, 30161 Hannover",
+    "telefon": "+49 511 109 1803"
+  },
+  {
+    "id": "PDH_POLIZEIAUTOBAHNWACHE_ESD_BAB_HANNOVER",
+    "name": "Polizeiautobahnwache ESD BAB Hannover",
+    "adresse": "Burgstraße 125, 30826 Garbsen",
+    "telefon": "+49 511 109 8930"
+  },
+  {
+    "id": "PDH_KRIMINAL_UND_VERKEHRSERMITTLUNGSDIENST",
+    "name": "Kriminal- und Verkehrsermittlungsdienst",
+    "adresse": "Am Welfenplatz 1, 30161 Hannover",
+    "telefon": "+49 511 109 1803"
+  },
+  {
+    "id": "PDH_SPEZIALISIERTE_VERFUEGUNGSEINHEIT",
+    "name": "Spezialisierte Verfügungseinheit (SVE)",
+    "adresse": "Am Welfenplatz 1, 30161 Hannover",
+    "telefon": "+49 511 109 1803"
+  },
+  {
+    "id": "PDH_VUD_HANNOVER",
+    "name": "Verkehrsunfalldienst Hannover",
+    "adresse": "Am Welfenplatz 1, 30161 Hannover",
+    "telefon": "+49 511 109 1803"
+  },
+  {
+    "id": "PDH_WASSERSCHUTZPOLIZEISTATION_HANNOVER",
+    "name": "Wasserschutzpolizeistation Hannover",
+    "adresse": "Vahrenwalder Str. 212, 30165 Hannover",
+    "telefon": "+49 511 1091945"
+  },
+    {
+    "id": "PD HANNOVER",
+    "name": "Polizeidirektion Hannover",
+    "adresse": "Waterloostraße 9, 30169 Hannover",
+    "telefon": "+49 511 1090"
+  }
+]

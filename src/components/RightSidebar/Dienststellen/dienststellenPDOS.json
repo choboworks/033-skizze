@@ -1,0 +1,542 @@
+[
+  {
+    "id": "PDOS PD OSNABRUECK",
+    "name": "Polizeidirektion Osnabrück",
+    "adresse": "Heger-Tor-Wall 18, 49078 Osnabrück",
+    "telefon": "+49 541 327 0"
+  },
+  {
+    "id": "PDOS PI AURICH WITTMUND",
+    "name": "Polizeiinspektion Aurich/Wittmund",
+    "adresse": "Fischteichweg 1-5, 26603 Aurich",
+    "telefon": "+49 4941 606 0"
+  },
+  {
+    "id": "PDOS_PK_NORDEN",
+    "name": "Polizeikommissariat Norden",
+    "adresse": "Am Markt 10, 26506 Norden",
+    "telefon": "+49 4931 921 0"
+  },
+  {
+    "id": "PDOS_PST_BALTRUM",
+    "name": "Polizeistation Baltrum",
+    "adresse": "Westdorf 215, 26579 Baltrum",
+    "telefon": "+49 4939 91042 0"
+  },
+  {
+    "id": "PDOS_PST_DORNUM",
+    "name": "Polizeistation Dornum",
+    "adresse": "Schatthauser Straße 9, 26553 Dornum",
+    "telefon": "+49 4933 99275 0"
+  },
+  {
+    "id": "PDOS_PST_GROSSHEIDE",
+    "name": "Polizeistation Großheide",
+    "adresse": "Am Markt 10a, 26532 Großheide",
+    "telefon": "+49 4936 91276"
+  },
+  {
+    "id": "PDOS_PST_HAGE",
+    "name": "Polizeistation Hage",
+    "adresse": "Hauptstraße 81, 26524 Hage",
+    "telefon": "+49 4931 97398 0"
+  },
+  {
+    "id": "PDOS_PST_HINTE",
+    "name": "Polizeistation Hinte",
+    "adresse": "Osterhuser Straße 19, 26759 Hinte",
+    "telefon": "+49 4925 92543 0"
+  },
+  {
+    "id": "PDOS_PST_JUIST",
+    "name": "Polizeistation Juist",
+    "adresse": "Carl-Stegmann-Straße 1, 26571 Juist",
+    "telefon": "+49 4935 92157 0"
+  },
+  {
+    "id": "PDOS_PST_MARIENHAFE",
+    "name": "Polizeistation Marienhafe",
+    "adresse": "Rosenstraße 5, 26529 Marienhafe",
+    "telefon": "+49 4934 91059 0"
+  },
+  {
+    "id": "PDOS_PST_NORDDEICH",
+    "name": "Polizeistation Norddeich",
+    "adresse": "Hafenstraße 2, 26506 Norden/Norddeich",
+    "telefon": "+49 4931 97279 0"
+  },
+  {
+    "id": "PDOS_PST_NORDERNEY",
+    "name": "Polizeistation Norderney",
+    "adresse": "Knyphausenstraße 7, 26548 Norderney",
+    "telefon": "+49 4932 9298 0"
+  },
+  {
+    "id": "PDOS_PST_PEWSUM",
+    "name": "Polizeistation Pewsum",
+    "adresse": "Manningastraße 12, 26736 Krummhörn",
+    "telefon": "+49 4923 80571 0"
+  },
+  {
+    "id": "PDOS_PK_WITTMUND",
+    "name": "Polizeikommissariat Wittmund",
+    "adresse": "Isumser Straße 1-3, 26409 Wittmund",
+    "telefon": "+49 4462 911 0"
+  },
+  {
+    "id": "PDOS_PST_ESENS",
+    "name": "Polizeistation Esens",
+    "adresse": "Bahnhofstraße 15a, 26427 Esens",
+    "telefon": "+49 4971 92650 0"
+  },
+  {
+    "id": "PDOS_PST_FRIEDEBURG",
+    "name": "Polizeistation Friedeburg",
+    "adresse": "Friedeburger Hauptstraße 96, 26446 Friedeburg",
+    "telefon": "+49 4465 94578 0"
+  },
+  {
+    "id": "PDOS_PST_HOLTRIEM",
+    "name": "Polizeistation Holtriem",
+    "adresse": "Kirchweg 6, 26556 Westerholt",
+    "telefon": "+49 4975 75694 0"
+  },
+  {
+    "id": "PDOS_PST_LANGEOOG",
+    "name": "Polizeistation Langeoog",
+    "adresse": "An der Kaapdüne 5, 26465 Langeoog",
+    "telefon": "+49 4972 99070 0"
+  },
+  {
+    "id": "PDOS_PST_SPIEKEROOG",
+    "name": "Polizeistation Spiekeroog",
+    "adresse": "Tranpad 3, 26474 Spiekeroog",
+    "telefon": "+49 4976 70677 0"
+  },
+  {
+    "id": "PDOS_PST_IHLOW",
+    "name": "Polizeistation Ihlow",
+    "adresse": "Rathaus Ihlowerfehn, Alte Wieke 6, 26632 Ihlow",
+    "telefon": "+49 4929 91785 0"
+  },
+  {
+    "id": "PDOS_PST_SUEDBROOKMERLAND",
+    "name": "Polizeistation Südbrookmerland",
+    "adresse": "Westvictorburer Straße 14 c, 26624 Südbrookmerland",
+    "telefon": "+49 4942 20420 0"
+  },
+  {
+    "id": "PDOS_PST_WIESMOOR",
+    "name": "Polizeistation Wiesmoor",
+    "adresse": "Hauptstraße 250 A, 26639 Wiesmoor",
+    "telefon": "+49 4944 91405 0"
+  },
+  {
+    "id": "PDOS_PST_GROSSEFEHN",
+    "name": "Polizeistation Großefehn",
+    "adresse": "Kanalstraße Süd 54 A, 26629 Großefehn",
+    "telefon": "+49 4943 92566 0"
+  },
+  {
+    "id": "PDOS PI EMSLAND GRAFSCHAFT BENTHEIM",
+    "name": "Polizeiinspektion Emsland/Gr. Bentheim",
+    "adresse": "Wilhelm-Berning-Straße 8, 49809 Lingen (Ems)",
+    "telefon": "+49 591 87 0"
+  },
+  {
+    "id": "PDOS_PK_MEPPEN",
+    "name": "Polizeikommissariat Meppen",
+    "adresse": "Bahnhofstraße 32, 49716 Meppen",
+    "telefon": "+49 5931 949 0"
+  },
+  {
+    "id": "PDOS_PST_GEESTE",
+    "name": "Polizeistation Geeste",
+    "adresse": "Am Rathaus 1, 49744 Geeste",
+    "telefon": "+49 5937 97005 0"
+  },
+  {
+    "id": "PDOS_PST_HAREN",
+    "name": "Polizeistation Haren",
+    "adresse": "Brinkerweg 5, 49733 Haren",
+    "telefon": "+49 5932 72 100"
+  },
+  {
+    "id": "PDOS_PST_HASELUENNE",
+    "name": "Polizeistation Haselünne",
+    "adresse": "Nordstraße 18, 49740 Haselünne",
+    "telefon": "+49 5961 95870 0"
+  },
+  {
+    "id": "PDOS_PST_HERZLAKE",
+    "name": "Polizeistation Herzlake",
+    "adresse": "Neuer Markt 4, 49770 Herzlake",
+    "telefon": "+49 5962 87776 0"
+  },
+  {
+    "id": "PDOS_PST_LATHEN",
+    "name": "Polizeistation Lathen",
+    "adresse": "Große Straße 5, 49762 Lathen",
+    "telefon": "+49 5933 924570"
+  },
+  {
+    "id": "PDOS_PST_TWIST",
+    "name": "Polizeistation Twist",
+    "adresse": "Flensbergstraße 6, 49767 Twist",
+    "telefon": "+49 5936 93450 0"
+  },
+  {
+    "id": "PDOS_PK_NORDHORN",
+    "name": "Polizeikommissariat Nordhorn",
+    "adresse": "Wietmarscher Straße 4, 48531 Nordhorn",
+    "telefon": "+49 5921 309 0"
+  },
+  {
+    "id": "PDOS_CITYWACHE_NORD_NORDHORN",
+    "name": "Citywache Nord",
+    "adresse": "Am Wassergarten 2, 48529 Nordhorn",
+    "telefon": "+49 5921 78855 0"
+  },
+  {
+    "id": "PDOS_PST_BAD_BENTHEIM",
+    "name": "Polizeistation Bad Bentheim",
+    "adresse": "Thomas-Mann-Straße 2, 48455 Bad Bentheim",
+    "telefon": "+49 5922 77660 0"
+  },
+  {
+    "id": "PDOS_PST_EMLICHHEIM",
+    "name": "Polizeistation Emlichheim",
+    "adresse": "Hauptstraße 60, 49824 Emlichheim",
+    "telefon": "+49 5943 9200 0"
+  },
+  {
+    "id": "PDOS_PST_NEUENHAUS",
+    "name": "Polizeistation Neuenhaus",
+    "adresse": "Veldhausener Straße 37, 49828 Neuenhaus",
+    "telefon": "+49 5941 98985 0"
+  },
+  {
+    "id": "PDOS_PST_SCHUETTORF",
+    "name": "Polizeistation Schüttorf",
+    "adresse": "Vechtestraße 1, 48465 Schüttorf",
+    "telefon": "+49 5923 99438 0"
+  },
+  {
+    "id": "PDOS_PST_UELSEN",
+    "name": "Polizeistation Uelsen",
+    "adresse": "Itterbecker Straße 11, 49843 Uelsen",
+    "telefon": "+49 5942 92215 0"
+  },
+  {
+    "id": "PDOS_PST_WIETMARSCHEN",
+    "name": "Polizeistation Wietmarschen",
+    "adresse": "Baus Blick 5, 49835 Wietmarschen",
+    "telefon": "+49 5925 998960"
+  },
+  {
+    "id": "PDOS_PK_PAPENBURG",
+    "name": "Polizeikommissariat Papenburg",
+    "adresse": "Gasthauskanal 16, 26871 Papenburg",
+    "telefon": "+49 4961 9260"
+  },
+  {
+    "id": "PDOS_PST_DOERPEN",
+    "name": "Polizeistation Dörpen",
+    "adresse": "Hauptstraße 25, 26892 Dörpen",
+    "telefon": "+49 4963 91909 0"
+  },
+  {
+    "id": "PDOS_PST_HUEMMLING_ESTERWEGEN",
+    "name": "Polizeistation Hümmling Esterwegen",
+    "adresse": "Poststraße 13, 26897 Esterwegen",
+    "telefon": "+49 5955 93497 0"
+  },
+  {
+    "id": "PDOS_PST_RHEDE",
+    "name": "Polizeistation Rhede",
+    "adresse": "Gerhardyweg 1, 26899 Rhede (Ems)",
+    "telefon": "+49 4964 60554 0"
+  },
+  {
+    "id": "PDOS_PST_HUEMMLING_SOEGEL",
+    "name": "Polizeistation Hümmling- Sögel",
+    "adresse": "Prinzenkamp 3, 49751 Sögel",
+    "telefon": "+49 5952 93450"
+  },
+  {
+    "id": "PDOS_PST_HUEMMLING_WERLTE",
+    "name": "Polizeistation Hümmling- Werlte",
+    "adresse": "Harrenstätter Straße 31, 49757 Werlte",
+    "telefon": "+49 5951 99530 0"
+  },
+  {
+    "id": "PDOS_PST_SPELLE",
+    "name": "Polizeistation Spelle",
+    "adresse": "Hauptsstraße 39, 48480 Spelle",
+    "telefon": "+49 5977 20436 0"
+  },
+  {
+    "id": "PDOS_PST_EMSBUEREN",
+    "name": "Polizeistation Emsbüren",
+    "adresse": "Magistratstraße 3, 48488 Emsbüren",
+    "telefon": "+49 5903 70319 0"
+  },
+  {
+    "id": "PDOS_PST_FREREN",
+    "name": "Polizeistation Freren",
+    "adresse": "Königstraße 23, 49832 Freren",
+    "telefon": "+49 5902 94962 0"
+  },
+  {
+    "id": "PDOS_PST_LENGERICH",
+    "name": "Polizeistation Lengerich",
+    "adresse": "Miittelstraße 15, 49838 Lengerich (Emsland)",
+    "telefon": "+49 5904 96489 0"
+  },
+  {
+    "id": "PDOS_PST_SALZBERGEN",
+    "name": "Polizeistation Salzbergen",
+    "adresse": "Bahnhofstraße 5, 48499 Salzbergen",
+    "telefon": "+49 5976 94855 0"
+  },
+  {
+    "id": "PDOS PI LEER EMDEN",
+    "name": "Polizeiinspektion Leer/Emden",
+    "adresse": "Am Hafenkopf 2, 26789 Leer",
+    "telefon": "+49 491 97690 0"
+  },
+  {
+    "id": "PDOS_PK_EMDEN",
+    "name": "Polizeikommissariat Emden",
+    "adresse": "Bahnhofsplatz 3, 26721 Emden",
+    "telefon": "+49 4921 891 0"
+  },
+  {
+    "id": "PDOS_ESD_AUTOBAHN_LEER",
+    "name": "Einsatz- und Streifendienst Autobahn",
+    "adresse": "Deichstraße 122, 26789 Leer",
+    "telefon": "+49 491 96074 110"
+  },
+  {
+    "id": "PDOS_PST_BORKUM",
+    "name": "Polizeistation Borkum",
+    "adresse": "Strandstraße 11, 26757 Borkum",
+    "telefon": "+49 4922 91860"
+  },
+  {
+    "id": "PDOS_PST_BUNDE",
+    "name": "Polizeistation Bunde",
+    "adresse": "Am Bahnhof 1b, 26831 Bunde",
+    "telefon": "+49 4953 92152 0"
+  },
+  {
+    "id": "PDOS_PST_FILSUM",
+    "name": "Polizeistation Filsum",
+    "adresse": "Rathausring 8-12, 26849 Filsum",
+    "telefon": "+49 4957 92812 0"
+  },
+  {
+    "id": "PDOS_PST_HESEL",
+    "name": "Polizeistation Hesel",
+    "adresse": "Leeraner Straße 9, 26835 Hesel",
+    "telefon": "+49 4950 995570"
+  },
+  {
+    "id": "PDOS_PST_JEMGUM",
+    "name": "Polizeistation Jemgum",
+    "adresse": "Hofstraße 2, 26844 Jemgum",
+    "telefon": "+49 4958 91042 0"
+  },
+  {
+    "id": "PDOS_PST_MOORMERLAND",
+    "name": "Polizeistation Moormerland",
+    "adresse": "Rudolf-Eucken-Straße 13, 26802 Moormerland/OT Warsingsfehn",
+    "telefon": "+49 4954 95545 0"
+  },
+  {
+    "id": "PDOS_PST_OSTRHAUDERFEHN",
+    "name": "Polizeistation Ostrhauderfehn",
+    "adresse": "Hauptstraße 119, 26842 Ostrauderfehn",
+    "telefon": "+49 4952 82968 0"
+  },
+  {
+    "id": "PDOS_PST_RHAUDERFEHN",
+    "name": "Polizeistation Rhauderfehn",
+    "adresse": "1. Südwieke 49, 26817 Rhauderfehn",
+    "telefon": "+49 4952 923 0"
+  },
+  {
+    "id": "PDOS_PST_UPLENGEN",
+    "name": "Polizeistation Uplengen",
+    "adresse": "Ostertorstraße 47, 26670 Uplengen - OT Remels",
+    "telefon": "+49 4956 92745 0"
+  },
+  {
+    "id": "PDOS_PST_WEENER",
+    "name": "Polizeistation Weener",
+    "adresse": "Wiesenstraße 12, 26826 Weener",
+    "telefon": "+49 4951 91482 0"
+  },
+  {
+    "id": "PDOS_PST_WESTOVERLEDINGEN",
+    "name": "Polizeistation Westoverledingen",
+    "adresse": "Großwolder Straße 7, 26810 Westoverledingen - OT Ihrhove",
+    "telefon": "+49 4955 937920"
+  },
+  {
+    "id": "PDOS PI OSNABRUECK",
+    "name": "Polizeiinspektion Osnabrück",
+    "adresse": "Kollegienwall 6-8, 49074 Osnabrück",
+    "telefon": "+49 541 327 0"
+  },
+  {
+    "id": "PDOS_PST_NEUENKIRCHEN",
+    "name": "Polizeistation Neuenkirchen",
+    "adresse": "Alte Poststraße 5-7 (im Rathaus), 49586 Neuenkirchen",
+    "telefon": "+49 5465 20338 0"
+  },
+  {
+    "id": "PDOS_PK_BERSENBRUECK",
+    "name": "Polizeikommissariat Bersenbrück",
+    "adresse": "Berliner Straße 11, 49593 Bersenbrück",
+    "telefon": "+49 5439 969 0"
+  },
+  {
+    "id": "PDOS_PST_ALFHAUSEN",
+    "name": "Polizeistation Alfhausen",
+    "adresse": "Hauptstraße 18, 49594 Alfhausen",
+    "telefon": "+49 5464 968560"
+  },
+  {
+    "id": "PDOS_PST_ANKUM",
+    "name": "Polizeistation Ankum",
+    "adresse": "Lindenstraße 2, 49577 Ankum",
+    "telefon": "+49 5462 962500"
+  },
+  {
+    "id": "PDOS_PST_FUERSTENAU",
+    "name": "Polizeistation Fürstenau",
+    "adresse": "Fröhlkingstraße 7, 49584 Fürstenau",
+    "telefon": "+49 5901 96148 0"
+  },
+  {
+    "id": "PDOS_PST_QUAKENBRUECK",
+    "name": "Polizeistation Quakenbrück",
+    "adresse": "Wilhelmstraße 32, 49610 Quakenbrück",
+    "telefon": "+49 5431 90776 0"
+  },
+  {
+    "id": "PDOS_PST_BAD_ESSEN",
+    "name": "Polizeistation Bad Essen",
+    "adresse": "Gartenstraße 11, 49152 Bad Essen",
+    "telefon": "+49 5472 97717 0"
+  },
+  {
+    "id": "PDOS_PK_BRAMSCHE",
+    "name": "Polizeikommissariat Bramsche",
+    "adresse": "Osnabrücker Straße 40, 49565 Bramsche",
+    "telefon": "+49 5461 9453 0"
+  },
+  {
+    "id": "PDOS_PST_BOHMTE",
+    "name": "Polizeistation Bohmte",
+    "adresse": "Leverner Straße 9, 49163 Bohmte",
+    "telefon": "+49 5471 9710"
+  },
+  {
+    "id": "PDOS_PST_OSTERCAPPELN",
+    "name": "Polizeistation Ostercappeln",
+    "adresse": "Gildebrede1, 49179 Ostercappeln",
+    "telefon": "+49 5473 95921 0"
+  },
+  {
+    "id": "PDOS_PST_WALLENHORST",
+    "name": "Polizeistation Wallenhorst",
+    "adresse": "Niedersachsenstraße 18, 49134 Wallenhorst",
+    "telefon": "+49 5407 85700 0"
+  },
+  {
+    "id": "PDOS_PST_HAGEN",
+    "name": "Polizeistation Hagen",
+    "adresse": "Alte Straße 2, 49170 Hagen",
+    "telefon": "+49 5401 84912 0"
+  },
+  {
+    "id": "PDOS_PST_BAD_LAER",
+    "name": "Polizeistation Bad Laer",
+    "adresse": "Glandorfer Straße 5, 49196 Bad Laer",
+    "telefon": "+49 5424 64450 0"
+  },
+  {
+    "id": "PDOS_PK_GEORGSMARIENHUETTE",
+    "name": "Polizeikommissariat Georgsmarienhütte",
+    "adresse": "Johannes-Möller-Straße 1, 49124 Georgsmarienhütte",
+    "telefon": "+49 5401 83160"
+  },
+  {
+    "id": "PDOS_PST_BAD_ROTHENFELDE",
+    "name": "Polizeistation Bad Rothenfelde",
+    "adresse": "Frankfurter Straße 4, 49214 Bad Rothenfelde",
+    "telefon": "+49 5424 29329 0"
+  },
+  {
+    "id": "PDOS_PST_BAD_IBURG",
+    "name": "Polizeistation Bad Iburg",
+    "adresse": "Schloß, 49176 Bad Iburg",
+    "telefon": "+49 5403 79669 0"
+  },
+  {
+    "id": "PDOS_PST_DISSEN",
+    "name": "Polizeistation Dissen a. T. W.",
+    "adresse": "Auf der Worth 28, 49201 Dissen a. T. W.",
+    "telefon": "+49 5421 93128 0"
+  },
+  {
+    "id": "PDOS_PST_GLANDORF",
+    "name": "Polizeistation Glandorf",
+    "adresse": "Kolpingstraße 1c, 49219 Glandorf",
+    "telefon": "+49 5426 94543 0"
+  },
+  {
+    "id": "PDOS_PST_HASBERGEN",
+    "name": "Polizeistation Hasbergen",
+    "adresse": "Lyrastraße 7 A, 49205 Hasbergen",
+    "telefon": "+49 5405 89544 0"
+  },
+  {
+    "id": "PDOS_PST_HILTER",
+    "name": "Polizeistation Hilter",
+    "adresse": "Osnabrücker Straße 1, 49176 Hilter",
+    "telefon": "+49 5424 29396 0"
+  },
+  {
+    "id": "PDOS_PK_MELLE",
+    "name": "Polizeikommissariat Melle",
+    "adresse": "Plettenberger Straße 27, 49324 Melle",
+    "telefon": "+49 5422 92260"
+  },
+  {
+    "id": "PDOS_PST_BELM",
+    "name": "Polizeistation Belm",
+    "adresse": "Marktring 17, 49191 Belm",
+    "telefon": "+49 5406 89863 0"
+  },
+  {
+    "id": "PDOS_PST_BISSENDORF",
+    "name": "Polizeistation Bissendorf",
+    "adresse": "Osnabrücker Straße 3, 49143 Bissendorf",
+    "telefon": "+49 5402 98549 0"
+  },
+  {
+    "id": "PDOS_ZVD_OSNABRUECK",
+    "name": "Zentraler Verkehrsdienst Osnabrück",
+    "adresse": "Augustenburger Straße 62, 49078 Osnabrück",
+    "telefon": "+49 541 327 2515"
+  },
+  {
+    "id": "PDOS_POLIZEIAUTOBAHNWACHE_BRAMSCHE",
+    "name": "Polizeiautobahnwache Bramsche",
+    "adresse": "An der BAB 1, Anschlussstelle Bramsche",
+    "telefon": "+49 541 327 2515"
+  }
+]

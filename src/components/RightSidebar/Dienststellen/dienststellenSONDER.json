@@ -1,0 +1,33 @@
+[
+  {
+    "id": "SONDER ZPD NDS",
+    "name": "Zentrale Polizeidirektion Niedersachsen",
+    "adresse": "Tannenbergallee 11, 30163 Hannover",
+    "telefon": "+49 011 9695 0"
+  },
+  {
+    "id": "SONDER_PA_NDS_DEZ20_HANN_MUENDEN",
+    "name": "Polizeiakademie Niedersachsen Dezernat 20",
+    "adresse": "Gimterstr. 10, 34346 Hann. Münden",
+    "telefon": "+49 5021 844 2020"
+  },
+  {
+    "id": "SONDER PA NIENBURG",
+    "name": "Polizeiakademie Niedersachsen Standort Nienburg",
+    "adresse": "Bürgermeister-Stahn-Wall 9, 31582 Nienburg / Weser",
+    "telefon": "+49 5021 844 1714"
+  },
+  {
+    "id": "SONDER PA HANN MÜNDEN",
+    "name": "Polizeiakademie Niedersachsen Standort Hann. Münden",
+    "adresse": "Gimterstr. 10, 34346 Hann.-Münden",
+    "telefon": "+49 5021 844 1773"
+  },
+  {
+    "id": "SONDER PA OLDENBURG",
+    "name": "Polizeiakademie Niedersachsen Standort Oldenburg",
+    "adresse": "Bloherfelder Str. 235, 26129 Oldenburg",
+    "telefon": "+49 5021 844 1760"
+  }
+]
+

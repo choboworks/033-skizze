@@ -57,11 +57,13 @@ export interface ScaleState {
 export interface DocumentMeta {
   id: string
   name: string
-  caseNumber: string    // Aktenzeichen
+  caseNumber: string          // Aktenzeichen
   date: string
-  officer: string       // Sachbearbeiter
-  department: string    // Dienststelle
-  subdivision: string   // Dienstabteilung
+  officer: string             // Sachbearbeiter
+  department: string          // Dienststelle (Name)
+  departmentAddress: string   // Dienststellen-Adresse ("Straße, PLZ Stadt")
+  departmentPhone: string     // Dienststellen-Telefon
+  subdivision: string         // Dienstabteilung
   createdAt: number
   updatedAt: number
 }
