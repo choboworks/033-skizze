@@ -1,10 +1,11 @@
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
 import { Stage, Layer, Rect, Line as KonvaLine, Text } from 'react-konva'
 import { StripRenderer } from './StripRenderer'
 import { MarkingRenderer } from './MarkingRenderer'
-import { totalWidth, STRIP_LABELS, STRIP_MIN_WIDTHS, FIXED_WIDTH_STRIPS } from '../constants'
+import { totalWidth, STRIP_LABELS, STRIP_MIN_WIDTHS, FIXED_WIDTH_STRIPS, orderMarkingsByLayer } from '../constants'
 import type { Strip, Marking } from '../types'
 import type Konva from 'konva'
+import { getStripRenderLength, getStripRenderY } from '../stripProps'
 
 // ============================================================
 // RoadTopView – Interactive top-down view
@@ -21,6 +22,7 @@ import type Konva from 'konva'
 interface Props {
   strips: Strip[]
   markings: Marking[]
+  layerOrder?: string[]
   length: number
   selectedStripId: string | null
   selectedMarkingId: string | null
@@ -38,6 +40,7 @@ const PADDING = 40
 export function RoadTopView({
   strips,
   markings,
+  layerOrder,
   length,
   selectedStripId,
   selectedMarkingId,
@@ -55,6 +58,10 @@ export function RoadTopView({
   const [isDraggingMarking, setIsDraggingMarking] = useState(false)
 
   const tw = totalWidth(strips)
+  const orderedMarkings = useMemo(
+    () => orderMarkingsByLayer(markings, layerOrder),
+    [markings, layerOrder]
+  )
 
   // Snap positions: cumulative strip edges (boundaries between strips)
   const stripEdges: number[] = []
@@ -174,7 +181,6 @@ export function RoadTopView({
   const [isDragging, setIsDragging] = useState(false)
 
   const startDragReorder = useCallback((stripId: string, stripIndex: number, e: Konva.KonvaEventObject<MouseEvent>) => {
-    if (selectedStripId !== stripId) return
     e.cancelBubble = true
     dragRef.current = { stripId, originalIndex: stripIndex }
     dragTargetRef.current = null
@@ -247,7 +253,7 @@ export function RoadTopView({
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
-  }, [selectedStripId, strips, offsetX, displayScale, onStripsUpdate])
+  }, [strips, offsetX, displayScale, onStripsUpdate])
 
   // --- Length drag ---
   const [draggingLength, setDraggingLength] = useState(false)
@@ -306,60 +312,69 @@ export function RoadTopView({
 
   // Spring animation loop — only runs during drag
   const [animShifts, setAnimShifts] = useState<Record<string, number>>({})
+  const animShiftsRef = useRef<Record<string, number>>({})
   const animRef = useRef<number>(0)
   const isAnimatingRef = useRef(false)
 
   useEffect(() => {
-    if (!isDragging && Object.values(animShifts).every((v) => Math.abs(v) < 0.01)) {
+    animShiftsRef.current = animShifts
+  }, [animShifts])
+
+  useEffect(() => {
+    const hasNonZeroTargets = Object.values(targetShiftsRef.current).some((v) => Math.abs(v) > 0.005)
+    const hasActiveShifts = Object.values(animShiftsRef.current).some((v) => Math.abs(v) > 0.005)
+
+    if (!isDragging && !hasNonZeroTargets && !hasActiveShifts) {
       // Not dragging and all shifts at rest — don't animate
       if (isAnimatingRef.current) {
         cancelAnimationFrame(animRef.current)
         isAnimatingRef.current = false
+      }
+      if (Object.keys(animShiftsRef.current).length > 0) {
+        animShiftsRef.current = {}
         setAnimShifts({})
       }
       return
     }
 
-    if (isAnimatingRef.current) return // already running
+    if (isAnimatingRef.current) return
 
     isAnimatingRef.current = true
     const animate = () => {
       if (!isAnimatingRef.current) return
-      setAnimShifts((prev) => {
-        const targets = targetShiftsRef.current
-        const next: Record<string, number> = {}
-        let anyMoving = false
-        for (const id of Object.keys(targets)) {
-          const current = prev[id] || 0
-          const target = targets[id] || 0
-          const diff = target - current
-          if (Math.abs(diff) > 0.005) {
-            next[id] = current + diff * 0.18
-            anyMoving = true
-          } else {
-            next[id] = target
-          }
+      const prev = animShiftsRef.current
+      const targets = targetShiftsRef.current
+      const next: Record<string, number> = {}
+      let anyMoving = false
+
+      for (const id of Object.keys(targets)) {
+        const current = prev[id] || 0
+        const target = targets[id] || 0
+        const diff = target - current
+        if (Math.abs(diff) > 0.005) {
+          next[id] = current + diff * 0.18
+          anyMoving = true
+        } else if (Math.abs(target) > 0.005) {
+          next[id] = target
         }
-        // Ease back strips no longer in targets
-        for (const id of Object.keys(prev)) {
-          if (!(id in next)) {
-            const current = prev[id] || 0
-            if (Math.abs(current) > 0.005) {
-              next[id] = current * 0.82
-              anyMoving = true
-            } else {
-              next[id] = 0
-            }
-          }
+      }
+
+      for (const id of Object.keys(prev)) {
+        if (id in next) continue
+        const current = prev[id] || 0
+        if (Math.abs(current) > 0.005) {
+          next[id] = current * 0.82
+          anyMoving = true
         }
-        if (!anyMoving) {
-          isAnimatingRef.current = false
-          return {}
-        }
-        return next
-      })
-      if (isAnimatingRef.current) {
+      }
+
+      animShiftsRef.current = next
+      setAnimShifts(next)
+
+      if (anyMoving || isDragging) {
         animRef.current = requestAnimationFrame(animate)
+      } else {
+        isAnimatingRef.current = false
       }
     }
     animRef.current = requestAnimationFrame(animate)
@@ -367,7 +382,7 @@ export function RoadTopView({
       cancelAnimationFrame(animRef.current)
       isAnimatingRef.current = false
     }
-  }, [isDragging, animShifts])
+  }, [isDragging])
 
   // --- Build strip visuals ---
   const stripNodes: React.ReactNode[] = []
@@ -376,6 +391,8 @@ export function RoadTopView({
   let xOffset = 0
   for (let i = 0; i < strips.length; i++) {
     const strip = strips[i]
+    const stripY = getStripRenderY(strip)
+    const stripHeight = getStripRenderLength(strip, length)
     const isBeingDragged = strip.id === draggedStripId
     const shift = animShifts[strip.id] || 0
     const sx = xOffset + shift
@@ -384,14 +401,14 @@ export function RoadTopView({
 
     // Strip visual
     stripNodes.push(
-      <StripRenderer key={strip.id} strip={strip} x={sx} length={length} />
+      <StripRenderer key={strip.id} strip={strip} x={sx} y={stripY} length={stripHeight} />
     )
     // Dim original during drag
     if (isBeingDragged) {
       stripNodes.push(
         <Rect
           key={`dim-${strip.id}`}
-          x={sx} y={0} width={strip.width} height={length}
+          x={sx} y={stripY} width={strip.width} height={stripHeight}
           fill="rgba(0,0,0,0.35)" listening={false}
         />
       )
@@ -404,7 +421,7 @@ export function RoadTopView({
       stripNodes.push(
         <Text
           key={`l-${strip.id}`}
-          x={sx} y={0.15}
+          x={sx} y={stripY + 0.15}
           width={strip.width}
           align="center"
           text={label}
@@ -416,46 +433,42 @@ export function RoadTopView({
       )
     }
 
-    // Click area (rgba fill so Konva registers hits)
+    // Stable interaction node for selection + double-click + optional drag.
+    // Keeping this as a single Konva node avoids losing dblclick when the
+    // selected overlay appears between the first and second click.
     interactionNodes.push(
-      <Rect
-        key={`click-${strip.id}`}
-        x={sx} y={0}
-        width={strip.width} height={length}
-        fill="rgba(0,0,0,0.001)"
+        <Rect
+        key={`hit-${strip.id}`}
+        x={sx}
+        y={stripY}
+        width={strip.width}
+        height={stripHeight}
+          fill={isSelected ? 'rgba(74,158,255,0.12)' : 'rgba(0,0,0,0.001)'}
+        stroke={isSelected ? '#4a9eff' : undefined}
+        strokeWidth={isSelected ? 1.5 / displayScale : 0}
         onClick={(e) => { e.cancelBubble = true; onSelectStrip(strip.id); onSelectMarking(null) }}
         onDblClick={(e) => { e.cancelBubble = true; onDoubleClickElement?.('strip', strip.id) }}
         onTap={(e) => { e.cancelBubble = true; onSelectStrip(strip.id); onSelectMarking(null) }}
-        onDblTap={() => onDoubleClickElement?.('strip', strip.id)}
-        cursor="pointer"
+        onDblTap={(e) => { e.cancelBubble = true; onDoubleClickElement?.('strip', strip.id) }}
+        onMouseDown={(e) => {
+          onSelectStrip(strip.id)
+          onSelectMarking(null)
+          startDragReorder(strip.id, i, e)
+        }}
+        cursor={isSelected ? 'grab' : 'pointer'}
       />
     )
 
     // Selection highlight + resize edges (only for selected strip)
     if (isSelected) {
-      // Blue overlay
-      interactionNodes.push(
-        <Rect
-          key={`sel-${strip.id}`}
-          x={sx} y={0}
-          width={strip.width} height={length}
-          fill="rgba(74,158,255,0.12)"
-          stroke="#4a9eff"
-          strokeWidth={1.5 / displayScale}
-          cursor="grab"
-          onMouseDown={(e) => {
-            startDragReorder(strip.id, i, e)
-          }}
-        />
-      )
 
       // Left edge resize handle (if not fixed and not first strip)
       if (!isFixed && i > 0) {
         interactionNodes.push(
           <Rect
             key={`resize-l-${strip.id}`}
-            x={sx - 0.2} y={0}
-            width={0.4} height={length}
+            x={sx - 0.2} y={stripY}
+            width={0.4} height={stripHeight}
             fill="rgba(0,0,0,0.001)"
             cursor="col-resize"
             onMouseDown={(e) => handleResizeStart(i, 'left', e)}
@@ -468,8 +481,8 @@ export function RoadTopView({
         interactionNodes.push(
           <Rect
             key={`resize-r-${strip.id}`}
-            x={sx + strip.width - 0.2} y={0}
-            width={0.4} height={length}
+            x={sx + strip.width - 0.2} y={stripY}
+            width={0.4} height={stripHeight}
             fill="rgba(0,0,0,0.001)"
             cursor="col-resize"
             onMouseDown={(e) => handleResizeStart(i, 'right', e)}
@@ -481,10 +494,12 @@ export function RoadTopView({
     // Subtle edge line between strips of different types
     if (i < strips.length - 1 && strip.type !== strips[i + 1].type) {
       const edgeX = sx + strip.width
+      const nextStripY = getStripRenderY(strips[i + 1])
+      const nextStripHeight = getStripRenderLength(strips[i + 1], length)
       stripNodes.push(
         <KonvaLine
           key={`edge-${i}`}
-          points={[edgeX, 0, edgeX, length]}
+          points={[edgeX, Math.min(stripY, nextStripY), edgeX, Math.max(stripY + stripHeight, nextStripY + nextStripHeight)]}
           stroke="rgba(128,128,128,0.2)"
           strokeWidth={0.3 / displayScale}
           listening={false}
@@ -501,14 +516,16 @@ export function RoadTopView({
     const ghostStrip = strips.find((s) => s.id === dragRef.current!.stripId)
     if (ghostStrip) {
       const gw = ghostStrip.width
+      const ghostY = getStripRenderY(ghostStrip)
+      const ghostHeight = getStripRenderLength(ghostStrip, length)
       const pad = 0.25
 
       // Soft shadow (slightly offset down-right for depth)
       ghostNodes.push(
         <Rect
           key="ghost-shadow"
-          x={dragGhostX - pad + 0.06} y={-pad + 0.08}
-          width={gw + pad * 2} height={length + pad * 2}
+          x={dragGhostX - pad + 0.06} y={ghostY - pad + 0.08}
+          width={gw + pad * 2} height={ghostHeight + pad * 2}
           fill="rgba(0,0,0,0.12)"
           cornerRadius={0.12}
           listening={false}
@@ -518,8 +535,8 @@ export function RoadTopView({
       ghostNodes.push(
         <Rect
           key="ghost-glow"
-          x={dragGhostX - pad} y={-pad}
-          width={gw + pad * 2} height={length + pad * 2}
+          x={dragGhostX - pad} y={ghostY - pad}
+          width={gw + pad * 2} height={ghostHeight + pad * 2}
           fill="rgba(74,158,255,0.06)"
           stroke="rgba(74,158,255,0.2)"
           strokeWidth={2 / displayScale}
@@ -529,14 +546,14 @@ export function RoadTopView({
       )
       // The strip itself (slightly scaled up for "lift" effect)
       ghostNodes.push(
-        <StripRenderer key="ghost-strip" strip={ghostStrip} x={dragGhostX} length={length} />
+        <StripRenderer key="ghost-strip" strip={ghostStrip} x={dragGhostX} y={ghostY} length={ghostHeight} />
       )
       // Accent border (thin, crisp)
       ghostNodes.push(
         <Rect
           key="ghost-accent"
-          x={dragGhostX} y={0}
-          width={gw} height={length}
+          x={dragGhostX} y={ghostY}
+          width={gw} height={ghostHeight}
           stroke="rgba(74,158,255,0.45)"
           strokeWidth={1 / displayScale}
           listening={false}
@@ -598,10 +615,10 @@ export function RoadTopView({
 
         {/* Markings (draggable, selectable, snappable) */}
         <Layer x={offsetX} y={offsetY} scaleX={displayScale} scaleY={displayScale}>
-          {markings.map((m) => {
+          {orderedMarkings.map((m) => {
             // For centerlines: pass peer phases for vertical alignment snap
             const peerPhases = m.type === 'centerline'
-              ? markings.filter(p => p.type === 'centerline' && p.id !== m.id).map(p => p.y)
+              ? orderedMarkings.filter((p) => p.type === 'centerline' && p.id !== m.id).map((p) => p.y)
               : undefined
             return (
               <MarkingRenderer

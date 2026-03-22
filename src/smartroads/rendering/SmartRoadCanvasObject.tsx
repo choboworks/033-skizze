@@ -8,6 +8,8 @@ import { metersToPixels, pixelsToMeters } from '@/utils/scale'
 import { shapeRefs } from '@/components/Canvas/shapeRefs'
 import { useAppStore } from '@/store'
 import type Konva from 'konva'
+import { orderMarkingsByLayer } from '../constants'
+import { getStripRenderLength, getStripRenderY } from '../stripProps'
 
 // ============================================================
 // SmartRoadCanvasObject – Renders a SmartRoad on the main canvas
@@ -27,10 +29,12 @@ interface Props {
   contentOriginY?: number
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSelect?: (id: string, e: any) => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onDragStart?: (id: string, e: any) => void
   onDoubleClick?: (id: string) => void
 }
 
-export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMeters = 0, contentOriginX = 0, contentOriginY = 0, onSelect, onDoubleClick }: Props) {
+export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMeters = 0, contentOriginX = 0, contentOriginY = 0, onSelect, onDragStart, onDoubleClick }: Props) {
   const groupRef = useRef<Konva.Group>(null)
   const updateObject = useAppStore((s) => s.updateObject)
   const activeTool = useAppStore((s) => s.activeTool)
@@ -89,13 +93,20 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
   }, [obj.id, scale, scaleFactor, updateObject, contentOriginX, contentOriginY, offsetXMeters, offsetYMeters])
 
   if (!state || !state.strips || state.strips.length === 0) return null
+  const orderedMarkings = orderMarkingsByLayer(state.markings, state.layerOrder)
 
   // Build strip nodes
   const stripNodes: React.ReactNode[] = []
   let xOffset = 0
   for (const strip of state.strips) {
     stripNodes.push(
-      <StripRenderer key={strip.id} strip={strip} x={xOffset} length={state.length} />
+      <StripRenderer
+        key={strip.id}
+        strip={strip}
+        x={xOffset}
+        y={getStripRenderY(strip)}
+        length={getStripRenderLength(strip, state.length)}
+      />
     )
     xOffset += strip.width
   }
@@ -112,15 +123,17 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
       opacity={obj.opacity}
       visible={obj.visible}
       draggable={!obj.locked && (activeTool === 'select' || (activeTool === 'print-area' && hasViewportOverride))}
+      onMouseDown={(e) => onSelect?.(obj.id, e)}
       onClick={(e) => onSelect?.(obj.id, e)}
       onTap={(e) => onSelect?.(obj.id, e)}
+      onDragStart={(e) => onDragStart?.(obj.id, e)}
       onDblClick={() => onDoubleClick?.(obj.id)}
       onDblTap={() => onDoubleClick?.(obj.id)}
       onDragEnd={handleDragEnd}
       onTransformEnd={handleTransformEnd}
     >
       {stripNodes}
-      {state.markings.map((m) => (
+      {orderedMarkings.map((m) => (
         <MarkingRenderer key={m.id} marking={m} roadLength={state.length} />
       ))}
     </Group>

@@ -1,6 +1,7 @@
 import { Group, Line, Rect } from 'react-konva'
 import type { Marking } from '../../types'
 import { handleMarkingDragMove } from './snapHelper'
+import { MARKING_RULES } from '../../rules/markingRules'
 
 interface Props {
   marking: Marking
@@ -15,21 +16,23 @@ interface Props {
 }
 
 export function LaneBoundary({ marking, roadLength, draggable, selected, snapPositions, onDragEnd, onClick, onDoubleClick, onDragging }: Props) {
+  const baseY = marking.offsetY ?? marking.y
+  const effectiveLength = marking.length ?? roadLength
   const isDouble = marking.variant === 'double'
-  const sw = marking.strokeWidth || 0.12
+  const sw = marking.strokeWidth || MARKING_RULES.lineWidths.otherRoads.schmalstrich
   const color = marking.color || '#ffffff'
   const hitWidth = Math.max(0.6, sw * 4)
 
   return (
     <Group
-      x={marking.x} y={marking.y}
+      x={marking.x} y={baseY}
       draggable={draggable}
       onDragStart={() => onDragging?.(true)}
       onDragMove={(e) => {
-        e.target.y(0) // solid line: always full length, no vertical drag
+        e.target.y(baseY) // solid line: always full length, no vertical drag
         handleMarkingDragMove(e, snapPositions)
       }}
-      onDragEnd={(e) => { onDragging?.(false); onDragEnd?.(marking.id, e.target.x(), e.target.y()) }}
+      onDragEnd={(e) => { onDragging?.(false); onDragEnd?.(marking.id, e.target.x(), baseY) }}
       onClick={(e) => { e.cancelBubble = true; onClick?.(marking.id) }}
       onDblClick={(e) => { e.cancelBubble = true; onDoubleClick?.(marking.id) }}
       onTap={(e) => { e.cancelBubble = true; onClick?.(marking.id) }}
@@ -38,22 +41,22 @@ export function LaneBoundary({ marking, roadLength, draggable, selected, snapPos
       {selected && (
         <Rect
           x={-hitWidth / 2} y={0}
-          width={hitWidth} height={roadLength}
+          width={hitWidth} height={effectiveLength}
           fill="rgba(74,158,255,0.15)"
           listening={false}
         />
       )}
       {isDouble ? (
         <>
-          <Line points={[-0.08, 0, -0.08, roadLength]} stroke={color} strokeWidth={sw} />
-          <Line points={[0.08, 0, 0.08, roadLength]} stroke={color} strokeWidth={sw} />
+          <Line points={[-0.08, 0, -0.08, effectiveLength]} stroke={color} strokeWidth={sw} />
+          <Line points={[0.08, 0, 0.08, effectiveLength]} stroke={color} strokeWidth={sw} />
         </>
       ) : (
-        <Line points={[0, 0, 0, roadLength]} stroke={color} strokeWidth={sw} />
+        <Line points={[0, 0, 0, effectiveLength]} stroke={color} strokeWidth={sw} />
       )}
       <Rect
         x={-hitWidth / 2} y={0}
-        width={hitWidth} height={roadLength}
+        width={hitWidth} height={effectiveLength}
         fill="rgba(0,0,0,0.001)"
         cursor="pointer"
       />

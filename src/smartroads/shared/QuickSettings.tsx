@@ -2,7 +2,7 @@ import { useState } from 'react'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import { Minus, Plus, ChevronDown } from 'lucide-react'
 import { AlertTriangle } from 'lucide-react'
-import type { Strip, RoadClass } from '../types'
+import type { Strip, RoadClass, StripType, StripVariant } from '../types'
 import { createStrip, totalWidth, ROAD_CLASS_CONFIG } from '../constants'
 import { calculateAutoScale, PAGE_WIDTH_MM } from '@/utils/scale'
 
@@ -32,6 +32,15 @@ function getSide(strips: Strip[], type: string): Side {
 
 function countLanes(strips: Strip[]): number {
   return strips.filter((s) => s.type === 'lane').length
+}
+
+function defaultQuickVariant(type: 'sidewalk' | 'cyclepath' | 'parking'): StripVariant {
+  switch (type) {
+    case 'parking':
+      return 'parallel'
+    default:
+      return 'standard'
+  }
 }
 
 // --- Editable number with +/- buttons ---
@@ -122,10 +131,13 @@ export function QuickSettings({ strips, length, roadClass, onUpdateStrips, onUpd
   const laneCount = countLanes(strips)
   const tw = totalWidth(strips)
 
+  const createProfileStrip = (type: StripType, variant: StripVariant = 'standard', direction?: 'up' | 'down') =>
+    createStrip(type, variant, direction, roadClass)
+
   const addLane = () => {
     const lastLaneIdx = strips.reduce((acc, s, i) => s.type === 'lane' ? i : acc, -1)
     const newStrips = [...strips]
-    newStrips.splice(lastLaneIdx + 1, 0, createStrip('lane', 'standard', 'down'))
+    newStrips.splice(lastLaneIdx + 1, 0, createProfileStrip('lane', 'standard', 'down'))
     onUpdateStrips(newStrips)
   }
 
@@ -136,9 +148,10 @@ export function QuickSettings({ strips, length, roadClass, onUpdateStrips, onUpd
   }
 
   const setSide = (type: 'sidewalk' | 'cyclepath' | 'parking', side: Side) => {
+    const variant = defaultQuickVariant(type)
     let newStrips = strips.filter((s) => s.type !== type)
-    if (side === 'left' || side === 'both') newStrips = [createStrip(type), ...newStrips]
-    if (side === 'right' || side === 'both') newStrips = [...newStrips, createStrip(type)]
+    if (side === 'left' || side === 'both') newStrips = [createProfileStrip(type, variant), ...newStrips]
+    if (side === 'right' || side === 'both') newStrips = [...newStrips, createProfileStrip(type, variant)]
     onUpdateStrips(newStrips)
   }
 

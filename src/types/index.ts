@@ -156,6 +156,8 @@ export interface PanelStates {
   rightSidebarWidth: number
 }
 
+export type RightSidebarTab = 'layers' | 'library' | 'metadata'
+
 // --- Theme ---
 export type Theme = 'light' | 'dark'
 
@@ -208,6 +210,7 @@ export interface AppState {
   theme: Theme
   propertiesPanelId: string | null
   activeLibraryCategory: string | null
+  rightSidebarTab: RightSidebarTab
 
   // Actions – Viewport
   setViewport: (viewport: Partial<ViewportState>) => void
@@ -241,6 +244,7 @@ export interface AppState {
 
   // Actions – Library
   setLibraryCategory: (category: string | null) => void
+  setRightSidebarTab: (tab: RightSidebarTab) => void
 
   // Actions – Theme
   toggleTheme: () => void

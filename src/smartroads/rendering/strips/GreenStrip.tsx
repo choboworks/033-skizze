@@ -3,14 +3,15 @@ import { getGrassPattern } from '../../shared/patterns'
 
 interface Props {
   x: number
+  y?: number
   width: number
   length: number
 }
 
-export function GreenStrip({ x, width, length }: Props) {
+export function GreenStrip({ x, y = 0, width, length }: Props) {
   return (
     <Rect
-      x={x} y={0}
+      x={x} y={y}
       width={width} height={length}
       fillPatternImage={getGrassPattern() as unknown as HTMLImageElement}
       fillPatternScale={{ x: 0.02, y: 0.02 }}

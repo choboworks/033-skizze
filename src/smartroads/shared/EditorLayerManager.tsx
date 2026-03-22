@@ -4,32 +4,38 @@ import {
   Minus, ArrowUp, ArrowDown, Route, Pencil,
 } from 'lucide-react'
 import type { Strip, Marking } from '../types'
-import { STRIP_LABELS, STRIP_COLORS } from '../constants'
+import { STRIP_LABELS, STRIP_COLORS, normalizeLayerOrder } from '../constants'
 import { MARKING_TYPE_LABELS } from '@/constants/shared'
 
 // ============================================================
-// EditorLayerManager – Ebenen-Manager inside the SmartRoad editor
+// EditorLayerManager - Ebenen-Manager inside the SmartRoad editor
 // Mirrors the main app's LayerManager design.
 // ============================================================
 
-// --- Icons ---
 function StripIcon({ type }: { type: string }) {
   switch (type) {
-    case 'lane': case 'bus': return <ArrowUp size={16} />
-    case 'sidewalk': return <Route size={16} />
-    default: return <Minus size={16} />
+    case 'lane':
+    case 'bus':
+      return <ArrowUp size={16} />
+    case 'sidewalk':
+      return <Route size={16} />
+    default:
+      return <Minus size={16} />
   }
 }
 
 function MarkingIcon({ type }: { type: string }) {
   switch (type) {
-    case 'centerline': case 'laneboundary': return <Minus size={16} />
-    case 'arrow': return <ArrowDown size={16} />
-    default: return <Pencil size={16} />
+    case 'centerline':
+    case 'laneboundary':
+      return <Minus size={16} />
+    case 'arrow':
+      return <ArrowDown size={16} />
+    default:
+      return <Pencil size={16} />
   }
 }
 
-// Unified item type
 interface LayerItem {
   id: string
   kind: 'strip' | 'marking'
@@ -41,6 +47,7 @@ interface LayerItem {
 interface Props {
   strips: Strip[]
   markings: Marking[]
+  layerOrder: string[]
   selectedStripId: string | null
   selectedMarkingId: string | null
   onSelectStrip: (id: string | null) => void
@@ -48,35 +55,43 @@ interface Props {
   onDeleteStrip: (id: string) => void
   onDeleteMarking: (id: string) => void
   onOpenProperties: (kind: 'strip' | 'marking', id: string) => void
-  onReorderStrips: (strips: Strip[]) => void
+  onReorderLayers: (layerOrder: string[]) => void
 }
 
 export function EditorLayerManager({
-  strips, markings,
-  selectedStripId, selectedMarkingId,
-  onSelectStrip, onSelectMarking,
-  onDeleteStrip, onDeleteMarking,
-  onOpenProperties, onReorderStrips,
+  strips,
+  markings,
+  layerOrder,
+  selectedStripId,
+  selectedMarkingId,
+  onSelectStrip,
+  onSelectMarking,
+  onDeleteStrip,
+  onDeleteMarking,
+  onOpenProperties,
+  onReorderLayers,
 }: Props) {
-
   const items: LayerItem[] = [
-    ...strips.map((s) => ({
-      id: s.id,
+    ...strips.map((strip) => ({
+      id: strip.id,
       kind: 'strip' as const,
-      label: `${STRIP_LABELS[s.type] || s.type}${s.direction ? (s.direction === 'up' ? ' ↑' : ' ↓') : ''}`,
-      icon: <StripIcon type={s.type} />,
-      color: STRIP_COLORS[s.type] || '#555',
+      label: STRIP_LABELS[strip.type] || strip.type,
+      icon: <StripIcon type={strip.type} />,
+      color: STRIP_COLORS[strip.type] || '#555',
     })),
-    ...markings.map((m) => ({
-      id: m.id,
+    ...markings.map((marking) => ({
+      id: marking.id,
       kind: 'marking' as const,
-      label: MARKING_TYPE_LABELS[m.type] || m.type,
-      icon: <MarkingIcon type={m.type} />,
+      label: MARKING_TYPE_LABELS[marking.type] || marking.type,
+      icon: <MarkingIcon type={marking.type} />,
       color: '#ffffff',
     })),
   ]
 
-  // --- Strip DnD z-order ---
+  const normalizedOrder = normalizeLayerOrder(layerOrder, strips, markings)
+  const displayOrder = [...normalizedOrder].reverse()
+  const itemMap = new Map(items.map((item) => [item.id, item]))
+
   const [dragId, setDragId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
   const [dropPosition, setDropPosition] = useState<'above' | 'below' | null>(null)
@@ -99,35 +114,46 @@ export function EditorLayerManager({
     setDropPosition(e.clientY < midY ? 'above' : 'below')
   }, [dragId])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     if (!dragId || !dropTargetId || dragId === dropTargetId) {
-      setDragId(null); setDropTargetId(null); setDropPosition(null)
+      setDragId(null)
+      setDropTargetId(null)
+      setDropPosition(null)
       return
     }
-    const fromIdx = strips.findIndex(s => s.id === dragId)
-    const toIdx = strips.findIndex(s => s.id === dropTargetId)
-    if (fromIdx === -1 || toIdx === -1) {
-      setDragId(null); setDropTargetId(null); setDropPosition(null)
+
+    const nextOrder = normalizedOrder.filter((id) => id !== dragId)
+    const targetIdx = nextOrder.indexOf(dropTargetId)
+    if (targetIdx === -1) {
+      setDragId(null)
+      setDropTargetId(null)
+      setDropPosition(null)
       return
     }
-    const newStrips = strips.filter(s => s.id !== dragId)
-    const insertIdx = dropPosition === 'above' ? toIdx : toIdx + 1
-    const adjustedIdx = insertIdx > fromIdx ? insertIdx - 1 : insertIdx
-    newStrips.splice(adjustedIdx, 0, strips[fromIdx])
-    onReorderStrips(newStrips)
-    setDragId(null); setDropTargetId(null); setDropPosition(null)
-  }, [dragId, dropTargetId, dropPosition, strips, onReorderStrips])
+
+    if (dropPosition === 'above') {
+      nextOrder.splice(targetIdx + 1, 0, dragId)
+    } else {
+      nextOrder.splice(targetIdx, 0, dragId)
+    }
+
+    onReorderLayers(normalizeLayerOrder(nextOrder, strips, markings))
+    setDragId(null)
+    setDropTargetId(null)
+    setDropPosition(null)
+  }
 
   const handleDragEnd = useCallback(() => {
-    setDragId(null); setDropTargetId(null); setDropPosition(null)
+    setDragId(null)
+    setDropTargetId(null)
+    setDropPosition(null)
   }, [])
 
   const selectedId = selectedStripId || selectedMarkingId
 
   return (
     <div className="flex flex-col">
-      {/* Header */}
       <div
         className="pb-3 text-[11px] font-semibold flex items-center justify-between"
         style={{ color: 'var(--text-secondary)' }}
@@ -142,22 +168,23 @@ export function EditorLayerManager({
         </div>
       )}
 
-      {/* Item list — each item is a distinct card-like row */}
       <div className="flex flex-col" style={{ gap: 8 }}>
-        {items.map((item) => {
+        {displayOrder.map((itemId) => {
+          const item = itemMap.get(itemId)
+          if (!item) return null
+
           const isSelected = item.id === selectedId
           const isDragging = dragId === item.id
           const isDropTarget = dropTargetId === item.id
-          const isStrip = item.kind === 'strip'
 
           return (
             <div
               key={item.id}
-              draggable={isStrip}
-              onDragStart={isStrip ? (e) => handleDragStart(e, item.id) : undefined}
-              onDragOver={isStrip ? (e) => handleDragOver(e, item.id) : undefined}
-              onDrop={isStrip ? handleDrop : undefined}
-              onDragEnd={isStrip ? handleDragEnd : undefined}
+              draggable
+              onDragStart={(e) => handleDragStart(e, item.id)}
+              onDragOver={(e) => handleDragOver(e, item.id)}
+              onDrop={handleDrop}
+              onDragEnd={handleDragEnd}
               className="relative group cursor-pointer"
               style={{
                 minHeight: 64,
@@ -166,11 +193,16 @@ export function EditorLayerManager({
                 background: isSelected ? 'var(--accent-muted)' : 'var(--surface)',
                 border: isSelected ? '1px solid var(--panel-control-active-border)' : '1px solid var(--panel-control-border)',
                 transition: 'background var(--duration-hover) var(--ease-out-fast), border-color var(--duration-hover) var(--ease-out-fast), transform var(--duration-hover) var(--ease-out-fast), box-shadow var(--duration-hover) var(--ease-out-fast)',
-                ...(isDragging ? { transform: 'scale(1.02)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)', opacity: 1 } : {}),
+                ...(isDragging ? { transform: 'scale(1.02)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)', opacity: 0.4 } : {}),
               }}
               onClick={() => {
-                if (isStrip) { onSelectStrip(item.id); onSelectMarking(null) }
-                else { onSelectMarking(item.id); onSelectStrip(null) }
+                if (item.kind === 'strip') {
+                  onSelectStrip(item.id)
+                  onSelectMarking(null)
+                } else {
+                  onSelectMarking(item.id)
+                  onSelectStrip(null)
+                }
               }}
               onDoubleClick={() => onOpenProperties(item.kind, item.id)}
               onMouseEnter={(e) => {
@@ -180,7 +212,6 @@ export function EditorLayerManager({
                 if (!isSelected) e.currentTarget.style.background = 'var(--surface)'
               }}
             >
-              {/* Drop indicators */}
               {isDropTarget && dropPosition === 'above' && (
                 <div className="absolute -top-0.5 left-2 right-2 h-0.5 rounded-full" style={{ background: 'var(--accent)', zIndex: 10 }} />
               )}
@@ -188,18 +219,13 @@ export function EditorLayerManager({
                 <div className="absolute -bottom-0.5 left-2 right-2 h-0.5 rounded-full" style={{ background: 'var(--accent)', zIndex: 10 }} />
               )}
 
-              {/* Main row */}
               <div className="flex items-center" style={{ gap: 10 }}>
-                {isStrip ? (
-                  <GripVertical
-                    size={14}
-                    className="shrink-0 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-60 transition-opacity"
-                    style={{ color: 'var(--text-muted)' }}
-                  />
-                ) : (
-                  <div className="w-3.5 shrink-0" />
-                )}
-                {/* Color dot */}
+                <GripVertical
+                  size={14}
+                  className="shrink-0 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-60 transition-opacity"
+                  style={{ color: 'var(--text-muted)' }}
+                />
+
                 <span
                   className="shrink-0 w-3.5 h-3.5 rounded-sm"
                   style={{ background: item.color, border: '1.5px solid var(--border)' }}
@@ -217,19 +243,28 @@ export function EditorLayerManager({
                   {item.label}
                 </span>
 
-                {/* Inline actions (always visible on hover) */}
                 <div className="flex items-center shrink-0" style={{ gap: 4 }}>
-                  <button className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0 }} onClick={(e) => {
-                    e.stopPropagation()
-                    onOpenProperties(item.kind, item.id)
-                  }} title="Eigenschaften">
+                  <button
+                    className="icon-btn"
+                    style={{ width: 28, height: 28, borderRadius: 10, padding: 0 }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onOpenProperties(item.kind, item.id)
+                    }}
+                    title="Eigenschaften"
+                  >
                     <Settings2 size={14} />
                   </button>
-                  <button className="icon-btn" style={{ width: 28, height: 28, borderRadius: 10, padding: 0, color: 'var(--danger, #e05050)' }} onClick={(e) => {
-                    e.stopPropagation()
-                    if (isStrip) onDeleteStrip(item.id)
-                    else onDeleteMarking(item.id)
-                  }} title="Entfernen">
+                  <button
+                    className="icon-btn"
+                    style={{ width: 28, height: 28, borderRadius: 10, padding: 0, color: 'var(--danger, #e05050)' }}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (item.kind === 'strip') onDeleteStrip(item.id)
+                      else onDeleteMarking(item.id)
+                    }}
+                    title="Entfernen"
+                  >
                     <Trash2 size={14} />
                   </button>
                 </div>

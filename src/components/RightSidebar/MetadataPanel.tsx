@@ -3,8 +3,8 @@ import { useAppStore } from '@/store'
 import { DIENSTSTELLEN, type Dienststelle } from './Dienststellen/dienststellenAll'
 
 // ============================================================
-// MetadataPanel – Premium editor-style document metadata
-// Three sections: Vorgang, Zuständigkeit, Bearbeitung
+// MetadataPanel - Premium editor-style document metadata
+// Three sections: Vorgang, Zustandigkeit, Bearbeitung
 // ============================================================
 
 export function MetadataPanel() {
@@ -12,88 +12,86 @@ export function MetadataPanel() {
   const updateDocument = useAppStore((s) => s.updateDocument)
 
   return (
-    <div className="flex flex-col" style={{ padding: 14, gap: 16 }}>
-      {/* Header */}
-      <div style={{ marginBottom: 14 }}>
-        <div className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>
-          Metadaten
-        </div>
-        <div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-          Falldaten & Zuständigkeit
+    <div className="glass flex flex-col h-full min-h-0" style={{ borderRadius: 24 }}>
+      <div className="flex-1 overflow-y-auto" style={{ padding: 14 }}>
+        <div className="flex flex-col" style={{ gap: 16 }}>
+          <div style={{ marginBottom: 14 }}>
+            <div className="text-[13px] font-semibold" style={{ color: 'var(--text)' }}>
+              Metadaten
+            </div>
+            <div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+              Falldaten & Zustandigkeit
+            </div>
+          </div>
+
+          <SectionCard title="Vorgang">
+            <MetaField
+              label="Uberschrift"
+              value={document.name}
+              onChange={(v) => updateDocument({ name: v })}
+            />
+            <MetaField
+              label="Vorgangsnummer"
+              value={document.caseNumber}
+              onChange={(v) => updateDocument({ caseNumber: v })}
+              placeholder="Vg.-Nr."
+              required
+            />
+            <MetaField
+              label="Datum"
+              value={document.date}
+              onChange={(v) => updateDocument({ date: v })}
+              type="date"
+              required
+            />
+          </SectionCard>
+
+          <SectionCard title="Zustandigkeit">
+            <DienststellenField
+              value={document.department}
+              onSelect={(name, address, phone) => updateDocument({ department: name, departmentAddress: address, departmentPhone: phone })}
+              onManualChange={(v) => updateDocument({ department: v })}
+              required
+            />
+            {(!document.departmentAddress || !document.departmentPhone) && document.department.trim() !== '' && (
+              <>
+                <MetaField
+                  label="Adresse"
+                  value={document.departmentAddress}
+                  onChange={(v) => updateDocument({ departmentAddress: v })}
+                  placeholder="Strasse, PLZ Stadt"
+                />
+                <MetaField
+                  label="Telefon"
+                  value={document.departmentPhone}
+                  onChange={(v) => updateDocument({ departmentPhone: v })}
+                  placeholder="+49 ..."
+                />
+              </>
+            )}
+            <MetaField
+              label="Dienstabteilung"
+              value={document.subdivision}
+              onChange={(v) => updateDocument({ subdivision: v })}
+              placeholder="z. B. ESD DAIV"
+            />
+          </SectionCard>
+
+          <SectionCard title="Bearbeitung">
+            <MetaField
+              label="Sachbearbeiter/in"
+              value={document.officer}
+              onChange={(v) => updateDocument({ officer: v })}
+              placeholder="Name, Dienstgrad"
+              required
+            />
+          </SectionCard>
         </div>
       </div>
-
-      {/* Sektion 1 – Vorgang */}
-      <SectionCard title="Vorgang">
-        <MetaField
-          label="Überschrift"
-          value={document.name}
-          onChange={(v) => updateDocument({ name: v })}
-        />
-        <MetaField
-          label="Vorgangsnummer"
-          value={document.caseNumber}
-          onChange={(v) => updateDocument({ caseNumber: v })}
-          placeholder="Vg.-Nr."
-          required
-        />
-        <MetaField
-          label="Datum"
-          value={document.date}
-          onChange={(v) => updateDocument({ date: v })}
-          type="date"
-          required
-        />
-      </SectionCard>
-
-      {/* Sektion 2 – Zuständigkeit */}
-      <SectionCard title="Zuständigkeit">
-        <DienststellenField
-          value={document.department}
-          onSelect={(name, address, phone) => updateDocument({ department: name, departmentAddress: address, departmentPhone: phone })}
-          onManualChange={(v) => updateDocument({ department: v })}
-          required
-        />
-        {/* Zusatzfelder: sichtbar wenn Adresse/Telefon leer (manuelle Eingabe) */}
-        {(!document.departmentAddress || !document.departmentPhone) && document.department.trim() !== '' && (
-          <>
-            <MetaField
-              label="Adresse"
-              value={document.departmentAddress}
-              onChange={(v) => updateDocument({ departmentAddress: v })}
-              placeholder="Straße, PLZ Stadt"
-            />
-            <MetaField
-              label="Telefon"
-              value={document.departmentPhone}
-              onChange={(v) => updateDocument({ departmentPhone: v })}
-              placeholder="+49 ..."
-            />
-          </>
-        )}
-        <MetaField
-          label="Dienstabteilung"
-          value={document.subdivision}
-          onChange={(v) => updateDocument({ subdivision: v })}
-          placeholder="z. B. ESD DAIV"
-        />
-      </SectionCard>
-
-      {/* Sektion 3 – Bearbeitung */}
-      <SectionCard title="Bearbeitung">
-        <MetaField
-          label="Sachbearbeiter/in"
-          value={document.officer}
-          onChange={(v) => updateDocument({ officer: v })}
-          placeholder="Name, Dienstgrad"
-          required
-        />
-      </SectionCard>
     </div>
   )
 }
 
-// --- Section Card ---
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div
@@ -118,7 +116,6 @@ function SectionCard({ title, children }: { title: string; children: React.React
   )
 }
 
-// --- Metadata Field ---
 function MetaField({
   label,
   value,
@@ -157,7 +154,6 @@ function MetaField({
   )
 }
 
-// --- Dienststellen Autocomplete ---
 function DienststellenField({
   value,
   onSelect,
@@ -176,7 +172,6 @@ function DienststellenField({
   const listRef = useRef<HTMLDivElement>(null)
   const isEmpty = required && value.trim() === ''
 
-  // Sync query when value changes externally
   useEffect(() => { setQuery(value) }, [value])
 
   const results = query.trim().length === 0
@@ -209,7 +204,6 @@ function DienststellenField({
     }
   }
 
-  // Scroll active item into view
   useEffect(() => {
     if (activeIdx >= 0 && listRef.current) {
       const item = listRef.current.children[activeIdx] as HTMLElement
@@ -217,7 +211,6 @@ function DienststellenField({
     }
   }, [activeIdx])
 
-  // Close on click outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
@@ -248,11 +241,10 @@ function DienststellenField({
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={handleKeyDown}
-        placeholder="Dienststelle suchen …"
+        placeholder="Dienststelle suchen ..."
         style={isEmpty ? { borderColor: 'var(--danger)', boxShadow: '0 0 0 1px rgba(239,68,68,0.15)' } : undefined}
       />
 
-      {/* Dropdown */}
       {open && results.length > 0 && (
         <div
           ref={listRef}

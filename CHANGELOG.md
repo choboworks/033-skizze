@@ -2,6 +2,79 @@
 
 ---
 
+## Session 8 – 22.03.2026
+
+**Teilnehmer**: Alex + Codex
+**Fokus**: SmartRoad Editor fertigziehen, Regelbasis auf Profi-Niveau vorbereiten, rechte Sidebar umbauen
+
+### SmartRoad Editor – Bugfixes & Interaktions-Qualität
+- **Spur-hinzufügen Bug gefixt**: Beim Hinzufügen eines Fahrstreifens konnte eine riesige weiße Fläche über der Straße erscheinen. Ursache war eine fehlerhafte Leitlinien-Neuberechnung; `generateLaneMarkings()` bekam in einem Codepfad falsche Argumente und setzte die Straßenlänge als `strokeWidth`. Die Centerlines werden jetzt in allen Add/Delete/Update-Pfaden konsistent neu aufgebaut.
+- **Reorder-Animation stabilisiert**: Das seitliche Einschnappen der Strips im Editor war visuell "flashy", weil die Bewegung pro Frame über React-State neu angeschoben wurde. Das Verhalten läuft jetzt stabil über einen `requestAnimationFrame`-Loop mit `ref`-basiertem Animationszustand.
+- **Properties per Doppelklick im Preview**: Strips können ihre Eigenschaften jetzt nicht nur über das Zahnrad im Editor-Layer-Manager, sondern auch per Doppelklick direkt im Road-Preview öffnen. Die Hit-Target-Logik wurde dafür auf einen stabilen gemeinsamen Konva-Node umgebaut.
+- **Direktes Anfassen ohne Vorselektion**: Ein Strip im SmartRoad-Preview muss nicht mehr erst separat ausgewählt werden. `mousedown` selektiert sofort und startet direkt die Drag-/Reorder-Vorbereitung, mit Dead-Zone gegen versehentliche Drags.
+- **SmartRoad Layer-Manager funktional gemacht**: Die Karten im Editor-Layer-Manager sind jetzt wirklich draggable; ihre Reihenfolge steuert die Z-Order im Preview und bleibt über `layerOrder` persistent erhalten.
+- **Strips immer unter Markierungen**: Auch wenn im Layer-Manager frei gezogen wird, können Fahrbahnen/Fahrstreifen technisch nicht über Markierungen einsortiert werden. Der Strip-Block bleibt immer unten, die Markierungen liegen darüber.
+
+### SmartRoad Editor – Geometrie & Properties
+- **Strip-Höhe eingeführt**: Einzelne Strips können jetzt kürzer als die Gesamtstraße sein. Die Eigenschaft wurde im Properties-Panel ergänzt und sowohl im Editor als auch auf dem Hauptcanvas korrekt ins Rendering übernommen.
+- **Leitlinien auf echten Überlappungsbereich begrenzt**: Auto-generierte Centerlines laufen nicht mehr stumpf über die gesamte Straßenlänge, sondern nur noch über den gemeinsamen sichtbaren Bereich benachbarter Fahrstreifen.
+- **Längslage für Fahrstreifen**: Für `lane` und `bus` wurden `startOffset` und `endOffset` als neue Längs-Properties eingeführt. Dadurch können Fahrstreifen später beginnen oder früher enden, statt nur "kürzer" zu sein.
+- **Abgeleitete Länge statt stumpfer Höhe**: Im Lane-/Bus-Panel wird jetzt eine berechnete `Länge` aus Straßenlänge minus Start-/End-Offset angezeigt. Legacy-Strips mit nur `height` bleiben kompatibel.
+- **Richtung aus Fahrstreifen-Properties entfernt**: `direction` wurde aus dem sichtbaren Strip-Panel entfernt, weil sie für eure aktuelle Darstellung keine relevante Wirkung hatte.
+- **Fahrstreifenart aus Lane-Panel entfernt**: `standard`, `turn-left`, `turn-right`, `multi-use` blieben semantisch ohne sichtbare Auswirkung, während Pfeile bewusst als eigene Markierungen gesetzt werden. Deshalb ist die sichtbare `Variante` für Fahrstreifen vorerst aus der UI entfernt worden.
+
+### Neue Property-Architektur für Strips
+- **Registry statt Einheitsformular**: Die Strip-Properties wurden von hartcodierter Speziallogik auf eine Registry umgestellt. Gemeinsame Geometrie (`Breite`, `Höhe`) und typspezifische Sektionen werden jetzt sauber getrennt gerendert.
+- **Typ-spezifische `props` im Datenmodell**: Strips besitzen jetzt eine gemeinsame Hülle plus optionale fachliche Zusatzdaten je Typ (`lane`, `bus`, `parking`, usw.).
+- **Parking als erstes echtes Beispiel**: `parking` bekam mit `Stellplatzlänge` die erste reale Fach-Property, die nicht nur im Panel sichtbar ist, sondern das Rendering der Stellplatz-Trennlinien tatsächlich beeinflusst.
+- **Vorbereitung für weitere Strip-Typen**: Durch die Registry lassen sich jetzt nach und nach fachlich saubere Properties pro Typ ergänzen, ohne `StripProperties.tsx` immer wieder komplett zu verbiegen.
+
+### Regelbasis aus dem Nachschlagewerk
+- **Nachschlagewerk analysiert**: `Nachschlagewerk_Strasseninfrastruktur_Deutschland.md` wurde gegen die aktuelle SmartRoad-Implementierung geprüft. Ergebnis: gute Basis, aber noch nicht durchgängig professionell belastbar; daraus entstand die neue Regel-Roadmap.
+- **Source of Truth eingeführt**: Normnahe Werte für Profile, Strips und Markierungen wurden in eigene Regeldateien ausgelagert, statt weiter verstreut in `constants.ts` und einzelnen Renderern zu liegen.
+- **Neue Regeldateien**:
+- `src/smartroads/rules/shared.ts`
+- `src/smartroads/rules/profileRules.ts`
+- `src/smartroads/rules/stripRules.ts`
+- `src/smartroads/rules/markingRules.ts`
+- **Markierungsrenderer an Regeln angebunden**: Kernwerte für Centerlines, Haltelinien, Zebrastreifen und Lane-Boundaries werden jetzt zentral aus den Regeln gezogen statt aus losen Hardcodes.
+- **RoadClass steuert jetzt nicht mehr nur Striche**: `innerorts`, `ausserorts` und `autobahn` beeinflussen jetzt auch Geometrie relevanter Strips. Aktuell sind `lane`, `shoulder` und `median` mit `barrier`-Variante an die Profilregeln angeschlossen.
+- **Quick Settings / Presets an Profilregeln gekoppelt**: Neue Strips aus Palette und Quick Settings sowie die bestehenden Straight-Presets greifen jetzt auf die jeweilige `roadClass`-Breite statt auf globale Einheitswerte zurück.
+- **Kommentar zur Maßstabslogik korrigiert**: Der irreführende Beispiel-Kommentar in `src/utils/scale.ts` wurde auf die korrekte Rechnung (`1 m` bei `1:200` = `5 mm`) gebracht.
+
+### Main App – Flow & rechte Sidebar
+- **Direktes Greifen auf dem Hauptcanvas**: Unselektierte Objekte müssen vor dem Verschieben nicht mehr extra angewählt werden. Auf `mousedown` wird sofort selektiert; `dragstart` dient als Fallback. Das gilt auch für SmartRoad-Objekte.
+- **Sofort sichtbare Auswahl beim Ziehen**: Auf dem Hauptcanvas ist das Objekt beim direkten Anfassen nun auch optisch sofort ausgewählt, nicht erst nach dem Start des Drags.
+- **Rechte Sidebar strukturell umgebaut**: Statt gequetschtem Stack aus Layer-Manager + Tabs + Library/Metadaten gibt es jetzt oben drei Buttons: `Ebenen`, `Library`, `Metadaten`. Der aktive Bereich nutzt darunter die volle Höhe der Sidebar.
+- **Layer-Manager automatisch öffnen**: Immer wenn ein neues Objekt auf den Canvas kommt, schaltet die rechte Sidebar automatisch auf `Ebenen`.
+- **Library-Scroll-Bug gefixt**: Wenn der Inhalt der Objekt-Bibliothek höher als der verfügbare Bereich wurde, war die Liste nicht scrollbar. Die Layout-Kette der rechten Sidebar wurde dafür mit `h-full`, `min-h-0` und `overflow-hidden` bereinigt.
+
+### Visuelle Differenzierung der Rad- und Gehweg-Typen
+- **Cyclepath-Varianten neu gestaltet**: `Schutzstreifen`, `Radfahrstreifen` und `baulich getrennter Radweg` unterscheiden sich jetzt nicht mehr nur grob über Braun/Rot, sondern über Materialwirkung, Kanten und innere Struktur.
+- **Schutzstreifen fahrbahnnah gehalten**: Leichte Tönung + gestrichelte Führungskanten statt vollwertiger Eigenkörper.
+- **Radfahrstreifen als eigener markierter Streifen**: Kräftigerer Kern und klare Kanten, aber weiter klar der Fahrbahn verwandt.
+- **Baulich getrennter Radweg als eigene Infrastruktur**: Heller Randaufbau und separater Oberflächencharakter statt nur "stärker rot".
+- **Gehweg-Varianten endlich sichtbar getrennt**: `SidewalkStrip` berücksichtigt jetzt seine Varianten.
+- `standard`: neutraler Pflasterbelag
+- `shared-bike`: gemeinsame, weich getönte Mischfläche
+- `separated-bike`: intern geteilte Fläche mit sichtbarer Trennlinie und eigenem Radbereich
+
+### Neue Dateien
+| Datei | Zweck |
+|-------|-------|
+| `src/smartroads/rules/shared.ts` | Gemeinsame Regel-Helper und fachliche Metadaten |
+| `src/smartroads/rules/profileRules.ts` | Regelprofile für `innerorts`, `ausserorts`, `autobahn` |
+| `src/smartroads/rules/stripRules.ts` | Normnahe Strip-Breiten und Variant-Regeln |
+| `src/smartroads/rules/markingRules.ts` | Zentrale Markierungsmaße und Dash-/Stroke-Regeln |
+| `src/smartroads/stripProps.ts` | Default-Props und Geometrie-Helper für Strip-Typen |
+| `src/smartroads/shared/properties/stripPropertyRegistry.ts` | Registry für typ-spezifische Strip-Properties |
+
+### Verifikation
+- **`npm run lint`** läuft sauber nach allen heutigen Änderungen.
+- **`npm run build`** scheitert weiterhin nur an den bereits vorher vorhandenen TypeScript-Fehlern in `src/components/Canvas/PageHeader.tsx` und `src/store/index.ts`.
+
+---
+
 ## Session 7 – 22.03.2026
 
 **Teilnehmer**: Alex + Claude Opus 4.6
@@ -312,5 +385,4 @@
 - Zustand Store-Architektur
 
 ---
-
 *Dieses Changelog wird nach jeder Session aktualisiert.*

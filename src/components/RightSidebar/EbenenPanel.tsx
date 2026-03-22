@@ -117,8 +117,8 @@ export function EbenenPanel() {
 
   return (
     <div
-      className="glass flex flex-col shrink-0"
-      style={{ borderRadius: 24, maxHeight: 360 }}
+      className="glass flex flex-col h-full min-h-0"
+      style={{ borderRadius: 24 }}
     >
       {/* Header */}
       <div className="flex items-center justify-center px-4 pt-4 pb-4 shrink-0 gap-2">

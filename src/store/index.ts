@@ -87,6 +87,7 @@ export const useAppStore = create<AppState>()(
       theme: getInitialTheme(),
       propertiesPanelId: null,
       activeLibraryCategory: null,
+      rightSidebarTab: 'library',
       editingTextId: null,
 
       // --- Actions ---
@@ -135,6 +136,7 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           objects: { ...state.objects, [obj.id]: obj },
           objectOrder: [...state.objectOrder, obj.id],
+          rightSidebarTab: 'layers',
         })),
 
       updateObject: (id: string, changes: Partial<CanvasObject>) =>
@@ -185,6 +187,8 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           activeLibraryCategory: state.activeLibraryCategory === category ? null : category,
         })),
+
+      setRightSidebarTab: (tab) => set({ rightSidebarTab: tab }),
 
       // Theme
       toggleTheme: () =>

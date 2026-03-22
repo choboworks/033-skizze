@@ -67,7 +67,7 @@ export function LibraryPanel() {
 
   return (
     <div
-      className="glass flex flex-col flex-1 min-h-0"
+      className="glass flex flex-col h-full min-h-0 overflow-hidden"
       style={{ borderRadius: 24 }}
     >
       {/* Header */}

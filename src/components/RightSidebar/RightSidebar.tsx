@@ -1,24 +1,20 @@
-import { useState } from 'react'
+import { useAppStore } from '@/store'
 import { EbenenPanel } from './EbenenPanel'
 import { LibraryPanel } from './LibraryPanel'
 import { MetadataPanel } from './MetadataPanel'
 
-type Tab = 'library' | 'metadata'
-
 export function RightSidebar() {
-  const [activeTab, setActiveTab] = useState<Tab>('library')
+  const activeTab = useAppStore((s) => s.rightSidebarTab)
+  const setActiveTab = useAppStore((s) => s.setRightSidebarTab)
 
   return (
     <aside
-      className="flex flex-col shrink-0 h-full overflow-y-auto z-40"
+      className="flex flex-col shrink-0 h-full min-h-0 overflow-hidden z-40"
       style={{ width: 'var(--sidebar-width)', gap: 16 }}
     >
-      {/* Ebenen-Manager — eigene Panel-Card */}
-      <EbenenPanel />
-
-      {/* Tab bar */}
+      {/* Mode switch */}
       <div
-        className="grid grid-cols-2 gap-1 shrink-0"
+        className="grid grid-cols-3 gap-1 shrink-0"
         style={{
           height: 44,
           padding: 4,
@@ -29,12 +25,17 @@ export function RightSidebar() {
           marginBottom: 12,
         }}
       >
+        <TabButton label="Ebenen" active={activeTab === 'layers'} onClick={() => setActiveTab('layers')} />
         <TabButton label="Library" active={activeTab === 'library'} onClick={() => setActiveTab('library')} />
         <TabButton label="Metadaten" active={activeTab === 'metadata'} onClick={() => setActiveTab('metadata')} />
       </div>
 
-      {/* Tab content */}
-      {activeTab === 'library' ? <LibraryPanel /> : <MetadataPanel />}
+      {/* Active panel */}
+      <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+        {activeTab === 'layers' && <EbenenPanel />}
+        {activeTab === 'library' && <LibraryPanel />}
+        {activeTab === 'metadata' && <MetadataPanel />}
+      </div>
     </aside>
   )
 }

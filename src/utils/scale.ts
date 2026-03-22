@@ -47,10 +47,11 @@ export function calculateAutoScale(
 }
 
 /**
- * Convert meters to pixels on screen given a scale ratio and zoom level.
- * At scale 1:200, 1 meter = 190mm/200 = 0.95mm on paper = ~3.59px at 96dpi
- * But we work with a fixed page size on screen, so:
- * pixelsPerMeter = PAGE_WIDTH_PX / (PAGE_WIDTH_MM / 1000 * scale)
+ * Convert real-world meters into on-screen pixels for a given print scale 1:S.
+ * At scale 1:200, 1 meter real = 1000 / 200 = 5mm on paper, which is ~18.9px at 96dpi.
+ * In general:
+ *   mmOnPaper = (1000 / scale) * meters
+ *   pixels = mmOnPaper * MM_TO_PX
  */
 export function metersToPixels(meters: number, scale: number): number {
   // At scale 1:S, 1 meter real = (1000/S) mm on paper

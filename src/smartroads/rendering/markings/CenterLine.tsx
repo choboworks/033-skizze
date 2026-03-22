@@ -3,6 +3,7 @@ import { Group, Line, Rect } from 'react-konva'
 import type { Marking } from '../../types'
 import type Konva from 'konva'
 import { handleMarkingDragMove } from './snapHelper'
+import { getCenterlineDashPattern, MARKING_RULES } from '../../rules/markingRules'
 
 interface Props {
   marking: Marking
@@ -18,16 +19,10 @@ interface Props {
 }
 
 export function CenterLine({ marking, roadLength, draggable, selected, snapPositions, peerPhases, onDragEnd, onClick, onDoubleClick, onDragging }: Props) {
-  const dashMap: Record<string, number[]> = {
-    'standard-dash': [3, 6],
-    'rural-dash': [6, 12],
-    'autobahn-dash': [6, 12],
-    'short-dash': [1.5, 3],
-    'warning-dash': [6, 3],
-    'autobahn-warning': [12, 6],
-  }
-  const dash = dashMap[marking.variant] || [3, 6]
-  const sw = marking.strokeWidth || 0.12
+  const offsetY = marking.offsetY ?? 0
+  const effectiveLength = marking.length ?? roadLength
+  const dash = getCenterlineDashPattern(marking.variant)
+  const sw = marking.strokeWidth || MARKING_RULES.lineWidths.otherRoads.schmalstrich
   const [d, g] = dash
   const cycle = d + g
 
@@ -45,7 +40,7 @@ export function CenterLine({ marking, roadLength, draggable, selected, snapPosit
   // Places the dash(es) in the visual CENTER of the road,
   // not at the edges. Works for all road lengths and patterns.
   const computeOffset = (phase: number) => {
-    const r = roadLength % cycle
+    const r = effectiveLength % cycle
     // r <= d: remainder is partial dash → center the full dashes in the middle
     // r > d:  remainder includes full dash + partial gap → center the gap splits
     const centerShift = r <= d
@@ -63,14 +58,14 @@ export function CenterLine({ marking, roadLength, draggable, selected, snapPosit
   return (
     <Group
       x={marking.x}
-      y={0}
+      y={offsetY}
       draggable={draggable}
       onDragStart={() => onDragging?.(true)}
       onDragMove={(e) => {
         const node = e.target
         // Capture y drag as phase shift, reset y to keep line in place
-        const dragY = node.y()
-        node.y(0)
+        const dragY = node.y() - offsetY
+        node.y(offsetY)
 
         // Update phase: subtract dragY so dragging UP increases phase (dashes move up)
         let newPhase = marking.y - dragY
@@ -114,7 +109,7 @@ export function CenterLine({ marking, roadLength, draggable, selected, snapPosit
       {selected && (
         <Rect
           x={-hitWidth / 2} y={0}
-          width={hitWidth} height={roadLength}
+          width={hitWidth} height={effectiveLength}
           fill="rgba(74,158,255,0.15)"
           listening={false}
         />
@@ -122,7 +117,7 @@ export function CenterLine({ marking, roadLength, draggable, selected, snapPosit
       {/* Dashed line — always full road, y-drag shifts the dash phase */}
       <Line
         ref={lineRef}
-        points={[0, 0, 0, roadLength]}
+        points={[0, 0, 0, effectiveLength]}
         stroke={marking.color || '#ffffff'}
         strokeWidth={sw}
         dash={dash}
@@ -131,7 +126,7 @@ export function CenterLine({ marking, roadLength, draggable, selected, snapPosit
       />
       <Rect
         x={-hitWidth / 2} y={0}
-        width={hitWidth} height={roadLength}
+        width={hitWidth} height={effectiveLength}
         fill="rgba(0,0,0,0.001)"
         cursor="pointer"
       />

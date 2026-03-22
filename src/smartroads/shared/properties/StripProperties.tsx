@@ -1,53 +1,44 @@
 import { useState } from 'react'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import { Minus, Plus } from 'lucide-react'
-import type { Strip, StripVariant } from '../../types'
-import { STRIP_LABELS, STRIP_MIN_WIDTHS, FIXED_WIDTH_STRIPS, VARIANT_LABELS } from '../../constants'
+import type { Strip } from '../../types'
+import { STRIP_LABELS } from '../../constants'
+import {
+  getStripPropertySections,
+  type StripChoiceFieldDefinition,
+  type StripNumberFieldDefinition,
+  type StripPropertyFieldDefinition,
+} from './stripPropertyRegistry'
 
 // ============================================================
-// StripProperties – Properties panel for a selected strip
+// StripProperties - Generic strip property renderer
+// Base geometry is shared; type-specific sections come from the registry.
 // ============================================================
 
-const STRIP_VARIANT_OPTIONS: Partial<Record<string, { value: StripVariant; label: string }[]>> = {
-  lane: [
-    { value: 'standard', label: 'Standard' },
-    { value: 'turn-left', label: 'Abbieger L' },
-    { value: 'turn-right', label: 'Abbieger R' },
-    { value: 'multi-use', label: 'Mehrzweck' },
-  ],
-  cyclepath: [
-    { value: 'protected', label: 'Baulich getr.' },
-    { value: 'lane-marked', label: 'Radfahrstr.' },
-    { value: 'advisory', label: 'Schutzstr.' },
-  ],
-  sidewalk: [
-    { value: 'standard', label: 'Standard' },
-    { value: 'shared-bike', label: 'Gem. Rad' },
-    { value: 'separated-bike', label: 'Getr. Rad' },
-  ],
-  parking: [
-    { value: 'parallel', label: 'Längs' },
-    { value: 'angled', label: 'Schräg' },
-    { value: 'perpendicular', label: 'Quer' },
-  ],
-  median: [
-    { value: 'marking-only', label: 'Markierung' },
-    { value: 'green-median', label: 'Grün' },
-    { value: 'barrier', label: 'Leitplanke' },
-  ],
-  green: [
-    { value: 'standard', label: 'Standard' },
-    { value: 'tree-strip', label: 'Baumstreifen' },
-  ],
-}
-
-function WidthStepper({ value, onChange, min }: { value: number; onChange: (v: number) => void; min: number }) {
+function NumberStepper({
+  value,
+  onChange,
+  min,
+  max,
+  step = 0.25,
+}: {
+  value: number
+  onChange: (v: number) => void
+  min: number
+  max?: number
+  step?: number
+}) {
   const [editing, setEditing] = useState(false)
   const [editValue, setEditValue] = useState(String(value))
 
+  const clamp = (next: number) => {
+    const boundedMax = max != null ? Math.min(max, next) : next
+    return Math.max(min, Math.round(boundedMax * 100) / 100)
+  }
+
   const commit = () => {
     const n = parseFloat(editValue)
-    if (!isNaN(n)) onChange(Math.max(min, Math.round(n * 100) / 100))
+    if (!isNaN(n)) onChange(clamp(n))
     setEditing(false)
   }
 
@@ -55,7 +46,7 @@ function WidthStepper({ value, onChange, min }: { value: number; onChange: (v: n
     <div className="flex items-center" style={{ gap: 8 }}>
       <button
         className="toggle-btn w-8 h-8 rounded-lg flex items-center justify-center"
-        onClick={() => onChange(Math.max(min, Math.round((value - 0.25) * 100) / 100))}
+        onClick={() => onChange(clamp(value - step))}
       >
         <Minus size={13} />
       </button>
@@ -80,7 +71,7 @@ function WidthStepper({ value, onChange, min }: { value: number; onChange: (v: n
       )}
       <button
         className="toggle-btn w-8 h-8 rounded-lg flex items-center justify-center"
-        onClick={() => onChange(Math.round((value + 0.25) * 100) / 100)}
+        onClick={() => onChange(clamp(value + step))}
       >
         <Plus size={13} />
       </button>
@@ -90,92 +81,107 @@ function WidthStepper({ value, onChange, min }: { value: number; onChange: (v: n
 
 interface Props {
   strip: Strip
+  roadLength?: number
   onUpdate: (changes: Partial<Strip>) => void
 }
 
-export function StripProperties({ strip, onUpdate }: Props) {
+function renderNumberField(
+  field: StripNumberFieldDefinition,
+  strip: Strip,
+  roadLength: number | undefined,
+  onUpdate: (changes: Partial<Strip>) => void,
+) {
+  const context = { strip, roadLength }
+  const isReadOnly = field.readOnly?.(context) ?? false
+
+  return (
+    <div key={field.id} className="flex items-center justify-between">
+      <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>{field.label}</span>
+      {isReadOnly ? (
+        <span className="text-[13px] font-mono" style={{ color: 'var(--text-muted)' }}>
+          {field.readOnlyLabel?.(context) ?? `${field.getValue(context)}m`}
+        </span>
+      ) : (
+        <NumberStepper
+          value={field.getValue(context)}
+          onChange={(value) => onUpdate(field.applyValue(value, context))}
+          min={field.min(context)}
+          max={field.max?.(context)}
+          step={field.step}
+        />
+      )}
+    </div>
+  )
+}
+
+function renderChoiceField(
+  field: StripChoiceFieldDefinition,
+  strip: Strip,
+  roadLength: number | undefined,
+  onUpdate: (changes: Partial<Strip>) => void,
+) {
+  const context = { strip, roadLength }
+  const options = field.options(context)
+
+  return (
+    <div key={field.id} className="flex flex-col gap-2">
+      <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>{field.label}</span>
+      <ToggleGroup.Root
+        type="single"
+        value={field.getValue(context)}
+        onValueChange={(value) => { if (value) onUpdate(field.applyValue(value, context)) }}
+        className="flex flex-wrap"
+        style={{ gap: 6, rowGap: 8 }}
+      >
+        {options.map((option) => (
+          <ToggleGroup.Item
+            key={option.value}
+            value={option.value}
+            className="toggle-btn flex items-center justify-center"
+            style={{ height: 28, padding: '0 10px', borderRadius: 9999, fontSize: 10.5, fontWeight: 600 }}
+            data-active={field.getValue(context) === option.value}
+            title={option.title}
+          >
+            {option.label}
+          </ToggleGroup.Item>
+        ))}
+      </ToggleGroup.Root>
+    </div>
+  )
+}
+
+function renderField(
+  field: StripPropertyFieldDefinition,
+  strip: Strip,
+  roadLength: number | undefined,
+  onUpdate: (changes: Partial<Strip>) => void,
+) {
+  if (field.kind === 'number') {
+    return renderNumberField(field, strip, roadLength, onUpdate)
+  }
+  return renderChoiceField(field, strip, roadLength, onUpdate)
+}
+
+export function StripProperties({ strip, roadLength, onUpdate }: Props) {
   const label = STRIP_LABELS[strip.type] || strip.type
-  const isFixed = FIXED_WIDTH_STRIPS.includes(strip.type)
-  const minWidth = STRIP_MIN_WIDTHS[strip.type] || 0.10
-  const variants = STRIP_VARIANT_OPTIONS[strip.type]
-  const hasDirection = strip.type === 'lane' || strip.type === 'bus'
+  const sections = getStripPropertySections({ strip, roadLength })
 
   return (
     <div className="flex flex-col" style={{ gap: 14 }}>
-      {/* Type label */}
       <div className="text-[13px] font-semibold text-center" style={{ color: 'var(--text)' }}>
         {label}
       </div>
 
-      {/* Width */}
-      {!isFixed ? (
-        <div className="flex items-center justify-between">
-          <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>Breite</span>
-          <WidthStepper value={strip.width} onChange={(w) => onUpdate({ width: w })} min={minWidth} />
+      {sections.map((section) => (
+        <div key={section.id} className="flex flex-col" style={{ gap: 10 }}>
+          {section.title && (
+            <span className="text-[10px] font-bold uppercase tracking-[0.08em]" style={{ color: 'var(--text-muted)' }}>
+              {section.title}
+            </span>
+          )}
+          {section.fields.map((field) => renderField(field, strip, roadLength, onUpdate))}
         </div>
-      ) : (
-        <div className="flex items-center justify-between">
-          <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>Breite</span>
-          <span className="text-[13px] font-mono" style={{ color: 'var(--text-muted)' }}>{strip.width}m (fix)</span>
-        </div>
-      )}
-
-      {/* Direction (lanes only) */}
-      {hasDirection && (
-        <div className="flex items-center justify-between">
-          <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>Richtung</span>
-          <ToggleGroup.Root
-            type="single"
-            value={strip.direction || 'up'}
-            onValueChange={(v) => { if (v) onUpdate({ direction: v as 'up' | 'down' }) }}
-            className="flex" style={{ gap: 6 }}
-          >
-            <ToggleGroup.Item
-              value="up"
-              className="toggle-btn flex items-center justify-center"
-              style={{ width: 28, height: 28, borderRadius: 9999, fontSize: 14 }}
-              data-active={strip.direction === 'up'}
-            >
-              ↑
-            </ToggleGroup.Item>
-            <ToggleGroup.Item
-              value="down"
-              className="toggle-btn flex items-center justify-center"
-              style={{ width: 28, height: 28, borderRadius: 9999, fontSize: 14 }}
-              data-active={strip.direction === 'down'}
-            >
-              ↓
-            </ToggleGroup.Item>
-          </ToggleGroup.Root>
-        </div>
-      )}
-
-      {/* Variant */}
-      {variants && variants.length > 1 && (
-        <div className="flex flex-col gap-2">
-          <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>Variante</span>
-          <ToggleGroup.Root
-            type="single"
-            value={strip.variant}
-            onValueChange={(v) => { if (v) onUpdate({ variant: v as StripVariant }) }}
-            className="flex flex-wrap"
-            style={{ gap: 6, rowGap: 8 }}
-          >
-            {variants.map((v) => (
-              <ToggleGroup.Item
-                key={v.value}
-                value={v.value}
-                className="toggle-btn flex items-center justify-center"
-                style={{ height: 28, padding: '0 10px', borderRadius: 9999, fontSize: 10.5, fontWeight: 600 }}
-                data-active={strip.variant === v.value}
-                title={VARIANT_LABELS[v.value] || v.label}
-              >
-                {v.label}
-              </ToggleGroup.Item>
-            ))}
-          </ToggleGroup.Root>
-        </div>
-      )}
+      ))}
     </div>
   )
 }

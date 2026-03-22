@@ -192,10 +192,12 @@ function DimensionShape({
 function ShapeRenderer({
   obj,
   onSelect,
+  onDragStart,
   onDoubleClick,
 }: {
   obj: CanvasObject
   onSelect: (id: string, e: Konva.KonvaEventObject<MouseEvent>) => void
+  onDragStart: (id: string, e: Konva.KonvaEventObject<DragEvent>) => void
   onDoubleClick: (id: string) => void
 }) {
   const updateObject = useAppStore((s) => s.updateObject)
@@ -221,11 +223,13 @@ function ShapeRenderer({
     rotation: obj.rotation,
     opacity: obj.opacity,
     draggable: !obj.locked && (activeTool === 'select' || (activeTool === 'print-area' && hasViewportOverride)),
+    onMouseDown: (e: Konva.KonvaEventObject<MouseEvent>) => onSelect(obj.id, e),
     onClick: (e: Konva.KonvaEventObject<MouseEvent>) => onSelect(obj.id, e),
     onDblClick: () => onDoubleClick(obj.id),
     onDblTap: () => onDoubleClick(obj.id),
     onTap: (e: Konva.KonvaEventObject<Event>) =>
       onSelect(obj.id, e as Konva.KonvaEventObject<MouseEvent>),
+    onDragStart: (e: Konva.KonvaEventObject<DragEvent>) => onDragStart(obj.id, e),
     onDragEnd: (e: Konva.KonvaEventObject<DragEvent>) => {
       if (obj.type === 'dimension' && obj.dimensionStart && obj.dimensionEnd) {
         // Dimension group origin = dimensionStart, so delta = newPos - oldStart
@@ -537,6 +541,7 @@ function SelectionTransformer() {
 export function CanvasObjects() {
   const objects = useAppStore((s) => s.objects)
   const objectOrder = useAppStore((s) => s.objectOrder)
+  const selection = useAppStore((s) => s.selection)
   const select = useAppStore((s) => s.select)
   const addToSelection = useAppStore((s) => s.addToSelection)
   const openProperties = useAppStore((s) => s.openProperties)
@@ -549,6 +554,13 @@ export function CanvasObjects() {
     if (e.evt.shiftKey) {
       addToSelection(id)
     } else {
+      select([id])
+    }
+  }
+
+  const handleDragStart = (id: string, e: Konva.KonvaEventObject<DragEvent>) => {
+    e.cancelBubble = true
+    if (!selection.includes(id)) {
       select([id])
     }
   }
@@ -616,6 +628,7 @@ export function CanvasObjects() {
               contentOriginX={contentOriginX}
               contentOriginY={contentOriginY}
               onSelect={handleSelect}
+              onDragStart={handleDragStart}
               onDoubleClick={handleDoubleClick}
             />
           )
@@ -625,6 +638,7 @@ export function CanvasObjects() {
             key={obj.id}
             obj={obj}
             onSelect={handleSelect}
+            onDragStart={handleDragStart}
             onDoubleClick={handleDoubleClick}
           />
         )

@@ -1,6 +1,7 @@
 import { Group, Rect } from 'react-konva'
 import type { Marking } from '../../types'
 import { handleMarkingDragMove } from './snapHelper'
+import { MARKING_RULES } from '../../rules/markingRules'
 
 interface Props {
   marking: Marking
@@ -15,9 +16,9 @@ interface Props {
 
 export function Crosswalk({ marking, draggable, selected, snapPositions, onDragEnd, onClick, onDoubleClick, onDragging }: Props) {
   const width = marking.width || 10
-  const depth = 4.0
-  const stripeW = 0.50
-  const gap = 0.50
+  const depth = MARKING_RULES.crosswalk.defaultLength
+  const stripeW = MARKING_RULES.crosswalk.stripeWidth
+  const gap = MARKING_RULES.crosswalk.gap
 
   const stripes: React.ReactNode[] = []
   for (let sx = 0; sx < width; sx += stripeW + gap) {

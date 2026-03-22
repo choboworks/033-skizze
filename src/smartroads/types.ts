@@ -45,11 +45,48 @@ export type StripVariant =
   | 'flush'           // Bündig
 
 // --- Strip (a single cross-section element) ---
+export interface LaneStripProps {
+  startOffset?: number
+  endOffset?: number
+}
+export type SidewalkStripProps = Record<string, never>
+export type CyclepathStripProps = Record<string, never>
+export interface ParkingStripProps {
+  bayLength?: number
+}
+export type GreenStripProps = Record<string, never>
+export type CurbStripProps = Record<string, never>
+export type GutterStripProps = Record<string, never>
+export type MedianStripProps = Record<string, never>
+export interface BusStripProps {
+  startOffset?: number
+  endOffset?: number
+}
+export type TramStripProps = Record<string, never>
+export type ShoulderStripProps = Record<string, never>
+
+export interface StripPropsByType {
+  lane: LaneStripProps
+  sidewalk: SidewalkStripProps
+  cyclepath: CyclepathStripProps
+  parking: ParkingStripProps
+  green: GreenStripProps
+  curb: CurbStripProps
+  gutter: GutterStripProps
+  median: MedianStripProps
+  bus: BusStripProps
+  tram: TramStripProps
+  shoulder: ShoulderStripProps
+}
+
+export type StripProps = StripPropsByType[StripType]
 export interface Strip {
   id: string
   type: StripType
   variant: StripVariant
   width: number             // Meter (die Quelle der Wahrheit)
+  height?: number           // Meter (optional; falls gesetzt, kuerzer als die Gesamtstrasse)
+  props?: StripProps
   direction?: 'up' | 'down' // Fahrtrichtung (nur für lane, bus)
 }
 
@@ -104,6 +141,8 @@ export interface Marking {
   y: number
   // Optional sizing
   width?: number          // Meter (e.g. crosswalk width = road width)
+  length?: number         // Meter (used by linear markings like centerlines)
+  offsetY?: number        // Meter (start offset for linear markings)
   rotation?: number       // Degrees
   // Free line specific
   strokeWidth?: number
@@ -119,6 +158,7 @@ export type RoadClass = 'innerorts' | 'ausserorts' | 'autobahn'
 export interface StraightRoadState {
   strips: Strip[]
   markings: Marking[]
+  layerOrder?: string[]      // z-order: first = bottom, last = top
   length: number           // Meter
   roadClass?: RoadClass    // defaults to 'innerorts' if absent
 }

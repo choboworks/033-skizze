@@ -1,6 +1,7 @@
 import { Group, Line, Rect } from 'react-konva'
 import type { Marking } from '../../types'
 import { handleMarkingDragMove } from './snapHelper'
+import { MARKING_RULES } from '../../rules/markingRules'
 
 interface Props {
   marking: Marking
@@ -15,7 +16,7 @@ interface Props {
 
 export function StopLine({ marking, draggable, selected, snapPositions, onDragEnd, onClick, onDoubleClick, onDragging }: Props) {
   const width = marking.width || 10
-  const sw = marking.strokeWidth || 0.50
+  const sw = marking.strokeWidth || MARKING_RULES.stopline.strokeWidth
   const hitHeight = Math.max(0.8, sw * 2)
 
   return (

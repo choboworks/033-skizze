@@ -15,12 +15,13 @@ import { MARKING_TYPE_LABELS } from '@/constants/shared'
 interface Props {
   strip: Strip | null
   marking: Marking | null
+  roadLength?: number
   onUpdateStrip?: (changes: Partial<Strip>) => void
   onUpdateMarking?: (changes: Partial<Marking>) => void
   onClose: () => void
 }
 
-export function FloatingEditorProperties({ strip, marking, onUpdateStrip, onUpdateMarking, onClose }: Props) {
+export function FloatingEditorProperties({ strip, marking, roadLength, onUpdateStrip, onUpdateMarking, onClose }: Props) {
   const PANEL_W = 320
 
   const [pos, setPos] = useState(() => ({
@@ -82,7 +83,7 @@ export function FloatingEditorProperties({ strip, marking, onUpdateStrip, onUpda
       {/* Properties content */}
       <div className="panel-section" style={{ maxHeight: '60vh', overflowY: 'auto', borderBottom: 'none' }}>
         {strip && onUpdateStrip && (
-          <StripProperties strip={strip} onUpdate={onUpdateStrip} />
+          <StripProperties strip={strip} roadLength={roadLength} onUpdate={onUpdateStrip} />
         )}
         {marking && onUpdateMarking && (
           <MarkingProperties marking={marking} onUpdate={onUpdateMarking} />
