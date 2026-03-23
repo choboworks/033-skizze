@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { EditorShell } from '../shared/EditorShell'
 import { ElementPalette } from '../shared/ElementPalette'
 import { QuickSettings } from '../shared/QuickSettings'
@@ -6,8 +6,12 @@ import { STRAIGHT_PRESETS } from '../shared/PresetList'
 import { EditorLayerManager } from '../shared/EditorLayerManager'
 import { FloatingEditorProperties } from '../shared/FloatingEditorProperties'
 import { RoadTopView } from '../rendering/RoadTopView'
-import { createStrip, totalWidth, ROAD_CLASS_CONFIG, generateLaneMarkings, normalizeLayerOrder } from '../constants'
+import { createDefaultStraightRoad, createStrip, totalWidth, ROAD_CLASS_CONFIG, generateLaneMarkings, normalizeLayerOrder } from '../constants'
+import { isLaneOverlayCyclepath } from '../layout'
+import { MARKING_RULES } from '../rules/markingRules'
 import { applyRoadClassWidthToStrips } from '../rules/stripRules'
+import { normalizeStraightRoadState } from '../state'
+import { applyCyclepathGeometryConstraints } from '../validation'
 import type { Strip, Marking, StraightRoadState, StripType, StripVariant, MarkingType, MarkingVariant, RoadClass } from '../types'
 
 // ============================================================
@@ -28,13 +32,18 @@ interface Props {
 }
 
 export function StraightEditor({ open, initialState, onFinish, onCancel }: Props) {
-  const [strips, setStrips] = useState<Strip[]>(initialState.strips)
-  const [markings, setMarkings] = useState<Marking[]>(initialState.markings)
-  const [layerOrder, setLayerOrder] = useState<string[]>(
-    () => normalizeLayerOrder(initialState.layerOrder, initialState.strips, initialState.markings)
+  const normalizedInitialState = useMemo(
+    () => normalizeStraightRoadState(initialState, createDefaultStraightRoad()),
+    [initialState]
   )
-  const [length, setLength] = useState(initialState.length)
-  const [roadClass, setRoadClass] = useState<RoadClass>(initialState.roadClass ?? 'innerorts')
+
+  const [strips, setStrips] = useState<Strip[]>(normalizedInitialState.strips)
+  const [markings, setMarkings] = useState<Marking[]>(normalizedInitialState.markings)
+  const [layerOrder, setLayerOrder] = useState<string[]>(
+    () => normalizeLayerOrder(normalizedInitialState.layerOrder, normalizedInitialState.strips, normalizedInitialState.markings)
+  )
+  const [length, setLength] = useState(normalizedInitialState.length)
+  const [roadClass, setRoadClass] = useState<RoadClass>(normalizedInitialState.roadClass ?? 'innerorts')
   const layerOrderRef = useRef(layerOrder)
 
   useEffect(() => {
@@ -68,10 +77,11 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
   // --- Strip operations ---
   // When strips change, auto-regenerate centerlines (keep non-centerline markings)
   const handleStripsUpdate = useCallback((newStrips: Strip[]) => {
-    setStrips(newStrips)
+    const constrainedStrips = applyCyclepathGeometryConstraints(newStrips)
+    setStrips(constrainedStrips)
     setMarkings((prev) => {
-      const nextMarkings = rebuildMarkingsForStrips(newStrips, prev)
-      setLayerOrder(buildStripAnchoredLayerOrder(newStrips, nextMarkings))
+      const nextMarkings = rebuildMarkingsForStrips(constrainedStrips, prev)
+      setLayerOrder(buildStripAnchoredLayerOrder(constrainedStrips, nextMarkings))
       return nextMarkings
     })
   }, [buildStripAnchoredLayerOrder, rebuildMarkingsForStrips])
@@ -83,12 +93,13 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
         const nextHeight = changes.height != null ? Math.min(changes.height, length) : changes.height
         return { ...s, ...changes, ...(changes.height !== undefined ? { height: nextHeight } : {}) }
       })
+      const constrained = applyCyclepathGeometryConstraints(updated)
       setMarkings((current) => {
-        const nextMarkings = rebuildMarkingsForStrips(updated, current, roadClass, length)
-        setLayerOrder(buildStripAnchoredLayerOrder(updated, nextMarkings))
+        const nextMarkings = rebuildMarkingsForStrips(constrained, current, roadClass, length)
+        setLayerOrder(buildStripAnchoredLayerOrder(constrained, nextMarkings))
         return nextMarkings
       })
-      return updated
+      return constrained
     })
   }, [buildStripAnchoredLayerOrder, rebuildMarkingsForStrips, roadClass, length])
 
@@ -108,19 +119,37 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
   const handleAddStrip = useCallback((type: StripType, variant: StripVariant, side: 'left' | 'right') => {
     const newStrip = createStrip(type, variant, undefined, roadClass)
     setStrips((prev) => {
-      const updated = side === 'left' ? [newStrip, ...prev] : [...prev, newStrip]
+      const updated = (() => {
+        if (type === 'cyclepath' && (variant === 'advisory' || variant === 'lane-marked')) {
+          const withoutLaneOverlays = prev.filter((strip) => !isLaneOverlayCyclepath(strip))
+          return [...withoutLaneOverlays, newStrip]
+        }
+
+        return side === 'left' ? [newStrip, ...prev] : [...prev, newStrip]
+      })()
+      const constrained = applyCyclepathGeometryConstraints(updated)
       setMarkings((current) => {
-        const nextMarkings = rebuildMarkingsForStrips(updated, current)
-        setLayerOrder(buildStripAnchoredLayerOrder(updated, nextMarkings))
+        const nextMarkings = rebuildMarkingsForStrips(constrained, current)
+        setLayerOrder(buildStripAnchoredLayerOrder(constrained, nextMarkings))
         return nextMarkings
       })
-      return updated
+      return constrained
     })
   }, [buildStripAnchoredLayerOrder, rebuildMarkingsForStrips, roadClass])
 
   // --- Marking operations ---
   const handleAddMarking = useCallback((type: MarkingType, variant: MarkingVariant) => {
     const tw = totalWidth(strips)
+    const strokeWidth = (() => {
+      if (type === 'centerline') {
+        return variant === 'autobahn-dash' || variant === 'autobahn-warning'
+          ? MARKING_RULES.lineWidths.autobahn.schmalstrich
+          : MARKING_RULES.lineWidths.otherRoads.schmalstrich
+      }
+      if (type === 'laneboundary') return MARKING_RULES.lineWidths.otherRoads.schmalstrich
+      if (type === 'stopline') return MARKING_RULES.stopline.strokeWidth
+      return undefined
+    })()
     const newMarking: Marking = {
       id: crypto.randomUUID(),
       type,
@@ -128,6 +157,7 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       x: tw / 2,
       y: length / 2,
       width: tw,
+      ...(strokeWidth ? { strokeWidth } : {}),
     }
     setMarkings((prev) => {
       const nextMarkings = [...prev, newMarking]
@@ -186,7 +216,7 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
   const handleRoadClassChange = useCallback((rc: RoadClass) => {
     setRoadClass(rc)
     setStrips((prev) => {
-      const nextStrips = applyRoadClassWidthToStrips(prev, rc)
+      const nextStrips = applyCyclepathGeometryConstraints(applyRoadClassWidthToStrips(prev, rc))
       setMarkings((current) => {
         const nextMarkings = rebuildMarkingsForStrips(nextStrips, current, rc, length)
         setLayerOrder(buildStripAnchoredLayerOrder(nextStrips, nextMarkings))
@@ -198,11 +228,12 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
 
   // --- Presets ---
   const handleLoadPreset = useCallback((state: StraightRoadState) => {
-    setStrips(state.strips)
-    setMarkings(state.markings)
-    setLayerOrder(normalizeLayerOrder(state.layerOrder, state.strips, state.markings))
-    setLength(state.length)
-    setRoadClass(state.roadClass ?? 'innerorts')
+    const normalized = normalizeStraightRoadState(state, createDefaultStraightRoad())
+    setStrips(normalized.strips)
+    setMarkings(normalized.markings)
+    setLayerOrder(normalizeLayerOrder(normalized.layerOrder, normalized.strips, normalized.markings))
+    setLength(normalized.length)
+    setRoadClass(normalized.roadClass ?? 'innerorts')
     setSelectedStripId(null)
     setSelectedMarkingId(null)
     setPropertiesOpen(false)
@@ -214,7 +245,7 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
 
   // --- Finish ---
   const handleFinish = () => {
-    onFinish({ strips, markings, layerOrder, length, roadClass })
+    onFinish(normalizeStraightRoadState({ strips, markings, layerOrder, length, roadClass }, createDefaultStraightRoad()))
   }
 
   // --- Resolve selected objects for floating properties ---
@@ -299,6 +330,7 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       >
         <QuickSettings
           strips={strips}
+          markings={markings}
           length={length}
           roadClass={roadClass}
           onUpdateStrips={handleStripsUpdate}

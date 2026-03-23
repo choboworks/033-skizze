@@ -50,7 +50,21 @@ export interface LaneStripProps {
   endOffset?: number
 }
 export type SidewalkStripProps = Record<string, never>
-export type CyclepathStripProps = Record<string, never>
+export type CyclepathPathType = 'one-way' | 'two-way'
+export type CyclepathProtectedPlacement = 'single-side' | 'both-sides'
+export type CyclepathLineMode = 'none' | 'dashed' | 'solid'
+export interface CyclepathStripProps {
+  pathType?: CyclepathPathType
+  protectedPlacement?: CyclepathProtectedPlacement
+  centerLineMode?: CyclepathLineMode
+  boundaryLineMode?: CyclepathLineMode
+  centerLineStrokeWidth?: number
+  boundaryLineStrokeWidth?: number
+  centerLineDashLength?: number
+  centerLineGapLength?: number
+  boundaryLineDashLength?: number
+  boundaryLineGapLength?: number
+}
 export interface ParkingStripProps {
   bayLength?: number
 }
@@ -86,6 +100,7 @@ export interface Strip {
   variant: StripVariant
   width: number             // Meter (die Quelle der Wahrheit)
   height?: number           // Meter (optional; falls gesetzt, kuerzer als die Gesamtstrasse)
+  color?: string
   props?: StripProps
   direction?: 'up' | 'down' // Fahrtrichtung (nur für lane, bus)
 }
@@ -109,11 +124,12 @@ export type MarkingType =
 export type MarkingVariant =
   // Centerline
   | 'standard-dash'     // Leitlinie innerorts: 3m/6m
-  | 'rural-dash'        // Leitlinie außerorts/Landstraße: 6m/12m
+  | 'rural-dash'        // Leitlinie außerorts/Landstraße: 4m/8m
   | 'autobahn-dash'     // Leitlinie Autobahn: 6m/12m, 15cm breit
   | 'short-dash'        // Kurze Leitlinie: 1.5m/3m
-  | 'warning-dash'      // Warnlinie innerorts: 6m/3m
-  | 'autobahn-warning'  // Warnlinie Autobahn: 12m/6m
+  | 'warning-dash'      // Warnlinie innerorts: 3m/1,5m
+  | 'rural-warning'     // Warnlinie außerorts/Landstraße: 4m/2m
+  | 'autobahn-warning'  // Warnlinie Autobahn: 6m/3m
   // Lane boundary
   | 'solid'
   | 'double'

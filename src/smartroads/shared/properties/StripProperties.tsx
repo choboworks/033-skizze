@@ -2,13 +2,14 @@ import { useState } from 'react'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import { Minus, Plus } from 'lucide-react'
 import type { Strip } from '../../types'
-import { STRIP_LABELS } from '../../constants'
+import { getStripDisplayLabel, getStripSwatchColor } from '../../constants'
 import {
   getStripPropertySections,
   type StripChoiceFieldDefinition,
   type StripNumberFieldDefinition,
   type StripPropertyFieldDefinition,
 } from './stripPropertyRegistry'
+import { ElementColorField } from './ElementColorField'
 
 // ============================================================
 // StripProperties - Generic strip property renderer
@@ -21,24 +22,33 @@ function NumberStepper({
   min,
   max,
   step = 0.25,
+  displayUnit = 'm',
+  displayFactor = 1,
 }: {
   value: number
   onChange: (v: number) => void
   min: number
   max?: number
   step?: number
+  displayUnit?: 'm' | 'cm'
+  displayFactor?: number
 }) {
   const [editing, setEditing] = useState(false)
-  const [editValue, setEditValue] = useState(String(value))
+  const [editValue, setEditValue] = useState(String(Math.round(value * displayFactor * 100) / 100))
 
   const clamp = (next: number) => {
     const boundedMax = max != null ? Math.min(max, next) : next
     return Math.max(min, Math.round(boundedMax * 100) / 100)
   }
 
+  const formatDisplayValue = (next: number) => {
+    const scaled = Math.round(next * displayFactor * 100) / 100
+    return Number.isInteger(scaled) ? String(scaled) : scaled.toFixed(2).replace(/\.?0+$/, '')
+  }
+
   const commit = () => {
     const n = parseFloat(editValue)
-    if (!isNaN(n)) onChange(clamp(n))
+    if (!isNaN(n)) onChange(clamp(n / displayFactor))
     setEditing(false)
   }
 
@@ -64,9 +74,9 @@ function NumberStepper({
         <button
           className="toggle-btn w-16 h-8 text-center text-[13px] font-mono rounded-lg"
           style={{ color: 'var(--text)' }}
-          onClick={() => { setEditValue(String(value)); setEditing(true) }}
+          onClick={() => { setEditValue(formatDisplayValue(value)); setEditing(true) }}
         >
-          {value}m
+          {formatDisplayValue(value)}{displayUnit}
         </button>
       )}
       <button
@@ -108,6 +118,8 @@ function renderNumberField(
           min={field.min(context)}
           max={field.max?.(context)}
           step={field.step}
+          displayUnit={field.displayUnit}
+          displayFactor={field.displayFactor}
         />
       )}
     </div>
@@ -163,8 +175,9 @@ function renderField(
 }
 
 export function StripProperties({ strip, roadLength, onUpdate }: Props) {
-  const label = STRIP_LABELS[strip.type] || strip.type
+  const label = getStripDisplayLabel(strip)
   const sections = getStripPropertySections({ strip, roadLength })
+  const resolvedColor = getStripSwatchColor(strip)
 
   return (
     <div className="flex flex-col" style={{ gap: 14 }}>
@@ -182,6 +195,13 @@ export function StripProperties({ strip, roadLength, onUpdate }: Props) {
           {section.fields.map((field) => renderField(field, strip, roadLength, onUpdate))}
         </div>
       ))}
+
+      <ElementColorField
+        value={resolvedColor}
+        hasCustomColor={Boolean(strip.color)}
+        onChange={(color) => onUpdate({ color })}
+        onReset={() => onUpdate({ color: undefined })}
+      />
     </div>
   )
 }

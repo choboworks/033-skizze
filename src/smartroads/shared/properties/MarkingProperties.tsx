@@ -1,6 +1,8 @@
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import type { Marking, MarkingVariant } from '../../types'
+import { DEFAULT_MARKING_COLOR } from '../../constants'
 import { MARKING_TYPE_LABELS } from '@/constants/shared'
+import { ElementColorField } from './ElementColorField'
 
 // ============================================================
 // MarkingProperties – Properties panel for a selected marking
@@ -8,10 +10,12 @@ import { MARKING_TYPE_LABELS } from '@/constants/shared'
 
 const MARKING_VARIANT_OPTIONS: Partial<Record<string, { value: MarkingVariant; label: string }[]>> = {
   centerline: [
-    { value: 'standard-dash', label: 'Innerorts' },
-    { value: 'rural-dash', label: 'Außerorts' },
-    { value: 'autobahn-dash', label: 'Autobahn' },
-    { value: 'warning-dash', label: 'Warnlinie' },
+    { value: 'standard-dash', label: 'Leitlinie I' },
+    { value: 'rural-dash', label: 'Leitlinie A' },
+    { value: 'autobahn-dash', label: 'Leitlinie AB' },
+    { value: 'warning-dash', label: 'Warnlinie I' },
+    { value: 'rural-warning', label: 'Warnlinie A' },
+    { value: 'autobahn-warning', label: 'Warnlinie AB' },
   ],
   laneboundary: [
     { value: 'solid', label: 'Einfach' },
@@ -36,7 +40,18 @@ export function MarkingProperties({ marking, onUpdate }: Props) {
   const variants = MARKING_VARIANT_OPTIONS[marking.type]
 
   const hasWidth = marking.type === 'crosswalk' || marking.type === 'stopline'
-  const hasStrokeWidth = marking.type === 'centerline' || marking.type === 'laneboundary' || marking.type === 'stopline'
+  const hasStrokeWidth = marking.type === 'centerline' || marking.type === 'laneboundary'
+  const strokeWidthOptions = marking.type === 'centerline'
+    ? [
+        { value: '0.12', label: '12cm' },
+        { value: '0.15', label: '15cm' },
+      ]
+    : [
+        { value: '0.12', label: '12cm' },
+        { value: '0.15', label: '15cm' },
+        { value: '0.25', label: '25cm' },
+        { value: '0.30', label: '30cm' },
+      ]
 
   return (
     <div className="flex flex-col" style={{ gap: 14 }}>
@@ -91,11 +106,7 @@ export function MarkingProperties({ marking, onUpdate }: Props) {
             onValueChange={(v) => { if (v) onUpdate({ strokeWidth: parseFloat(v) }) }}
             className="flex" style={{ gap: 6 }}
           >
-            {[
-              { value: '0.12', label: '12cm' },
-              { value: '0.15', label: '15cm' },
-              { value: '0.25', label: '25cm' },
-            ].map((sw) => (
+            {strokeWidthOptions.map((sw) => (
               <ToggleGroup.Item
                 key={sw.value}
                 value={sw.value}
@@ -109,6 +120,13 @@ export function MarkingProperties({ marking, onUpdate }: Props) {
           </ToggleGroup.Root>
         </div>
       )}
+
+      <ElementColorField
+        value={marking.color || DEFAULT_MARKING_COLOR}
+        hasCustomColor={Boolean(marking.color)}
+        onChange={(color) => onUpdate({ color })}
+        onReset={() => onUpdate({ color: undefined })}
+      />
     </div>
   )
 }

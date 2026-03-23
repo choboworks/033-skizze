@@ -6,7 +6,7 @@ import { ParkingStrip } from './strips/ParkingStrip'
 import { GreenStrip } from './strips/GreenStrip'
 import { CurbStrip } from './strips/CurbStrip'
 import { GenericStrip } from './strips/GenericStrip'
-import { getParkingStripProps } from '../stripProps'
+import { getCyclepathStripProps, getParkingStripProps } from '../stripProps'
 
 // ============================================================
 // StripRenderer – Dispatches to the correct Konva component
@@ -27,23 +27,44 @@ interface Props {
 }
 
 export function StripRenderer({ strip, x, y = 0, length }: Props) {
-  const w = strip.width + AA
+  const safeWidth = Math.max(0.1, Number.isFinite(strip.width) ? strip.width : 0.1) + AA
+  const safeLength = Math.max(0.5, Number.isFinite(length) ? length : 0.5)
   switch (strip.type) {
     case 'lane':
     case 'bus':
-      return <LaneStrip x={x} y={y} width={w} length={length} />
+      return <LaneStrip x={x} y={y} width={safeWidth} length={safeLength} color={strip.color} />
     case 'sidewalk':
-      return <SidewalkStrip x={x} y={y} width={w} length={length} variant={strip.variant} />
-    case 'cyclepath':
-      return <CyclePathStrip x={x} y={y} width={w} length={length} variant={strip.variant} />
+      return <SidewalkStrip x={x} y={y} width={safeWidth} length={safeLength} variant={strip.variant} color={strip.color} />
+    case 'cyclepath': {
+      const cyclepathProps = getCyclepathStripProps(strip)
+      return (
+        <CyclePathStrip
+          x={x}
+          y={y}
+          width={safeWidth}
+          length={safeLength}
+          variant={strip.variant}
+          color={strip.color}
+          pathType={cyclepathProps.pathType}
+          centerLineMode={cyclepathProps.centerLineMode}
+          boundaryLineMode={cyclepathProps.boundaryLineMode}
+          centerLineStrokeWidth={cyclepathProps.centerLineStrokeWidth}
+          boundaryLineStrokeWidth={cyclepathProps.boundaryLineStrokeWidth}
+          centerLineDashLength={cyclepathProps.centerLineDashLength}
+          centerLineGapLength={cyclepathProps.centerLineGapLength}
+          boundaryLineDashLength={cyclepathProps.boundaryLineDashLength}
+          boundaryLineGapLength={cyclepathProps.boundaryLineGapLength}
+        />
+      )
+    }
     case 'parking':
-      return <ParkingStrip x={x} y={y} width={w} length={length} bayLength={getParkingStripProps(strip).bayLength} />
+      return <ParkingStrip x={x} y={y} width={safeWidth} length={safeLength} bayLength={getParkingStripProps(strip).bayLength} color={strip.color} />
     case 'green':
-      return <GreenStrip x={x} y={y} width={w} length={length} />
+      return <GreenStrip x={x} y={y} width={safeWidth} length={safeLength} color={strip.color} />
     case 'curb':
     case 'gutter':
-      return <CurbStrip x={x} y={y} width={w} length={length} />
+      return <CurbStrip x={x} y={y} width={safeWidth} length={safeLength} color={strip.color} />
     default:
-      return <GenericStrip x={x} y={y} width={w} length={length} type={strip.type} />
+      return <GenericStrip x={x} y={y} width={safeWidth} length={safeLength} type={strip.type} color={strip.color} />
   }
 }

@@ -4,6 +4,7 @@ import { useKeyboard } from '@/hooks/useKeyboard'
 import { DevTestBench } from '@/smartroads/DevTestBench'
 import { StraightEditor } from '@/smartroads/editors/StraightEditor'
 import { createDefaultStraightRoad, totalWidth } from '@/smartroads/constants'
+import { normalizeStraightRoadState } from '@/smartroads/state'
 import { TopBar } from '@/components/TopBar/TopBar'
 import { Toolbar } from '@/components/Toolbar/Toolbar'
 import { SketchCanvas } from '@/components/Canvas/SketchCanvas'
@@ -40,10 +41,11 @@ export default function App() {
 
   // --- SmartRoad Editor handlers ---
   const handleEditorFinish = useCallback((state: StraightRoadState) => {
+    const normalizedState = normalizeStraightRoadState(state, createDefaultStraightRoad())
     const store = useAppStore.getState()
-    const editorState = JSON.stringify(state)
-    const realWidth = totalWidth(state.strips)
-    const realHeight = state.length
+    const editorState = JSON.stringify(normalizedState)
+    const realWidth = totalWidth(normalizedState.strips)
+    const realHeight = normalizedState.length
 
     let targetId: string | undefined
 
@@ -76,6 +78,8 @@ export default function App() {
     } else if (roadEditor?.roadId) {
       store.updateObject(roadEditor.roadId, {
         editorState,
+        width: realWidth,
+        height: realHeight,
         realWidth,
         realHeight,
       })
@@ -106,7 +110,7 @@ export default function App() {
     if (roadEditor?.roadId && roadEditor.roadId !== '__new__') {
       const obj = useAppStore.getState().objects[roadEditor.roadId]
       if (obj?.editorState) {
-        try { return JSON.parse(obj.editorState) as StraightRoadState } catch { /* fallthrough */ }
+        try { return normalizeStraightRoadState(JSON.parse(obj.editorState), createDefaultStraightRoad()) } catch { /* fallthrough */ }
       }
     }
     return createDefaultStraightRoad()

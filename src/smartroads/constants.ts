@@ -2,7 +2,8 @@ import type { StripType, StripVariant, Strip, Marking, MarkingVariant, StraightR
 import { MARKING_RULES } from './rules/markingRules'
 import { ROAD_PROFILE_RULES } from './rules/profileRules'
 import { FIXED_WIDTH_STRIP_TYPES, STRIP_BASE_RULES, STRIP_VARIANT_RULES, getStripDefaultWidth, getStripEditorMinWidth } from './rules/stripRules'
-import { getDefaultStripProps, getStripRenderLength, getStripRenderY } from './stripProps'
+import { getCyclepathStripProps, getDefaultStripProps, getStripRenderLength, getStripRenderY } from './stripProps'
+import { getCrossSectionStrips } from './layout'
 
 // ============================================================
 // SmartRoads - Constants and helpers
@@ -41,7 +42,7 @@ export const FIXED_WIDTH_STRIPS: StripType[] = FIXED_WIDTH_STRIP_TYPES
 export const STRIP_COLORS: Record<StripType, string> = {
   lane: '#3a3a3a',
   sidewalk: '#c8c0b0',
-  cyclepath: '#8b4513',
+  cyclepath: '#EF4444',
   parking: '#555555',
   green: '#7a9a5a',
   curb: '#999999',
@@ -50,6 +51,24 @@ export const STRIP_COLORS: Record<StripType, string> = {
   bus: '#3a3a3a',
   tram: '#555555',
   shoulder: '#999999',
+}
+
+export const DEFAULT_MARKING_COLOR = '#ffffff'
+
+export function getStripSwatchColor(strip: Pick<Strip, 'type' | 'variant' | 'color'>): string {
+  if (strip.color) return strip.color
+
+  if (strip.type === 'cyclepath') {
+    if (strip.variant === 'advisory' || strip.variant === 'lane-marked') return STRIP_COLORS.lane
+    return STRIP_COLORS.cyclepath
+  }
+
+  if (strip.type === 'sidewalk') {
+    if (strip.variant === 'shared-bike') return '#aebebc'
+    return STRIP_COLORS.sidewalk
+  }
+
+  return STRIP_COLORS[strip.type] || '#666666'
 }
 
 export const STRIP_LABELS: Record<StripType, string> = {
@@ -85,6 +104,58 @@ export const VARIANT_LABELS: Partial<Record<StripVariant, string>> = {
   'tree-strip': 'Baumstreifen',
   dedicated: 'Eigentrasse',
   flush: 'Buendig',
+}
+
+export function getStripDisplayLabel(strip: Strip): string {
+  if (strip.type === 'lane') {
+    if (strip.variant === 'turn-left') return 'Abbiegespur Links'
+    if (strip.variant === 'turn-right') return 'Abbiegespur Rechts'
+    if (strip.variant === 'multi-use') return 'Mehrzweckstreifen'
+    return 'Fahrstreifen'
+  }
+
+  if (strip.type === 'cyclepath') {
+    if (strip.variant === 'advisory') return 'Schutzstreifen'
+    if (strip.variant === 'lane-marked') return 'Radfahrstreifen'
+    if (strip.variant === 'protected') {
+      const { pathType, protectedPlacement } = getCyclepathStripProps(strip)
+      if (pathType === 'two-way' && protectedPlacement === 'both-sides') return 'Zweirichtungsradweg (Sonderfall)'
+      if (pathType === 'two-way') return 'Zweirichtungsradweg'
+      return 'Baulich getrennter Radweg'
+    }
+  }
+
+  if (strip.type === 'sidewalk') {
+    if (strip.variant === 'shared-bike') return 'Gemeinsamer Geh-/Radweg'
+    if (strip.variant === 'separated-bike') return 'Getrennter Geh-/Radweg'
+    return 'Gehweg'
+  }
+
+  if (strip.type === 'parking') {
+    if (strip.variant === 'parallel') return 'Laengsparken'
+    if (strip.variant === 'angled') return 'Schraegparken'
+    if (strip.variant === 'perpendicular') return 'Querparken'
+    return 'Parkstreifen'
+  }
+
+  if (strip.type === 'green') {
+    if (strip.variant === 'tree-strip') return 'Baumstreifen'
+    return 'Gruenstreifen'
+  }
+
+  if (strip.type === 'median') {
+    if (strip.variant === 'marking-only') return 'Mittelstreifen-Markierung'
+    if (strip.variant === 'green-median') return 'Gruenstreifen'
+    if (strip.variant === 'barrier') return 'Leitplanke'
+    return 'Mittelstreifen'
+  }
+
+  if (strip.type === 'tram') {
+    if (strip.variant === 'dedicated') return 'Eigentrasse'
+    if (strip.variant === 'flush') return 'Buendiger Gleiskoerper'
+  }
+
+  return STRIP_LABELS[strip.type] || strip.type
 }
 
 export const DEFAULT_ROAD_LENGTH = 30
@@ -131,7 +202,7 @@ export function generateLaneMarkings(
   const effectiveRoadLength = roadLength ?? DEFAULT_ROAD_LENGTH
 
   for (let i = 0; i < strips.length - 1; i++) {
-    x += strips[i].width
+    x += Math.max(0.1, Number.isFinite(strips[i].width) ? strips[i].width : 0.1)
     const a = strips[i]
     const b = strips[i + 1]
     if ((a.type === 'lane' || a.type === 'bus') && (b.type === 'lane' || b.type === 'bus')) {
@@ -212,5 +283,5 @@ export function createDefaultStraightRoad(): StraightRoadState {
 }
 
 export function totalWidth(strips: Strip[]): number {
-  return strips.reduce((sum, strip) => sum + strip.width, 0)
+  return getCrossSectionStrips(strips).reduce((sum, strip) => sum + Math.max(0.1, Number.isFinite(strip.width) ? strip.width : 0.1), 0)
 }

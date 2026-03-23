@@ -12,8 +12,8 @@ export const CENTERLINE_VARIANT_RULES: Partial<Record<MarkingVariant, Centerline
     source: [reference('1.3 Laengsmarkierungen', 'Leitlinie innerorts: 3 m Strich / 6 m Luecke')],
   },
   'rural-dash': {
-    dashPattern: [6, 12],
-    source: [reference('1.3 Laengsmarkierungen', 'Leitlinie ausserorts: 6 m Strich / 12 m Luecke')],
+    dashPattern: [4, 8],
+    source: [reference('1.3 Laengsmarkierungen', 'Leitlinie ausserorts: 4 m Strich / 8 m Luecke')],
   },
   'autobahn-dash': {
     dashPattern: [6, 12],
@@ -24,12 +24,16 @@ export const CENTERLINE_VARIANT_RULES: Partial<Record<MarkingVariant, Centerline
     source: [reference('1.3 Laengsmarkierungen', 'Ableitung aus dem 1:2 Leitlinienverhaeltnis')],
   },
   'warning-dash': {
-    dashPattern: [6, 3],
-    source: [reference('1.3 Laengsmarkierungen', 'Warnlinie innerorts: 6 m Strich / 3 m Luecke')],
+    dashPattern: [3, 1.5],
+    source: [reference('1.3 Laengsmarkierungen', 'Warnlinie innerorts: 3 m Strich / 1,5 m Luecke')],
+  },
+  'rural-warning': {
+    dashPattern: [4, 2],
+    source: [reference('1.3 Laengsmarkierungen', 'Warnlinie ausserorts: 4 m Strich / 2 m Luecke')],
   },
   'autobahn-warning': {
-    dashPattern: [12, 6],
-    source: [reference('1.3 Laengsmarkierungen', 'Warnlinie Autobahn: 12 m Strich / 6 m Luecke')],
+    dashPattern: [6, 3],
+    source: [reference('1.3 Laengsmarkierungen', 'Warnlinie Autobahn: 6 m Strich / 3 m Luecke')],
   },
 }
 

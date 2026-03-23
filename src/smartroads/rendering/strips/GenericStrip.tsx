@@ -11,10 +11,11 @@ interface Props {
   width: number
   length: number
   type: StripType
+  color?: string
 }
 
-export function GenericStrip({ x, y = 0, width, length, type }: Props) {
+export function GenericStrip({ x, y = 0, width, length, type, color }: Props) {
   return (
-    <Rect x={x} y={y} width={width} height={length} fill={STRIP_COLORS[type] || '#666'} />
+    <Rect x={x} y={y} width={width} height={length} fill={color || STRIP_COLORS[type] || '#666'} />
   )
 }

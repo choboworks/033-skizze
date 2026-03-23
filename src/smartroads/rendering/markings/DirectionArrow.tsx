@@ -1,6 +1,7 @@
 import { Group, Path, Rect } from 'react-konva'
 import type { Marking } from '../../types'
 import { handleMarkingDragMove } from './snapHelper'
+import { MARKING_RULES } from '../../rules/markingRules'
 
 interface Props {
   marking: Marking
@@ -23,7 +24,11 @@ const ARROW_PATHS: Record<string, string> = {
 
 export function DirectionArrow({ marking, draggable, selected, snapPositions, onDragEnd, onClick, onDoubleClick, onDragging }: Props) {
   const pathData = ARROW_PATHS[marking.variant] || ARROW_PATHS.straight
-  const hitSize = 2.5
+  const hitWidth = 2.4
+  const hitHeight = hitWidth * MARKING_RULES.arrow.longitudinalStretch
+  const color = marking.color || '#ffffff'
+  const transverseScale = 1.15
+  const longitudinalScale = transverseScale * MARKING_RULES.arrow.longitudinalStretch
 
   return (
     <Group
@@ -39,25 +44,25 @@ export function DirectionArrow({ marking, draggable, selected, snapPositions, on
     >
       {selected && (
         <Rect
-          x={-hitSize / 2} y={-hitSize / 2}
-          width={hitSize} height={hitSize}
+          x={-hitWidth / 2} y={-hitHeight / 2}
+          width={hitWidth} height={hitHeight}
           fill="rgba(74,158,255,0.15)"
           listening={false}
         />
       )}
       <Path
         data={pathData}
-        stroke="#ffffff"
+        stroke={color}
         strokeWidth={0.15}
         lineCap="round"
         lineJoin="round"
         opacity={0.9}
-        scaleX={1.5}
-        scaleY={1.5}
+        scaleX={transverseScale}
+        scaleY={longitudinalScale}
       />
       <Rect
-        x={-hitSize / 2} y={-hitSize / 2}
-        width={hitSize} height={hitSize}
+        x={-hitWidth / 2} y={-hitHeight / 2}
+        width={hitWidth} height={hitHeight}
         fill="rgba(0,0,0,0.001)"
         cursor="pointer"
       />

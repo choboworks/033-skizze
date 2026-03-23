@@ -19,11 +19,12 @@ export function Crosswalk({ marking, draggable, selected, snapPositions, onDragE
   const depth = MARKING_RULES.crosswalk.defaultLength
   const stripeW = MARKING_RULES.crosswalk.stripeWidth
   const gap = MARKING_RULES.crosswalk.gap
+  const color = marking.color || '#ffffff'
 
   const stripes: React.ReactNode[] = []
   for (let sx = 0; sx < width; sx += stripeW + gap) {
     stripes.push(
-      <Rect key={sx} x={sx} y={0} width={stripeW} height={depth} fill="#ffffff" />
+      <Rect key={sx} x={sx} y={0} width={stripeW} height={depth} fill={color} />
     )
   }
 

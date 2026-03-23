@@ -83,9 +83,11 @@ const STRIP_ELEMENTS: Record<string, { variant: StripVariant; label: string; sub
 const MARKING_ELEMENTS: Record<string, { variant: MarkingVariant; label: string; sublabel?: string }[]> = {
   centerline: [
     { variant: 'standard-dash', label: 'Innerorts (3m/6m)', sublabel: 'Leitlinie' },
-    { variant: 'rural-dash', label: 'Außerorts (6m/12m)', sublabel: 'Leitlinie' },
+    { variant: 'rural-dash', label: 'Außerorts (4m/8m)', sublabel: 'Leitlinie' },
     { variant: 'autobahn-dash', label: 'Autobahn (6m/12m)', sublabel: 'Leitlinie' },
-    { variant: 'warning-dash', label: 'Warnlinie (6m/3m)', sublabel: 'Leitlinie' },
+    { variant: 'warning-dash', label: 'Warnlinie I (3m/1,5m)', sublabel: 'Leitlinie' },
+    { variant: 'rural-warning', label: 'Warnlinie A (4m/2m)', sublabel: 'Leitlinie' },
+    { variant: 'autobahn-warning', label: 'Warnlinie AB (6m/3m)', sublabel: 'Leitlinie' },
   ],
   laneboundary: [
     { variant: 'solid', label: 'Durchgezogen', sublabel: 'Begrenzung' },

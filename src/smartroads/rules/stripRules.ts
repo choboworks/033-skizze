@@ -1,4 +1,4 @@
-import type { RoadClass, Strip, StripType, StripVariant } from '../types'
+import type { CyclepathPathType, CyclepathProtectedPlacement, RoadClass, Strip, StripType, StripVariant } from '../types'
 import { editorDefault, reference, type RuleSourceRef } from './shared'
 
 export interface StripDimensionRule {
@@ -20,6 +20,38 @@ export interface RoadClassStripDimensionRule {
   note?: string
 }
 
+export interface ProtectedCyclepathDimensionRule {
+  defaultWidth: number
+  editorMinWidth: number
+  source: RuleSourceRef[]
+  note?: string
+}
+
+const PROTECTED_CYCLEPATH_RULES: Record<'one-way' | 'two-way-single-side' | 'two-way-both-sides', ProtectedCyclepathDimensionRule> = {
+  'one-way': {
+    defaultWidth: 2.00,
+    editorMinWidth: 1.60,
+    source: [
+      reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Baulicher Radweg (Einrichtung, innerorts)'),
+    ],
+  },
+  'two-way-single-side': {
+    defaultWidth: 3.00,
+    editorMinWidth: 2.50,
+    source: [
+      reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Baulicher Radweg (Zweirichtung, einseitig)'),
+    ],
+  },
+  'two-way-both-sides': {
+    defaultWidth: 2.50,
+    editorMinWidth: 2.00,
+    source: [
+      reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Baulicher Radweg (Zweirichtung, beidseitig)'),
+    ],
+    note: 'Beidseitig geführter Zweirichtungsradweg ist laut Nachschlagewerk der Sonderfall.',
+  },
+}
+
 export const STRIP_BASE_RULES: Record<StripType, StripDimensionRule> = {
   lane: {
     defaultWidth: 3.25,
@@ -38,12 +70,12 @@ export const STRIP_BASE_RULES: Record<StripType, StripDimensionRule> = {
     note: 'The editor minimum is a guardrail, not a full accessibility validation.',
   },
   cyclepath: {
-    defaultWidth: 1.85,
-    editorMinWidth: 1.00,
+    defaultWidth: 2.25,
+    editorMinWidth: 1.85,
     source: [
       reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Radfahrstreifen'),
     ],
-    note: 'Base default maps to the marked cycle-lane case. Other variants should override this width.',
+    note: 'Base default maps to the Radfahrstreifen-Regelbreite. Other variants should override this width.',
   },
   parking: {
     defaultWidth: 2.00,
@@ -107,10 +139,11 @@ export const STRIP_BASE_RULES: Record<StripType, StripDimensionRule> = {
 
 export const STRIP_VARIANT_RULES: Partial<Record<StripVariant, StripVariantDimensionRule>> = {
   'lane-marked': {
-    width: 1.85,
+    width: 2.25,
     source: [
       reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Radfahrstreifen'),
     ],
+    note: 'Regelbreite inkl. Markierung; 1,85 m remains the lower bound for constrained existing layouts.',
   },
   advisory: {
     width: 1.50,
@@ -130,6 +163,13 @@ export const STRIP_VARIANT_RULES: Partial<Record<StripVariant, StripVariantDimen
       reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Gemeins. Geh-/Radweg (ausserorts)'),
     ],
     note: 'Used as the current shared-path default until a dedicated bidirectional/shared-facility model exists.',
+  },
+  'separated-bike': {
+    width: 4.50,
+    source: [
+      reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Getrennter Geh-/Radweg innerorts (2,00 m Radteil + 2,50 m Gehteil)'),
+    ],
+    note: 'Modeled as total facility width in the straight editor.',
   },
   parallel: {
     width: 2.00,
@@ -233,6 +273,16 @@ export const ROAD_CLASS_VARIANT_RULES: Partial<Record<RoadClass, Partial<Record<
       note: 'Maps the motorway median barrier strip to a full median-width placeholder in the straight editor.',
     },
   },
+}
+
+export function getProtectedCyclepathRule(
+  pathType: CyclepathPathType = 'one-way',
+  placement: CyclepathProtectedPlacement = 'single-side',
+): ProtectedCyclepathDimensionRule {
+  if (pathType === 'one-way') return PROTECTED_CYCLEPATH_RULES['one-way']
+  return placement === 'both-sides'
+    ? PROTECTED_CYCLEPATH_RULES['two-way-both-sides']
+    : PROTECTED_CYCLEPATH_RULES['two-way-single-side']
 }
 
 export const FIXED_WIDTH_STRIP_TYPES: StripType[] = ['curb', 'gutter']

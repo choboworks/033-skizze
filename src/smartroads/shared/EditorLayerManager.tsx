@@ -4,7 +4,7 @@ import {
   Minus, ArrowUp, ArrowDown, Route, Pencil,
 } from 'lucide-react'
 import type { Strip, Marking } from '../types'
-import { STRIP_LABELS, STRIP_COLORS, normalizeLayerOrder } from '../constants'
+import { DEFAULT_MARKING_COLOR, getStripDisplayLabel, getStripSwatchColor, normalizeLayerOrder } from '../constants'
 import { MARKING_TYPE_LABELS } from '@/constants/shared'
 
 // ============================================================
@@ -75,16 +75,16 @@ export function EditorLayerManager({
     ...strips.map((strip) => ({
       id: strip.id,
       kind: 'strip' as const,
-      label: STRIP_LABELS[strip.type] || strip.type,
+      label: getStripDisplayLabel(strip),
       icon: <StripIcon type={strip.type} />,
-      color: STRIP_COLORS[strip.type] || '#555',
+      color: getStripSwatchColor(strip),
     })),
     ...markings.map((marking) => ({
       id: marking.id,
       kind: 'marking' as const,
       label: MARKING_TYPE_LABELS[marking.type] || marking.type,
       icon: <MarkingIcon type={marking.type} />,
-      color: '#ffffff',
+      color: marking.color || DEFAULT_MARKING_COLOR,
     })),
   ]
 

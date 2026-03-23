@@ -6,6 +6,7 @@ import { totalWidth, STRIP_LABELS, STRIP_MIN_WIDTHS, FIXED_WIDTH_STRIPS, orderMa
 import type { Strip, Marking } from '../types'
 import type Konva from 'konva'
 import { getStripRenderLength, getStripRenderY } from '../stripProps'
+import { getCrossSectionStrips, getStripPlacements, isLaneOverlayCyclepath } from '../layout'
 
 // ============================================================
 // RoadTopView – Interactive top-down view
@@ -57,7 +58,11 @@ export function RoadTopView({
   const [containerSize, setContainerSize] = useState({ width: 800, height: 500 })
   const [isDraggingMarking, setIsDraggingMarking] = useState(false)
 
-  const tw = totalWidth(strips)
+  const safeRoadLength = Math.max(0.5, Number.isFinite(length) ? length : 0.5)
+  const tw = Math.max(0.1, totalWidth(strips))
+  const crossSectionStrips = useMemo(() => getCrossSectionStrips(strips), [strips])
+  const stripPlacements = useMemo(() => getStripPlacements(strips, safeRoadLength), [strips, safeRoadLength])
+  const placementById = useMemo(() => new Map(stripPlacements.map((placement) => [placement.strip.id, placement])), [stripPlacements])
   const orderedMarkings = useMemo(
     () => orderMarkingsByLayer(markings, layerOrder),
     [markings, layerOrder]
@@ -65,7 +70,7 @@ export function RoadTopView({
 
   // Snap positions: cumulative strip edges (boundaries between strips)
   const stripEdges: number[] = []
-  { let acc = 0; for (const s of strips) { acc += s.width; stripEdges.push(acc) } }
+  { let acc = 0; for (const s of crossSectionStrips) { acc += s.width; stripEdges.push(acc) } }
   // Remove last edge (= total width, right edge of road) and add 0 (left edge)
   stripEdges.pop()
   // Don't include 0 — markings shouldn't snap to the very left edge
@@ -85,10 +90,10 @@ export function RoadTopView({
 
   // Scale & layout
   const scaleByWidth = (containerSize.width - PADDING * 2) / tw
-  const scaleByHeight = (containerSize.height - PADDING * 2 - 20) / length
+  const scaleByHeight = (containerSize.height - PADDING * 2 - 20) / safeRoadLength
   const displayScale = Math.min(scaleByWidth, scaleByHeight)
   const roadWidthPx = tw * displayScale
-  const roadHeightPx = length * displayScale
+  const roadHeightPx = safeRoadLength * displayScale
   const offsetX = (containerSize.width - roadWidthPx) / 2
   const offsetY = (containerSize.height - roadHeightPx) / 2
 
@@ -388,16 +393,18 @@ export function RoadTopView({
   const stripNodes: React.ReactNode[] = []
   const interactionNodes: React.ReactNode[] = []
 
-  let xOffset = 0
   for (let i = 0; i < strips.length; i++) {
     const strip = strips[i]
-    const stripY = getStripRenderY(strip)
-    const stripHeight = getStripRenderLength(strip, length)
+    const placement = placementById.get(strip.id)
+    if (!placement) continue
+    const stripY = placement.y
+    const stripHeight = placement.length
     const isBeingDragged = strip.id === draggedStripId
     const shift = animShifts[strip.id] || 0
-    const sx = xOffset + shift
+    const sx = placement.x + (placement.isLaneOverlay ? 0 : shift)
     const isSelected = selectedStripId === strip.id
-    const isFixed = FIXED_WIDTH_STRIPS.includes(strip.type)
+    const isOverlay = placement.isLaneOverlay
+    const isFixed = FIXED_WIDTH_STRIPS.includes(strip.type) || isOverlay
 
     // Strip visual
     stripNodes.push(
@@ -453,9 +460,11 @@ export function RoadTopView({
         onMouseDown={(e) => {
           onSelectStrip(strip.id)
           onSelectMarking(null)
-          startDragReorder(strip.id, i, e)
+          if (!isOverlay) {
+            startDragReorder(strip.id, i, e)
+          }
         }}
-        cursor={isSelected ? 'grab' : 'pointer'}
+        cursor={isSelected && !isOverlay ? 'grab' : 'pointer'}
       />
     )
 
@@ -492,32 +501,32 @@ export function RoadTopView({
     }
 
     // Subtle edge line between strips of different types
-    if (i < strips.length - 1 && strip.type !== strips[i + 1].type) {
+    const baseIndex = crossSectionStrips.findIndex((candidate) => candidate.id === strip.id)
+    if (!isOverlay && baseIndex >= 0 && baseIndex < crossSectionStrips.length - 1 && strip.type !== crossSectionStrips[baseIndex + 1].type) {
       const edgeX = sx + strip.width
-      const nextStripY = getStripRenderY(strips[i + 1])
-      const nextStripHeight = getStripRenderLength(strips[i + 1], length)
+      const nextPlacement = placementById.get(crossSectionStrips[baseIndex + 1].id)
+      if (nextPlacement) {
       stripNodes.push(
         <KonvaLine
           key={`edge-${i}`}
-          points={[edgeX, Math.min(stripY, nextStripY), edgeX, Math.max(stripY + stripHeight, nextStripY + nextStripHeight)]}
+          points={[edgeX, Math.min(stripY, nextPlacement.y), edgeX, Math.max(stripY + stripHeight, nextPlacement.y + nextPlacement.length)]}
           stroke="rgba(128,128,128,0.2)"
           strokeWidth={0.3 / displayScale}
           listening={false}
         />
       )
+      }
     }
-
-    xOffset += strip.width
   }
 
   // Ghost strip — iOS-style lifted element
   const ghostNodes: React.ReactNode[] = []
   if (isDragging && dragGhostX != null && dragRef.current) {
     const ghostStrip = strips.find((s) => s.id === dragRef.current!.stripId)
-    if (ghostStrip) {
+    if (ghostStrip && !isLaneOverlayCyclepath(ghostStrip)) {
       const gw = ghostStrip.width
       const ghostY = getStripRenderY(ghostStrip)
-      const ghostHeight = getStripRenderLength(ghostStrip, length)
+      const ghostHeight = getStripRenderLength(ghostStrip, safeRoadLength)
       const pad = 0.25
 
       // Soft shadow (slightly offset down-right for depth)
@@ -602,7 +611,7 @@ export function RoadTopView({
             {stripEdges.map((ex, i) => (
               <KonvaLine
                 key={`snap-${i}`}
-                points={[ex, 0, ex, length]}
+                points={[ex, 0, ex, safeRoadLength]}
                 stroke="#4a9eff"
                 strokeWidth={0.8 / displayScale}
                 dash={[4 / displayScale, 4 / displayScale]}
@@ -624,7 +633,7 @@ export function RoadTopView({
               <MarkingRenderer
                 key={m.id}
                 marking={m}
-                roadLength={length}
+                roadLength={safeRoadLength}
                 draggable
                 selected={selectedMarkingId === m.id}
                 snapPositions={stripEdges}

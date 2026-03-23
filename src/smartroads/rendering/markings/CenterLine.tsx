@@ -22,7 +22,10 @@ export function CenterLine({ marking, roadLength, draggable, selected, snapPosit
   const offsetY = marking.offsetY ?? 0
   const effectiveLength = marking.length ?? roadLength
   const dash = getCenterlineDashPattern(marking.variant)
-  const sw = marking.strokeWidth || MARKING_RULES.lineWidths.otherRoads.schmalstrich
+  const defaultStrokeWidth = marking.variant === 'autobahn-dash' || marking.variant === 'autobahn-warning'
+    ? MARKING_RULES.lineWidths.autobahn.schmalstrich
+    : MARKING_RULES.lineWidths.otherRoads.schmalstrich
+  const sw = marking.strokeWidth || defaultStrokeWidth
   const [d, g] = dash
   const cycle = d + g
 

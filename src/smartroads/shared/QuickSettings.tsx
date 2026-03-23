@@ -2,8 +2,10 @@ import { useState } from 'react'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import { Minus, Plus, ChevronDown } from 'lucide-react'
 import { AlertTriangle } from 'lucide-react'
-import type { Strip, RoadClass, StripType, StripVariant } from '../types'
+import type { Strip, Marking, RoadClass, StripType, StripVariant } from '../types'
 import { createStrip, totalWidth, ROAD_CLASS_CONFIG } from '../constants'
+import { getCrossSectionStrips, isLaneOverlayCyclepath } from '../layout'
+import { validateStraightRoadState } from '../validation'
 import { calculateAutoScale, PAGE_WIDTH_MM } from '@/utils/scale'
 
 // ============================================================
@@ -12,6 +14,7 @@ import { calculateAutoScale, PAGE_WIDTH_MM } from '@/utils/scale'
 
 interface Props {
   strips: Strip[]
+  markings: Marking[]
   length: number
   roadClass: RoadClass
   onUpdateStrips: (strips: Strip[]) => void
@@ -34,8 +37,22 @@ function countLanes(strips: Strip[]): number {
   return strips.filter((s) => s.type === 'lane').length
 }
 
+function isRoadwayStrip(strip: Strip): boolean {
+  return strip.type === 'lane' || strip.type === 'bus'
+}
+
+function sumWidths(strips: Strip[]): number {
+  return strips.reduce((sum, strip) => sum + strip.width, 0)
+}
+
+function formatMeters(value: number): string {
+  return `${value.toFixed(2)} m`
+}
+
 function defaultQuickVariant(type: 'sidewalk' | 'cyclepath' | 'parking'): StripVariant {
   switch (type) {
+    case 'cyclepath':
+      return 'protected'
     case 'parking':
       return 'parallel'
     default:
@@ -126,10 +143,14 @@ const ROAD_CLASSES: { value: RoadClass; label: string }[] = [
   { value: 'autobahn', label: 'Autobahn' },
 ]
 
-export function QuickSettings({ strips, length, roadClass, onUpdateStrips, onUpdateLength, onUpdateRoadClass }: Props) {
+export function QuickSettings({ strips, markings, length, roadClass, onUpdateStrips, onUpdateLength, onUpdateRoadClass }: Props) {
   const [collapsed, setCollapsed] = useState(false)
   const laneCount = countLanes(strips)
   const tw = totalWidth(strips)
+  const issues = validateStraightRoadState({ strips, markings, roadClass })
+  const baseStrips = getCrossSectionStrips(strips)
+  const roadwayWidth = sumWidths(baseStrips.filter(isRoadwayStrip))
+  const overlayCyclepath = strips.find(isLaneOverlayCyclepath) ?? null
 
   const createProfileStrip = (type: StripType, variant: StripVariant = 'standard', direction?: 'up' | 'down') =>
     createStrip(type, variant, direction, roadClass)
@@ -245,8 +266,24 @@ export function QuickSettings({ strips, length, roadClass, onUpdateStrips, onUpd
       {/* Size info + warning */}
       <div className="pt-3 flex flex-col gap-2" style={{ borderTop: '1px solid var(--panel-section-border)', marginTop: 4 }}>
         <div className="text-[11px] text-center" style={{ color: 'var(--text-muted)' }}>
-          {tw.toFixed(1)}m breit · {length}m lang · 1:{currentScale}
+          Fahrbahn {roadwayWidth.toFixed(1)}m · Gesamtquerschnitt {tw.toFixed(1)}m · {length}m lang · 1:{currentScale}
         </div>
+        {overlayCyclepath && (
+          <div
+            className="flex flex-col gap-1 px-3 py-2.5 rounded-xl text-[11px]"
+            style={{ background: 'rgba(74,158,255,0.08)', border: '1px solid rgba(74,158,255,0.18)', color: 'var(--text-secondary)' }}
+          >
+            <span style={{ color: 'var(--text)' }}>
+              {overlayCyclepath.variant === 'advisory' ? 'Schutzstreifen auf der Fahrbahn' : 'Radfahrstreifen auf der Fahrbahn'}
+            </span>
+            <span>
+              {overlayCyclepath.variant === 'advisory'
+                ? `Radverkehrsfläche ${formatMeters(overlayCyclepath.width)} · Kernfahrbahn links der Leitlinie ${formatMeters(Math.max(0, roadwayWidth - overlayCyclepath.width))}`
+                : `Radfahrstreifen ${formatMeters(overlayCyclepath.width)} · verbleibende Fahrbahn links der Trennlinie ${formatMeters(Math.max(0, roadwayWidth - overlayCyclepath.width))}`}
+            </span>
+            <span>Die Fläche liegt innerhalb der Fahrbahn und wird nicht als eigener Nebenstreifen addiert.</span>
+          </div>
+        )}
         {widthOverflow && (
           <div
             className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-[11px]"
@@ -256,6 +293,16 @@ export function QuickSettings({ strips, length, roadClass, onUpdateStrips, onUpd
             <span>Straße breiter als Seite. Länge erhöhen oder Streifen entfernen.</span>
           </div>
         )}
+        {issues.map((issue) => (
+          <div
+            key={issue.id}
+            className="flex items-start gap-2 px-3 py-2.5 rounded-xl text-[11px]"
+            style={{ background: 'rgba(255,180,50,0.08)', border: '1px solid rgba(255,180,50,0.18)', color: 'var(--text-secondary)' }}
+          >
+            <AlertTriangle size={14} className="shrink-0 mt-[1px]" />
+            <span>{issue.message}</span>
+          </div>
+        ))}
       </div>
     </div>
   )

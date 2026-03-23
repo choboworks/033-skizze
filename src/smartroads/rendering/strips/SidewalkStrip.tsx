@@ -8,21 +8,26 @@ interface Props {
   width: number
   length: number
   variant?: StripVariant
+  color?: string
 }
 
-export function SidewalkStrip({ x, y = 0, width, length, variant }: Props) {
+export function SidewalkStrip({ x, y = 0, width, length, variant, color }: Props) {
   const edgeBand = Math.max(0.04, Math.min(width * 0.06, 0.1))
   const bikeZoneWidth = Math.max(width * 0.38, 0.85)
   const bikeZoneX = width - bikeZoneWidth
 
   return (
     <Group x={x} y={y}>
-      <Rect
-        width={width}
-        height={length}
-        fillPatternImage={getPavingPattern() as unknown as HTMLImageElement}
-        fillPatternScale={{ x: 0.02, y: 0.02 }}
-      />
+      {color ? (
+        <Rect width={width} height={length} fill={color} />
+      ) : (
+        <Rect
+          width={width}
+          height={length}
+          fillPatternImage={getPavingPattern() as unknown as HTMLImageElement}
+          fillPatternScale={{ x: 0.02, y: 0.02 }}
+        />
+      )}
       <Rect width={edgeBand} height={length} fill="#ffffff" opacity={0.14} listening={false} />
       <Rect x={width - edgeBand} width={edgeBand} height={length} fill="#5f584d" opacity={0.12} listening={false} />
 

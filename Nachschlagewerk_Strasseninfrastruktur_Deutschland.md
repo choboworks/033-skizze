@@ -1,7 +1,8 @@
 # Nachschlagewerk: Straßeninfrastruktur Deutschland – Normen & Maße
 
 > Zusammenstellung aller normierten Maße, Querschnitte und Gestaltungsvorgaben für den deutschen Straßenraum.  
-> Stand der Recherche: März 2026
+> Stand der Recherche: März 2026  
+> **Revision 2** – Faktenprüfung gegen Originalregelwerke durchgeführt; 8 Fehler korrigiert, 19 Ungenauigkeiten präzisiert.
 
 ---
 
@@ -29,13 +30,15 @@
 #### Leitlinie (unterbrochen)
 - Verhältnis Strich : Lücke = **1 : 2**
 - Autobahn: 6 m Strich / 12 m Lücke
+- Außerorts: 4 m Strich / 8 m Lücke
 - Innerorts: 3 m Strich / 6 m Lücke
 - Ausführung: Schmalstrich
 
-#### Warnlinie (unterbrochen)
+#### Warnlinie (Zeichen 340, unterbrochen)
 - Verhältnis Strich : Lücke = **2 : 1** (umgekehrt zur Leitlinie)
-- Autobahn: 12 m Strich / 6 m Lücke
-- Innerorts: 6 m Strich / 3 m Lücke
+- Autobahn: 6 m Strich / 3 m Lücke
+- Außerorts: 4 m Strich / 2 m Lücke
+- Innerorts: 3 m Strich / 1,5 m Lücke
 - Ausführung: Schmalstrich
 - Kündigt Hindernisse, Fahrbahnteilungen oder Fahrstreifenbegrenzungen an
 
@@ -61,7 +64,7 @@
 #### Fußgängerüberweg / Zebrastreifen (Zeichen 293)
 - Streifenbreite: **50 cm**
 - Streifenabstand: **50 cm**
-- Mindestlänge: **3,00 m**
+- Mindestbreite (quer zur Fahrtrichtung): **3,00 m**, Regelbreite: **4,00 m**
 - Streifen verlaufen parallel zur Fahrtrichtung
 - Haltverbot auf und 5 m vor dem FGÜ
 
@@ -87,8 +90,8 @@
 
 ### 1.7 Temporäre Markierungen (Baustellen)
 
-- Farbe: **Gelb** (statt weiß)
-- Breite: 12 cm (Gelb und Weiß), 15 cm (Schwarz)
+- Farbe: **Gelb** (statt weiß, gemäß § 39 Abs. 5 StVO)
+- Strichbreiten richten sich nach RMS-1: Schmalstrich 12 cm (andere Straßen) bzw. 15 cm (Autobahn), Breitstrich 25 cm bzw. 30 cm
 - Hat Vorrang vor weißer Dauermarkierung
 - Ungültige Markierungen müssen so beseitigt werden, dass sie dauerhaft unter allen Witterungsbedingungen nicht mehr erkennbar sind
 
@@ -100,10 +103,12 @@
 
 | Regelquerschnitt | Fahrstreifen | Streifen/Richtung | Fahrstreifenbreite | Randstreifen | Seitenstreifen | Mittelstreifen | Gesamtbreite | DTV-Bereich |
 |---|---|---|---|---|---|---|---|---|
-| **RQ 28** | 4 | 2 | 3,50–3,75 m | 0,50 m | 2,50 m | 3,00 m | 28 m | 20.000–60.000 |
+| **RQ 28** | 4 | 2 | 3,50 m | 0,50 m | 2,50 m | 3,00 m | 28 m | < 30.000 (EKA 2) |
 | **RQ 31** | 4 | 2 | 3,75 m | 0,75 m | 3,00 m | 4,00 m | 31 m | 18.000–68.000 |
-| **RQ 36** | 6 | 3 | 3,75 m | 0,75 m | 3,00 m | 4,00 m | 36 m | 50.000–100.000 |
-| **RQ 43,5** | 8 | 4 | 3,75 m | 0,75 m | 3,00 m | 4,00 m | 43,5 m | ab 100.000 |
+| **RQ 36** | 6 | 3 | 3,50–3,75 m ¹ | 0,75 m | 2,50 m | 4,00 m | 36 m | 60.000–100.000 |
+| **RQ 43,5** | 8 | 4 | 3,50–3,75 m ¹ | 0,75 m | 3,00 m | 4,00 m | 43,5 m | ab 100.000 |
+
+¹ Überholfahrstreifen 3,75 m, übrige Fahrstreifen 3,50 m
 
 - Eingeführt mit ARS 7/2009
 - Entwurfsklassen: EKA 1A (130 km/h), EKA 1B (120 km/h), EKA 2, EKA 3 (Stadtautobahn)
@@ -112,11 +117,13 @@
 
 | Entwurfsklasse | Regelquerschnitt | Fahrstreifen | Fahrstreifenbreite | Randstreifen | Bankett | Besonderheit | Gesamtbreite |
 |---|---|---|---|---|---|---|---|
-| **EKL 1** | RQ 15,5 | 2+1 (wechselnd) | 3,50 m / 3,25 m (Überhol.) | 0,50 m | 1,50 m | Grüner Mittelstreifen 1,00 m | 15,5 m |
-| **EKL 2** | RQ 11,5+ | 2 + abschn. Überholstreifen | 3,50 m | 0,50 m | 1,50 m | Abschnittsweise 3-streifig | 11,5 m (Grundquerschn.) |
+| **EKL 1** | RQ 15,5 | 2+1 (wechselnd) | 3,50 m / 3,25 m (Überhol.) | 0,50–0,75 m ² | 1,50 m | Grüner Mittelstreifen 1,00 m | 15,5 m |
+| **EKL 2** | RQ 11,5+ | 2 + abschn. Überholstreifen | 3,50 m / 3,25 m (Überhol.) | 0,50 m | 1,50 m | Abschn. 3-streifig, doppelte Leitlinie mit Farbfüllung | 11,5 m (Grundquerschn.) |
 | **EKL 3** | RQ 11 | 2 | 3,50 m | 0,50 m | 1,50 m | Trennung: Leitlinie | 11 m |
-| **EKL 4** | RQ 9 | Ohne Mittellinie | Befest. Breite 5,50 m | – | 1,50 m | Seitliche Leitlinien 1:1 | 9 m |
-| **Hohe Nachfrage** | RQ 21 | 4 (zweibahnig) | 3,50 m | – | – | Für EKL 1–3 bei Überlastung | 21 m |
+| **EKL 4** | RQ 9 | Ohne Mittellinie | Befest. Breite 6,00 m | – | 1,50 m | Seitliche Leitlinien 1:1 | 9 m |
+| **Hohe Nachfrage** | RQ 21 | 4 (zweibahnig) | 3,50 m / 3,25 m (Überhol.) | – | – | Mittelstreifen 2,50 m; für EKL 1–3 bei Überlastung | 21 m |
+
+² Im zweistreifigen Bereich 0,50 m, im einstreifigen Bereich (neben Überholstreifen) 0,75 m
 
 - EKL 4: max. 3.000 Kfz/24h, max. 150 Fz Schwerverkehr/24h
 - Fahrstreifenreduzierung bei EKL 3 bei SV ≤ 300 Fz/24h möglich
@@ -132,11 +139,11 @@
 
 | Straßentyp | Fahrbahnbreite | Anmerkung |
 |---|---|---|
-| Hauptverkehrsstraße 2-streifig | 6,00–7,50 m | Je nach Begegnungsfall |
-| Mit Linienbusverkehr | ≥ 6,50 m | – |
-| Mit beidseitigen Schutzstreifen | ≥ 7,00 m | Ohne Parken |
+| Hauptverkehrsstraße 2-streifig | 5,50–7,50 m | Je nach Begegnungsfall und Lkw-Häufigkeit |
+| Mit Linienbusverkehr | ≥ 6,50 m | (6,00 m bei geringem Busverkehr) |
+| Mit beidseitigen Schutzstreifen | ≥ 7,00 m | Ohne Parken; Regelfall 7,50 m |
 | Einstreifige Richtungsfahrbahn | 3,25 m | Baulich getrennt |
-| Erschließungsstraße | 4,50–5,50 m | Mischungsprinzip < 400 Kfz/h |
+| Erschließungsstraße | 4,50–6,50 m | Mischungsprinzip < 400 Kfz/h |
 | Verkehrsberuhigter Bereich | Keine feste Breite | Schrittgeschwindigkeit |
 
 - Fahrstreifen < 2,75 m: nicht markieren
@@ -146,30 +153,30 @@
 
 | Anlagetyp | Regelbreite | Mindestbreite | Markierung | Anmerkung |
 |---|---|---|---|---|
-| **Radfahrstreifen** | 1,85 m | 1,60 m | Breitstrich 25 cm, durchgezogen | Neben Parken: + 0,50 m Sicherheit |
+| **Radfahrstreifen** | 1,85 m | 1,50 m (VwV-StVO lichte Breite) | Breitstrich 25 cm, durchgezogen | Neben Parken: + 0,50 m Sicherheit |
 | **Schutzstreifen** | 1,50 m | 1,25 m (ERA) / 1,50 m (E Klima) | Schmalstrich, gestrichelt | Kernfahrbahn ≥ 4,50 m |
 | **Baulicher Radweg (Einrichtung, innerorts)** | 2,00 m | 1,60 m | – | Lichte Breite inkl. Sicherheitsraum ≥ 1,50 m |
-| **Baulicher Radweg (Zweirichtung)** | 2,50 m | 2,00 m | – | – |
+| **Baulicher Radweg (Zweirichtung, beidseitig)** | 2,50 m | 2,00 m | – | Bei Radwegen auf beiden Straßenseiten |
+| **Baulicher Radweg (Zweirichtung, einseitig)** | 3,00 m | 2,50 m | – | Nur auf einer Straßenseite |
 | **Gemeins. Geh-/Radweg (außerorts)** | 2,50 m | 2,00 m (Engstelle) | Zeichen 240 | Abstand zur Fahrbahn: 1,75 m |
 | **Radschnellverbindung (Einrichtung)** | ≥ 3,00 m | – | – | Sicherheitstrennstreifen ≥ 0,75 m |
-| **Radschnellverbindung (Zweirichtung)** | ≥ 4,00 m | – | – | – |
+| **Radschnellverbindung (Zweirichtung)** | ≥ 4,00 m | – | – | Gemäß H RSV 2021 |
 
 #### Sicherheitstrennstreifen
 
-| Konstellation | Breite |
-|---|---|
-| Längsparken → Radweg/Schutzstreifen | ≥ 0,75 m |
-| Schrägparken → Radweg | ≥ 1,10 m |
-| Senkrechtparken → Radweg | ≥ 1,10 m |
-| Parken → Gehweg | ≥ 0,50 m |
-| Radweg → Fahrbahn (außerorts) | 1,75 m (Regel), ≥ 0,75 m (Mindest) |
+| Konstellation | Radweg (baulich) | Radfahrstreifen | Schutzstreifen |
+|---|---|---|---|
+| Längsparken → Radanlage | ≥ 0,75 m | ≥ 0,50–0,75 m | ≥ 0,50 m |
+| Schräg-/Senkrechtparken → Radanlage | ≥ 1,10 m | ≥ 0,75 m | ≥ 0,75 m |
+| Parken → Gehweg | ≥ 0,50 m | – | – |
+| Radweg → Fahrbahn (außerorts) | 1,75 m (Regel), ≥ 0,75 m (Mindest) | – | – |
 
 ### 2.5 Gehwege und Fußverkehr (RASt 06 / EFA 2002)
 
 | Element | Regelbreite | Zusammensetzung |
 |---|---|---|
 | **Gehweg (Regelfall)** | 2,50 m | 1,80 m Verkehrsraum + 0,50 m Sicherheit z. Fahrbahn + 0,20 m z. Bebauung |
-| **Geschäftsstraße** | ≥ 3,30 m | Zzgl. 1,00 m Schaufensterzone, zzgl. ≥ 1,50 m Außengastronomie |
+| **Geschäftsstraße** | 3,30–5,00 m | 3,30 m (Wohn-/Geschäftsmisch, EFA); örtl. Geschäftsstr. 4,00 m; Hauptgeschäftsstr. 5,00 m (RASt) |
 | **Selbstständiger Fußweg** | ≥ 2,50 m | Für maschinelle Reinigung / Winterdienst |
 | **Fußweg mit Fahrzeugverkehr** | ≥ 4,50 m | – |
 | **Restbreite bei Gehwegparken** | ≥ 2,50 m | (VwV-StVO: minimal 2,20 m) |
@@ -181,7 +188,7 @@
 |---|---|---|---|
 | **Längsparken** | 2,00 m (2,15 m neben Rad) | 5,70 m je Stellplatz | – |
 | **Senkrechtparken** | 2,50 m (≥ 2,30 m) | 5,00 m | ≥ 6,00 m |
-| **Schrägparken (45°–60°)** | 2,50 m | variabel | 3,50–4,50 m |
+| **Schrägparken (30°–75°)** | 2,50 m | variabel | 3,00–4,50 m (je nach Winkel) |
 | **Überhangstreifen** | 0,70–0,75 m | – | – |
 
 ---
@@ -192,7 +199,7 @@
 
 | Parameter | Innerorts | Außerorts |
 |---|---|---|
-| **Regeltiefe** | ≥ 2,50 m (angestrebt 3,00 m) | ≥ 2,50 m |
+| **Empfohlene Tiefe** | 2,50–3,00 m (angestrebt ≥ 3,00 m) | ≥ 2,50 m |
 | **Mindesttiefe** | 2,00 m | 2,50 m |
 | **Mit Radverkehr/Rollstuhl** | ≥ 2,50 m | ≥ 2,50 m |
 | **Bei Engstellen** | 1,60 m möglich | – |
@@ -220,7 +227,7 @@
 |---|---|---|---|---|
 | **Minikreisverkehr** | 13–22 m | Vollständig überfahrbar, ≥ 4 m ⌀, 4–5 cm Bord | Einstreifig | Nur innerorts, max. 50 km/h, bis 15.000 Kfz/Tag |
 | **Kleiner Kreisverkehr (innerorts)** | 26–40 m | Nicht überfahrbar, fest eingefasst | Einstreifig | Ggf. Innenring (überfahrbar) bei < 30 m |
-| **Kleiner Kreisverkehr (außerorts)** | 30–50 m | Nicht überfahrbar | Einstreifig | Ein-/Ausfahrten einstreifig |
+| **Kleiner Kreisverkehr (außerorts)** | 35–50 m | Nicht überfahrbar | Einstreifig | Ein-/Ausfahrten einstreifig |
 | **Zweistreifig befahrbar** | 40–60 m | Nicht überfahrbar | Zweistreifig | Zu-/Ausfahrten ein- oder zweistreifig |
 | **Großer / signalisierter** | > 60 m | Nicht überfahrbar | Mehrstreifig | Mit Lichtsignalanlagen |
 
@@ -295,7 +302,7 @@
 |---|---|
 | Standard-Leuchtfelddurchmesser | **200 mm** |
 | Großer Leuchtfelddurchmesser | **300 mm** |
-| 300 mm Einsatz | Anbaufreie Straßen, ab 70 km/h, großräumige Knoten, Hauptrichtung |
+| 300 mm Einsatz | Anbaufreie Straßen (mind. Hauptrichtung), ab 70 km/h, großräumige Knoten, eingeschränkte Erkennbarkeit |
 
 - Farbfolge Kfz: Rot → Rot/Gelb → Grün → Gelb → Rot
 - Farbfolge Fußgänger: Rot → Grün → Rot (kein Gelb, Ausnahme: Düsseldorf)
@@ -333,6 +340,7 @@
 
 - Räumzeit = Räumweg / Räumgeschwindigkeit
 - Räumweg = Furtlänge bis zum nächsten sicheren Bereich
+- Radfahrer: Überfahrzeit t_ü = 1 s; bei engen Bögen vor Radfahrerfurten Wert nach unten anpassen
 
 ### 4.6 Aufstellung Signalgebermaste
 
@@ -349,7 +357,7 @@
 | Anforderungstaster | Höhe **0,85 m** |
 | Taktiles Vibrationssignal | An Unterseite des Tasters |
 | Tastbarer Richtungspfeil | Am Taster, zeigt Querungsrichtung |
-| Mindest-Mastabstand für akustische Signale | **5 m** (darunter: taktile Signale zusätzlich nötig) |
+| Mastabstand < 5 m | Taktile Signale zusätzlich erforderlich (akust. Zuordnung nicht mehr eindeutig) |
 
 ### 4.8 LSA-Typen
 
@@ -379,20 +387,21 @@
 |---|---|---|---|
 | **Randhaltestelle** | Bus hält am Fahrbahnrand | Geringer Aufwand, geradlinige Anfahrt | Bus blockiert Fahrbahn |
 | **Buskap (Haltestellenkap)** | Seitenraum ragt in Fahrbahn | Minimaler Platzbedarf, gute Anfahrt, vergrößerte Aufstellfläche | Bus blockiert Fahrbahn, Hindernis für Kfz |
-| **Busbucht** | Bus fährt aus dem Verkehr heraus | Kein Rückstau | Einfädelproblematik, schlechte Anfahrbarkeit, Bordsteinhöhe oft ≤ 16 cm |
+| **Busbucht** | Bus fährt aus dem Verkehr heraus | Kein Rückstau | Einfädelproblematik, schlechte Anfahrbarkeit, Bordhöhe ≥ 22 cm schwer erreichbar |
 | **Inselhaltestelle** | Wartefläche als eigene Insel | Gute Barrierefreiheit | Hoher Platzbedarf |
+
+- Busbucht-Gesamtentwicklungslänge (Einfahrkeil + Haltebereich + Ausfahrkeil) bei 50 km/h: ca. **88,7 m** (Standardbus) bzw. ca. **94,7 m** (Gelenkbus) gemäß EAÖ; in der Praxis oft schwer umsetzbar – Bucht mit Nase reduziert auf ca. 60 m
 
 ### 5.3 Bordsteinhöhen an Haltestellen
 
 | Situation | Bordsteinhöhe |
 |---|---|
-| Mindestmaß (EAÖ, mit Kneeling) | **18 cm** |
+| Mindestmaß alle Haltestellenformen (EAÖ, mit Kneeling) | **18 cm** |
 | Ohne Klapprampe | **21–24 cm** |
-| Angestrebt (barrierefrei) | **22 cm** |
-| Voraussetzung für 22 cm | Geradlinige, störungsfreie Anfahrt |
-| In Busbuchten (eingeschränkte Anfahrt) | ≥ **16 cm** |
-| Ab 21 cm | Außenschwenktüren ggf. blockiert |
-| Reststufe + Restspalt (Barrierefreiheitsziel) | Max. **5 cm** |
+| In der Praxis angestrebt (z. B. Kasseler Sonderbord Plus) | **22 cm** |
+| Voraussetzung für ≥ 22 cm | Geradlinige, störungsfreie Anfahrt (Fahrbahnrand, Buskap, Inselhaltestelle) |
+| Ab 21 cm | Außenschwenktüren ggf. blockiert – Kompatibilität prüfen |
+| Reststufe und Restspalt (Barrierefreiheitsziel) | Jeweils max. **5 cm** (getrennt gemessen) |
 
 ### 5.4 Einstiegsfeld und Aufstellfläche
 
@@ -492,6 +501,7 @@
 | **H BVA** | Hinweise für barrierefreie Verkehrsanlagen | 2011 | FGSV |
 | **ESG** | Empfehlungen zur Straßenraumgestaltung | – | FGSV |
 | **E Klima 2022** | Steckbriefe – Vorgriff auf ERA-Neuausgabe | 2022 | FGSV |
+| **H RSV** | Hinweise zu Radschnellverbindungen | 2021 | FGSV |
 | **DIN 483** | Bordsteine aus Beton | – | DIN |
 | **DIN EN 1340** | Bordsteine – europäische Norm | – | CEN/DIN |
 | **DIN 18040-3** | Barrierefreies Bauen – Öffentlicher Verkehrsraum | – | DIN |
@@ -503,4 +513,4 @@
 
 ---
 
-*Erstellt auf Basis öffentlich zugänglicher Quellen, FGSV-Verlagsinformationen, Wikipedia und Fachliteratur. Für verbindliche Planungsentscheidungen sind stets die Originalregelwerke heranzuziehen.*
+*Erstellt auf Basis öffentlich zugänglicher Quellen, FGSV-Verlagsinformationen, Wikipedia und Fachliteratur. Revision 2 nach systematischer Faktenprüfung aller Zahlenwerte. Für verbindliche Planungsentscheidungen sind stets die Originalregelwerke heranzuziehen.*

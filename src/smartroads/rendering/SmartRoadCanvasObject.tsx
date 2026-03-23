@@ -9,7 +9,8 @@ import { shapeRefs } from '@/components/Canvas/shapeRefs'
 import { useAppStore } from '@/store'
 import type Konva from 'konva'
 import { orderMarkingsByLayer } from '../constants'
-import { getStripRenderLength, getStripRenderY } from '../stripProps'
+import { getStripPlacements } from '../layout'
+import { normalizeStraightRoadState } from '../state'
 
 // ============================================================
 // SmartRoadCanvasObject – Renders a SmartRoad on the main canvas
@@ -53,7 +54,7 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
   const state = useMemo<StraightRoadState | null>(() => {
     if (!obj.editorState) return null
     try {
-      return JSON.parse(obj.editorState) as StraightRoadState
+      return normalizeStraightRoadState(JSON.parse(obj.editorState))
     } catch {
       return null
     }
@@ -94,21 +95,20 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
 
   if (!state || !state.strips || state.strips.length === 0) return null
   const orderedMarkings = orderMarkingsByLayer(state.markings, state.layerOrder)
+  const stripPlacements = getStripPlacements(state.strips, state.length)
 
   // Build strip nodes
   const stripNodes: React.ReactNode[] = []
-  let xOffset = 0
-  for (const strip of state.strips) {
+  for (const placement of stripPlacements) {
     stripNodes.push(
       <StripRenderer
-        key={strip.id}
-        strip={strip}
-        x={xOffset}
-        y={getStripRenderY(strip)}
-        length={getStripRenderLength(strip, state.length)}
+        key={placement.strip.id}
+        strip={placement.strip}
+        x={placement.x}
+        y={placement.y}
+        length={placement.length}
       />
     )
-    xOffset += strip.width
   }
 
   return (

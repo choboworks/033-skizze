@@ -1,6 +1,15 @@
 import { Group, Line, Rect } from 'react-konva'
-import { getAsphaltPattern } from '../../shared/patterns'
-import type { StripVariant } from '../../types'
+import { STRIP_COLORS } from '../../constants'
+import {
+  isTwoWayCyclepath,
+  resolveCyclepathBoundaryDashPattern,
+  resolveCyclepathBoundaryLineMode,
+  resolveCyclepathBoundaryStrokeWidth,
+  resolveCyclepathCenterDashPattern,
+  resolveCyclepathCenterLineMode,
+  resolveCyclepathCenterStrokeWidth,
+} from '../../stripProps'
+import type { CyclepathLineMode, CyclepathPathType, StripVariant } from '../../types'
 
 interface Props {
   x: number
@@ -8,98 +17,91 @@ interface Props {
   width: number
   length: number
   variant?: StripVariant
+  color?: string
+  pathType?: CyclepathPathType
+  centerLineMode?: CyclepathLineMode
+  boundaryLineMode?: CyclepathLineMode
+  centerLineStrokeWidth?: number
+  boundaryLineStrokeWidth?: number
+  centerLineDashLength?: number
+  centerLineGapLength?: number
+  boundaryLineDashLength?: number
+  boundaryLineGapLength?: number
 }
 
-export function CyclePathStrip({ x, y = 0, width, length, variant }: Props) {
-  const edgeInset = Math.max(0.06, Math.min(width * 0.12, 0.18))
-  const guideStroke = Math.max(0.03, Math.min(width * 0.045, 0.08))
-  const guideLeft = edgeInset
-  const guideRight = width - edgeInset
-  const coreX = width * 0.18
-  const coreWidth = width * 0.64
-  const curbBand = Math.max(0.05, Math.min(width * 0.08, 0.12))
+export function CyclePathStrip({
+  x,
+  y = 0,
+  width,
+  length,
+  variant,
+  color,
+  pathType = 'one-way',
+  centerLineMode,
+  boundaryLineMode,
+  centerLineStrokeWidth,
+  boundaryLineStrokeWidth,
+  centerLineDashLength,
+  centerLineGapLength,
+  boundaryLineDashLength,
+  boundaryLineGapLength,
+}: Props) {
+  const isProtected = variant === 'protected'
+  const boundaryMode = resolveCyclepathBoundaryLineMode(variant, boundaryLineMode)
+  const middleMode = resolveCyclepathCenterLineMode(variant, centerLineMode, pathType)
+  const showMiddleLine = isProtected && middleMode !== 'none'
+  const showBoundaryLines = boundaryMode !== 'none'
 
-  const palette = (() => {
-    switch (variant) {
-      case 'advisory':
-        return {
-          tint: '#75614d',
-          tintOpacity: 0.18,
-          core: '#bfa78b',
-          coreOpacity: 0.12,
-          guideOpacity: 0.42,
-          guideDash: [0.45, 0.32],
-          protectedSurface: false,
-        }
-      case 'protected':
-        return {
-          tint: '#a85649',
-          tintOpacity: 0.34,
-          core: '#d48676',
-          coreOpacity: 0.22,
-          guideOpacity: 0,
-          guideDash: undefined,
-          protectedSurface: true,
-        }
-      case 'lane-marked':
-      default:
-        return {
-          tint: '#8f6845',
-          tintOpacity: 0.28,
-          core: '#c99661',
-          coreOpacity: 0.16,
-          guideOpacity: 0.56,
-          guideDash: undefined,
-          protectedSurface: false,
-        }
-    }
-  })()
+  const baseFill = color || (isProtected ? STRIP_COLORS.cyclepath : STRIP_COLORS.lane)
+  const white = '#ffffff'
+  const boundaryStroke = resolveCyclepathBoundaryStrokeWidth(variant, boundaryLineStrokeWidth)
+  const boundaryDash = boundaryMode === 'dashed'
+    ? resolveCyclepathBoundaryDashPattern(variant, boundaryLineDashLength, boundaryLineGapLength)
+    : undefined
+  const middleStroke = resolveCyclepathCenterStrokeWidth(centerLineStrokeWidth)
+  const middleDash = middleMode === 'dashed'
+    ? resolveCyclepathCenterDashPattern(centerLineDashLength, centerLineGapLength)
+    : undefined
+  const leftBoundaryX = 0
+  const rightBoundaryX = width
 
   return (
     <Group x={x} y={y}>
-      <Rect
-        width={width}
-        height={length}
-        fillPatternImage={getAsphaltPattern() as unknown as HTMLImageElement}
-        fillPatternScale={{ x: 0.02, y: 0.02 }}
-      />
-      <Rect width={width} height={length} fill={palette.tint} opacity={palette.tintOpacity} listening={false} />
-      <Rect
-        x={coreX}
-        y={0}
-        width={coreWidth}
-        height={length}
-        fill={palette.core}
-        opacity={palette.coreOpacity}
-        listening={false}
-      />
-      {palette.protectedSurface && (
+      <Rect width={width} height={length} fill={baseFill} />
+
+      {showBoundaryLines && (
         <>
-          <Rect width={curbBand} height={length} fill="#f0e6d7" opacity={0.58} listening={false} />
-          <Rect x={width - curbBand} width={curbBand} height={length} fill="#f0e6d7" opacity={0.58} listening={false} />
-          <Rect x={curbBand} width={curbBand * 0.5} height={length} fill="#4e4138" opacity={0.22} listening={false} />
-          <Rect x={width - curbBand * 1.5} width={curbBand * 0.5} height={length} fill="#4e4138" opacity={0.22} listening={false} />
+          <Line
+            points={[leftBoundaryX, 0, leftBoundaryX, length]}
+            stroke={white}
+            strokeWidth={boundaryStroke}
+            dash={boundaryDash}
+            lineCap="butt"
+            listening={false}
+          />
+          {isProtected && (
+            <Line
+              points={[rightBoundaryX, 0, rightBoundaryX, length]}
+              stroke={white}
+              strokeWidth={boundaryStroke}
+              dash={boundaryDash}
+              lineCap="butt"
+              listening={false}
+            />
+          )}
         </>
       )}
-      {palette.guideOpacity > 0 && (
-        <>
-          <Line
-            points={[guideLeft, 0, guideLeft, length]}
-            stroke="#f6f1ea"
-            strokeWidth={guideStroke}
-            opacity={palette.guideOpacity}
-            dash={palette.guideDash}
-            listening={false}
-          />
-          <Line
-            points={[guideRight, 0, guideRight, length]}
-            stroke="#f6f1ea"
-            strokeWidth={guideStroke}
-            opacity={palette.guideOpacity}
-            dash={palette.guideDash}
-            listening={false}
-          />
-        </>
+
+      {showMiddleLine && (
+        <Line
+          points={[width / 2, 0, width / 2, length]}
+          stroke={white}
+          strokeWidth={middleStroke}
+          dash={middleDash}
+          lineCap="butt"
+          opacity={isTwoWayCyclepath(pathType) ? 0.92 : 0.82}
+          listening={false}
+        />
       )}
     </Group>
   )
