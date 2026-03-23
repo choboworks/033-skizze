@@ -1,6 +1,6 @@
 import { useAppStore } from '@/store'
 import { Ruler } from 'lucide-react'
-import { ColorPicker } from '@/components/Inspector/ColorPicker'
+import { ColorPicker } from '@/components/ui/ColorPicker'
 import {
   PanelHeader,
   PanelSection,
@@ -33,7 +33,16 @@ export function DimensionToolPopover({
       />
 
       {/* Info */}
-      <div className="color-picker-well" style={{ marginBottom: 12 }}>
+      <div
+        className="editor-panel-card"
+        style={{
+          marginBottom: 12,
+          padding: 12,
+          borderRadius: 14,
+          background: 'var(--panel-control-bg)',
+          borderColor: 'var(--panel-control-border)',
+        }}
+      >
         <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
           Klicke zwei Punkte auf dem Canvas, um eine Bemaßungslinie zu erstellen.
           Die Distanz wird automatisch in Metern berechnet.

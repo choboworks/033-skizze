@@ -10,7 +10,7 @@ import {
   Spline,
   Star,
 } from 'lucide-react'
-import { ColorPicker } from '@/components/Inspector/ColorPicker'
+import { ColorPicker } from '@/components/ui/ColorPicker'
 import {
   PanelHeader,
   PanelSection,

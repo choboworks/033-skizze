@@ -272,18 +272,6 @@ html, body, #root {
   color: #0f172a;
 }
 
-/* Color picker well — wrapper for color pickers in tool popovers */
-.color-picker-well {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 14px;
-  padding: 10px;
-}
-[data-theme="light"] .color-picker-well {
-  background: var(--panel-control-bg);
-  border-color: var(--panel-control-border);
-}
-
 /* Vertical divider — used in TopBar between button groups */
 .divider-v {
   width: 1px;

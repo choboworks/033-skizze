@@ -107,6 +107,10 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
         x={placement.x}
         y={placement.y}
         length={placement.length}
+        renderWidth={placement.renderWidth}
+        overlaySide={placement.overlaySide}
+        safetyBufferWidth={placement.safetyBufferWidth}
+        facingSide={placement.facingSide}
       />
     )
   }

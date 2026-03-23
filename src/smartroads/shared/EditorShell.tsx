@@ -11,6 +11,7 @@ interface EditorShellProps {
   title: string
   onFinish: () => void
   onCancel: () => void
+  onReset?: () => void
   sidebar: React.ReactNode
   editor: React.ReactNode
   quickSettings?: React.ReactNode
@@ -21,6 +22,7 @@ export function EditorShell({
   title,
   onFinish,
   onCancel,
+  onReset,
   sidebar,
   editor,
   quickSettings,
@@ -128,6 +130,15 @@ export function EditorShell({
 
             {/* Center: buttons */}
             <div className="flex-1 flex items-center justify-center" style={{ gap: 12 }}>
+              {onReset && (
+                <button
+                  className="surface-btn text-[12px] font-semibold"
+                  style={{ height: 36, padding: '0 14px', borderRadius: 14 }}
+                  onClick={onReset}
+                >
+                  Reset
+                </button>
+              )}
               <button
                 className="surface-btn text-[12px] font-semibold"
                 style={{ height: 36, padding: '0 14px', borderRadius: 14 }}

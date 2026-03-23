@@ -1,17 +1,21 @@
-import { useState, useEffect } from 'react'
-import { ArrowUp, Route, Minus, ParkingCircle, TreePine, SeparatorHorizontal, Car, Pencil, Save, FolderOpen, Search } from 'lucide-react'
-// Strip/variant labels available via constants if needed
-import type { StripType, StripVariant, MarkingType, MarkingVariant, StraightRoadState } from '../types'
+import { useEffect, useState } from 'react'
+import {
+  ArrowUp,
+  Car,
+  FolderOpen,
+  Minus,
+  ParkingCircle,
+  Pencil,
+  Route,
+  Save,
+  Search,
+  SeparatorHorizontal,
+  TreePine,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import type { MarkingType, MarkingVariant, StraightRoadState, StripType, StripVariant } from '../types'
 
-// ============================================================
-// ElementPalette – Chip-based component palette for road building
-// Category → Subcategory → filtered Element Cards
-// ============================================================
-
-// --- Data definitions ---
-
-type TopCategory = 'strips' | 'markings' | 'presets'
+type TopCategory = 'strips' | 'markings' | 'structural' | 'presets'
 
 interface SubcategoryDef {
   id: string
@@ -26,19 +30,20 @@ interface ElementDef {
   action: () => void
 }
 
-// Strip subcategories
 const STRIP_SUBCATEGORIES: SubcategoryDef[] = [
   { id: 'lane', label: 'Fahrstreifen' },
   { id: 'cyclepath', label: 'Radweg' },
   { id: 'sidewalk', label: 'Gehweg' },
   { id: 'parking', label: 'Parken' },
-  { id: 'green', label: 'Grün' },
-  { id: 'curb', label: 'Bordstein' },
   { id: 'median', label: 'Mittelstr.' },
   { id: 'bus', label: 'Bus' },
 ]
 
-// Marking subcategories
+const STRUCTURAL_SUBCATEGORIES: SubcategoryDef[] = [
+  { id: 'edge', label: 'Rand' },
+  { id: 'separator', label: 'Trennung' },
+]
+
 const MARKING_SUBCATEGORIES: SubcategoryDef[] = [
   { id: 'centerline', label: 'Leitlinie' },
   { id: 'laneboundary', label: 'Begrenzung' },
@@ -48,7 +53,6 @@ const MARKING_SUBCATEGORIES: SubcategoryDef[] = [
   { id: 'blocked-area', label: 'Sperrfläche' },
 ]
 
-// Strip elements per subcategory
 const STRIP_ELEMENTS: Record<string, { variant: StripVariant; label: string; sublabel?: string }[]> = {
   lane: [
     { variant: 'standard', label: 'Standard', sublabel: 'Fahrstreifen' },
@@ -69,17 +73,68 @@ const STRIP_ELEMENTS: Record<string, { variant: StripVariant; label: string; sub
     { variant: 'angled', label: 'Schräg', sublabel: 'Parkstreifen' },
     { variant: 'perpendicular', label: 'Quer', sublabel: 'Parkstreifen' },
   ],
-  green: [{ variant: 'standard', label: 'Standard', sublabel: 'Grünstreifen' }],
-  curb: [{ variant: 'standard', label: 'Bordstein' }],
   median: [
     { variant: 'marking-only', label: 'Markierung', sublabel: 'Mittelstreifen' },
-    { variant: 'green-median', label: 'Grünstreifen', sublabel: 'Mittelstreifen' },
-    { variant: 'barrier', label: 'Leitplanke', sublabel: 'Mittelstreifen' },
   ],
   bus: [{ variant: 'standard', label: 'Busstreifen' }],
 }
 
-// Marking elements per subcategory
+const STRUCTURAL_ELEMENTS: Array<{
+  id: string
+  category: string
+  type: StripType
+  variant: StripVariant
+  label: string
+  sublabel?: string
+  icon: LucideIcon
+}> = [
+  {
+    id: 'structural-curb',
+    category: 'edge',
+    type: 'curb',
+    variant: 'standard',
+    label: 'Bordstein',
+    sublabel: 'Rand',
+    icon: SeparatorHorizontal,
+  },
+  {
+    id: 'structural-gutter',
+    category: 'edge',
+    type: 'gutter',
+    variant: 'standard',
+    label: 'Rinne',
+    sublabel: 'Rand',
+    icon: SeparatorHorizontal,
+  },
+  {
+    id: 'structural-barrier',
+    category: 'separator',
+    type: 'median',
+    variant: 'barrier',
+    label: 'Leitplanke',
+    sublabel: 'Trennung',
+    icon: Minus,
+  },
+  {
+    id: 'structural-green-strip',
+    category: 'separator',
+    type: 'green',
+    variant: 'standard',
+    label: 'Grünstreifen',
+    sublabel: 'Trennung',
+    icon: TreePine,
+  },
+  {
+    id: 'structural-green-median',
+    category: 'separator',
+    type: 'median',
+    variant: 'green-median',
+    label: 'Begrünter Mittelstreifen',
+    sublabel: 'Trennung',
+    icon: TreePine,
+  },
+]
+
 const MARKING_ELEMENTS: Record<string, { variant: MarkingVariant; label: string; sublabel?: string }[]> = {
   centerline: [
     { variant: 'standard-dash', label: 'Innerorts (3m/6m)', sublabel: 'Leitlinie' },
@@ -103,14 +158,11 @@ const MARKING_ELEMENTS: Record<string, { variant: MarkingVariant; label: string;
   'blocked-area': [{ variant: 'default', label: 'Schraffur', sublabel: 'Sperrfläche' }],
 }
 
-// Icon mapping per strip type
 const STRIP_ICONS: Record<string, LucideIcon> = {
   lane: ArrowUp,
   cyclepath: Route,
   sidewalk: Route,
   parking: ParkingCircle,
-  green: TreePine,
-  curb: SeparatorHorizontal,
   median: Minus,
   bus: Car,
 }
@@ -135,25 +187,28 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
 
   const isSearchMode = searchQuery.trim().length > 0
 
-  const TOP_CATEGORIES: { id: TopCategory; label: string }[] = [
+  const topCategories: { id: TopCategory; label: string }[] = [
     { id: 'strips', label: 'Streifen' },
     { id: 'markings', label: 'Markierungen' },
+    { id: 'structural', label: 'Bauliches' },
     { id: 'presets', label: 'Presets' },
   ]
 
-  const subcategories = activeCategory === 'strips'
-    ? STRIP_SUBCATEGORIES
-    : activeCategory === 'markings'
-      ? MARKING_SUBCATEGORIES
-      : []
+  const subcategories =
+    activeCategory === 'strips'
+      ? STRIP_SUBCATEGORIES
+      : activeCategory === 'markings'
+        ? MARKING_SUBCATEGORIES
+        : activeCategory === 'structural'
+          ? STRUCTURAL_SUBCATEGORIES
+          : []
 
-  // Build element list based on category + subcategory (or search)
   const elements: ElementDef[] = (() => {
     const buildStrips = (types: string[]) =>
-      types.flatMap(type => {
+      types.flatMap((type) => {
         const items = STRIP_ELEMENTS[type] || []
         const Icon = STRIP_ICONS[type] || Minus
-        return items.map(item => ({
+        return items.map((item) => ({
           id: `strip-${type}-${item.variant}`,
           label: item.label,
           sublabel: item.sublabel,
@@ -163,9 +218,9 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
       })
 
     const buildMarkings = (types: string[]) =>
-      types.flatMap(type => {
+      types.flatMap((type) => {
         const items = MARKING_ELEMENTS[type] || []
-        return items.map(item => ({
+        return items.map((item) => ({
           id: `marking-${type}-${item.variant}`,
           label: item.label,
           sublabel: item.sublabel,
@@ -174,12 +229,28 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
         }))
       })
 
+    const buildStructural = (categories?: string[]) =>
+      STRUCTURAL_ELEMENTS
+        .filter((item) => !categories || categories.includes(item.category))
+        .map((item) => ({
+          id: item.id,
+          label: item.label,
+          sublabel: item.sublabel,
+          icon: item.icon,
+          action: () => onAddStrip(item.type, item.variant, 'right'),
+        }))
+
     if (isSearchMode) {
-      const q = searchQuery.toLowerCase()
+      const query = searchQuery.toLowerCase()
       return [
         ...buildStrips(Object.keys(STRIP_ELEMENTS)),
+        ...buildStructural(),
         ...buildMarkings(Object.keys(MARKING_ELEMENTS)),
-      ].filter(el => el.label.toLowerCase().includes(q) || el.sublabel?.toLowerCase().includes(q))
+      ].filter(
+        (element) =>
+          element.label.toLowerCase().includes(query) ||
+          element.sublabel?.toLowerCase().includes(query),
+      )
     }
 
     if (activeCategory === 'strips') {
@@ -188,19 +259,25 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
     if (activeCategory === 'markings') {
       return buildMarkings(activeSubcategory ? [activeSubcategory] : Object.keys(MARKING_ELEMENTS))
     }
+    if (activeCategory === 'structural') {
+      return buildStructural(activeSubcategory ? [activeSubcategory] : undefined)
+    }
     return []
   })()
 
   return (
     <div className="flex flex-col h-full" style={{ padding: 14 }}>
-      {/* Searchbar */}
       <div className="shrink-0" style={{ marginBottom: 14 }}>
         <div className="relative">
-          <Search size={14} className="absolute top-1/2 -translate-y-1/2" style={{ left: 14, color: 'var(--text-muted)' }} />
+          <Search
+            size={14}
+            className="absolute top-1/2 -translate-y-1/2"
+            style={{ left: 14, color: 'var(--text-muted)' }}
+          />
           <input
             placeholder="Element suchen …"
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={(event) => setSearchInput(event.target.value)}
             className="field-input w-full"
             style={{
               paddingLeft: 36,
@@ -215,24 +292,36 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
         </div>
       </div>
 
-      {/* Top category chips */}
-      <div className="flex flex-wrap shrink-0" style={{ gap: 'var(--chip-gap-x)', rowGap: 'var(--chip-gap-y)', marginBottom: 10 }}>
-        {TOP_CATEGORIES.map(cat => (
+      <div
+        className="flex flex-wrap shrink-0"
+        style={{ gap: 'var(--chip-gap-x)', rowGap: 'var(--chip-gap-y)', marginBottom: 10 }}
+      >
+        {topCategories.map((category) => (
           <button
-            key={cat.id}
-            onClick={() => { setActiveCategory(cat.id); setActiveSubcategory(null) }}
-            data-active={activeCategory === cat.id}
+            key={category.id}
+            onClick={() => {
+              setActiveCategory(category.id)
+              setActiveSubcategory(null)
+            }}
+            data-active={activeCategory === category.id}
             className="category-chip flex items-center rounded-full font-semibold"
-            style={{ height: 'var(--chip-height-primary)', padding: '0 12px', fontSize: 11, ...(isSearchMode ? { opacity: 0.5 } : {}) }}
+            style={{
+              height: 'var(--chip-height-primary)',
+              padding: '0 12px',
+              fontSize: 11,
+              ...(isSearchMode ? { opacity: 0.5 } : {}),
+            }}
           >
-            {cat.label}
+            {category.label}
           </button>
         ))}
       </div>
 
-      {/* Subcategory chips */}
       {!isSearchMode && subcategories.length > 0 && (
-        <div className="flex flex-wrap shrink-0" style={{ gap: 'var(--chip-gap-x)', rowGap: 'var(--chip-gap-y)', marginBottom: 14 }}>
+        <div
+          className="flex flex-wrap shrink-0"
+          style={{ gap: 'var(--chip-gap-x)', rowGap: 'var(--chip-gap-y)', marginBottom: 14 }}
+        >
           <button
             onClick={() => setActiveSubcategory(null)}
             data-active={activeSubcategory === null}
@@ -241,34 +330,35 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
           >
             Alle
           </button>
-          {subcategories.map(sub => (
+          {subcategories.map((subcategory) => (
             <button
-              key={sub.id}
-              onClick={() => setActiveSubcategory(sub.id)}
-              data-active={activeSubcategory === sub.id}
+              key={subcategory.id}
+              onClick={() => setActiveSubcategory(subcategory.id)}
+              data-active={activeSubcategory === subcategory.id}
               className="subcategory-chip flex items-center rounded-full font-semibold"
               style={{ height: 'var(--chip-height-secondary)', padding: '0 10px', fontSize: 10.5 }}
             >
-              {sub.label}
+              {subcategory.label}
             </button>
           ))}
         </div>
       )}
 
-      {/* Element cards or Presets */}
-      <div className="flex-1 overflow-y-auto min-h-0" style={{ marginTop: isSearchMode || subcategories.length === 0 ? 14 : 0 }}>
+      <div
+        className="flex-1 overflow-y-auto min-h-0"
+        style={{ marginTop: isSearchMode || subcategories.length === 0 ? 14 : 0 }}
+      >
         {!isSearchMode && activeCategory === 'presets' ? (
-          /* Preset grid */
           <div className="flex flex-col" style={{ gap: 10 }}>
             <div className="grid grid-cols-2" style={{ gap: 8 }}>
-              {presets.map(p => (
+              {presets.map((preset) => (
                 <button
-                  key={p.id}
+                  key={preset.id}
                   className="surface-btn flex items-center justify-center text-[12px] font-semibold text-center"
                   style={{ height: 36, borderRadius: 14 }}
-                  onClick={() => onLoadPreset(p.create())}
+                  onClick={() => onLoadPreset(preset.create())}
                 >
-                  {p.label}
+                  {preset.label}
                 </button>
               ))}
             </div>
@@ -293,13 +383,12 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
             </div>
           </div>
         ) : (
-          /* Element cards */
           <div className="flex flex-col" style={{ gap: 8 }}>
-            {elements.map(el => {
-              const Icon = el.icon
+            {elements.map((element) => {
+              const Icon = element.icon
               return (
                 <button
-                  key={el.id}
+                  key={element.id}
                   className="asset-card flex items-center w-full text-left"
                   style={{
                     minHeight: 60,
@@ -307,7 +396,7 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
                     borderRadius: 16,
                     gap: 10,
                   }}
-                  onClick={el.action}
+                  onClick={element.action}
                 >
                   <div
                     className="flex items-center justify-center shrink-0"
@@ -324,11 +413,11 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] truncate" style={{ color: 'var(--text)', fontWeight: 500 }}>
-                      {el.label}
+                      {element.label}
                     </div>
-                    {el.sublabel && (
+                    {element.sublabel && (
                       <div className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-                        {el.sublabel}
+                        {element.sublabel}
                       </div>
                     )}
                   </div>

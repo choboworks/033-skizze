@@ -1,6 +1,6 @@
 import { useAppStore } from '@/store'
 import { Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline } from 'lucide-react'
-import { ColorPicker } from '@/components/Inspector/ColorPicker'
+import { ColorPicker } from '@/components/ui/ColorPicker'
 import {
   PanelHeader,
   PanelSection,

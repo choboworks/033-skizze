@@ -1,4 +1,123 @@
-# Changelog – 033-Skizze V2
+﻿# Changelog – 033-Skizze V2
+
+---
+
+## Session 9 - 23.03.2026
+
+**Teilnehmer**: Alex + Codex
+**Fokus**: SmartRoad Editor weiter finishen, Radwege normnah nachziehen, Bauliches/Bordstein ausbauen, UI-Infrastruktur aufraeumen
+
+### Radverkehr - Regeln, Geometrie und Realismus
+- **Neues Radverkehrs-Nachschlagewerk ausgewertet**: `Radverkehrs Nachschlagewerk.md` gegen die bestehende SmartRoad-Logik geprueft und die App auf die aktualisierten Regeln nachgezogen.
+- **Leit- und Warnlinien korrigiert**:
+- Innerorts Leitlinie: `3m / 6m`
+- Ausserorts Leitlinie: `4m / 8m`
+- Warnlinie innerorts: `3m / 1,5m`
+- Warnlinie ausserorts: `4m / 2m`
+- Warnlinie Autobahn: `6m / 3m`
+- **Radfahrstreifen und Schutzstreifen normnah gemacht**:
+- `Radfahrstreifen` jetzt mit `2,25m` Regelbreite
+- `Schutzstreifen` bei `1,50m`
+- Strichbreiten und Strichbilder aus dem Regelwerk uebernommen
+- **Baulich getrennter Radweg verfeinert**:
+- `Eine Richtung`: `2,00m`
+- `Beide Richtungen, beidseitig/Sonderfall`: `2,50m`
+- `Beide Richtungen, einseitig`: `3,00m`
+- **Laengsparken angepasst**: Stellplatzlaenge auf `5,70m` gebracht.
+- **Richtungspfeile korrigiert**: Pfeile jetzt mit echter 3-facher Laengsverzerrung statt gleichmaessiger Skalierung.
+
+### Radwege - neues Bedienmodell im Editor
+- **Schutzstreifen und Radfahrstreifen als fahrbahngebundene Overlays umgebaut**: Diese Typen sind keine freien Nebenstreifen mehr, sondern werden auf der Fahrbahn gerendert und verbreitern die Fahrbahnaufteilung fachlich korrekt.
+- **Baulich getrennter Radweg bleibt echter Strip**: Kann weiter als eigenes Querschnittselement neben der Fahrbahn gebaut und verschoben werden.
+- **Overlay-Radwege standardmaessig rechts eingefuegt**: Kein zusaetzlicher Lage-Schalter mehr beim Anlegen.
+- **Seitenwechsel per Preview-Drag statt Property**: `Schutzstreifen` und `Radfahrstreifen` lassen sich jetzt mit derselben Drag-Logik wie Strips im Preview zwischen linker und rechter Fahrbahnseite umsetzen; die sichtbare `links/rechts`-Property wurde dafuer wieder entfernt.
+- **Nur eine Overlay-Radanlage pro Seite**: Konflikte werden beim Verschieben bzw. Normalisieren sauber aufgeloest, statt chaotisch zu ueberlagern.
+- **Sicherheitstrennstreifen sichtbar gemacht**: Abstaende zu Parkstaenden werden nicht mehr nur validiert, sondern in der belegten Breite und Info-Anzeige beruecksichtigt.
+- **Hinweise/Warnungen gestuft**: Validierung im SmartRoad-Editor jetzt mit `info`, `warning`, `error` statt einer einzigen gelben Warnklasse.
+- **Quick-Info zur Fahrbahnlogik**: Die rechte Info-Karte erklaert jetzt belegte Radverkehrsflaeche, verbleibende Kernfahrbahn und ob etwas innerhalb der Fahrbahn oder als eigener Seitenstreifen zu lesen ist.
+
+### Radwege - Properties und direkte Manipulation
+- **Radweg-Farbwahl als echte Property**: Alle Radwegtypen koennen jetzt individuell eingefaerbt werden; Standardfarbe fuer baulich getrennte Radwege auf `#EF4444` gesetzt.
+- **Linien fuer Radwege voll editierbar gemacht**:
+- Begrenzungslinien: `gestrichelt`, `durchgezogen`, `keine`
+- Mittellinie (bei baulich getrennt): `gestrichelt`, `durchgezogen`, `keine`
+- Strichstaerke, Strichlaenge und Lueckenlaenge als eigene Properties
+- **Einheiten verbessert**: Kleine Linienmasse werden im Property-Panel jetzt in `cm` statt in `m` editiert, wo das fuer Nutzer sinnvoller ist.
+- **Labels sprachlich klarer gemacht**: z. B. `Begrenzung Strichlaenge` und `Begrenzung Lueckenlaenge` statt der unklaren Kurzlabels.
+- **Linienphase direkt manipulierbar**: Gestrichelte Radweg-Linien lassen sich im Preview vertikal verschieben, aehnlich zur freien Leitlinien-Positionierung.
+- **Mathematische Renderlogik robust gemacht**: Cyclepath-Optionen werden defensiv normalisiert, damit inkonsistente Altwerte oder kaputte Props nicht den gesamten SmartRoad-Renderer verschwinden lassen.
+
+### SmartRoad Editor - Struktur, Quick Settings und Bedienfluss
+- **Reset-Button in der Bottom Bar**: Ein Klick setzt den Straight-Editor wieder auf den Standardzustand zurueck.
+- **Quick Settings entschlackt und neu austariert**:
+- Controls auf `Strassentyp`, `Laenge`, `Spuren` reduziert
+- Warn- und Info-Karten bewusst behalten, weil sie fuer den fachlichen Kontext wichtig sind
+- `Innerorts`, `Ausserorts`, `Autobahn` wiederhergestellt, da daran Standardbreiten und Markierungsdefaults haengen
+- **Strassentyp sauber wieder verdrahtet**: Ein Wechsel der RoadClass zieht wieder profil-sensitive Fahrstreifenbreiten und auto-generierte Mittelmarkierungen nach.
+- **RoadClass-Buttons verfeinert**: Erst vergroessert, dann so ueberarbeitet, dass sie im schmalen Quick-Settings-Container wieder sauber fitten.
+- **Absturz im StraightEditor behoben**: Fehlender Import von `createDefaultStraightRoad` nach einem State-Refactor verursachte einen kompletten Editor-Crash; ist gefixt.
+
+### Bordstein / Bauliches
+- **Neue Oberkategorie `Bauliches` in der Palette**: `Bordstein`, `Rinne`, `Leitplanke` und die Gruen-Elemente aus `Streifen` herausgeloest und sauber neu strukturiert.
+- **Unterkategorien fuer Bauliches eingefuehrt**:
+- `Rand`
+- `Trennung`
+- `Gruen` wurde spaeter wieder entfernt und in `Trennung` integriert
+- **Bordstein optisch komplett ueberarbeitet**: Betonkoerper, Kantenlogik, Fugen und Seitenorientierung so angepasst, dass das Element links und rechts stimmig wirkt.
+- **Bordstein ohne Farbauswahl**: Farbwahl bewusst aus den Properties entfernt, weil ein Bordstein kein frei einfaerbbares Design-Element sein soll.
+- **Bordstein-Properties fachlich neu aufgebaut**:
+- `Art`: `Standard`, `Abgeflacht`, `Ein- oder Ausfahrt`
+- `Abgeflacht` = ueber die gesamte Laenge abgesenkter Bordstein
+- `Ein- oder Ausfahrt` = lokaler abgesenkter Abschnitt
+- **Ein-/Ausfahrt zentriert**: Beim Aktivieren spawnte der abgesenkte Abschnitt zuerst oben am Rand; jetzt startet er mittig auf dem Bordstein.
+- **Standardlaenge fuer Ein-/Ausfahrt gesetzt**: `3,00m` als Default fuer den abgesenkten Abschnitt.
+- **Vertikale Direktmanipulation fuer Ein-/Ausfahrt**: Der lokale abgesenkte Bereich kann im Preview vertikal verschoben werden; das ist nur fuer `Ein- oder Ausfahrt` aktiv, nicht fuer den voll abgeflachten Bordstein.
+- **Main Canvas zieht mit**: Bordsteine rendern im Preview und auf dem Hauptcanvas ueber dieselbe Komponente, damit Optik und Logik konsistent bleiben.
+
+### Architektur und Code-Wartbarkeit
+- **Strip-Properties modularisiert**: Die bisher zentrale Strip-Property-Registry in einzelne Definitionsdateien pro Typ ausgelagert.
+- Neuer Ordner: `src/smartroads/shared/properties/stripDefinitions/`
+- Enthalten u. a.: `lane.ts`, `cyclepath.ts`, `parking.ts`, `curb.ts`, `sidewalk.ts`, `gutter.ts`, `median.ts`, `tram.ts`, `shoulder.ts`, `bus.ts`
+- **Marking-Properties vorbereitet und ebenfalls modularisiert**:
+- Neuer Ordner: `src/smartroads/shared/properties/markingDefinitions/`
+- Aufgeteilt u. a. in `centerline.ts`, `laneboundary.ts`, `arrow.ts`, `crosswalk.ts`, `stopline.ts`
+- **State-Normalisierung gehaertet**: SmartRoad-States werden beim Laden, Speichern und Rendern defensiv normalisiert, damit fehlerhafte Props, alte IDs oder kaputte LayerOrder-Eintraege nicht das ganze Objekt zerlegen.
+
+### Globale UI-Infrastruktur
+- **ColorPicker komplett neu gestaltet**: Mehrfach ueberarbeitet in Design, Positionierung und Bedienung, bis er in Haupt-App und SmartRoad-Editor konsistent funktioniert.
+- **Portal-Positionierung repariert**: Picker wird jetzt im richtigen Layer gerendert und ist auch im SmartRoad-Dialog wirklich klickbar.
+- **OK/Abbrechen-Flow eingefuehrt**: Live-Vorschau beim Aendern, bewusstes Bestaetigen oder Verwerfen fuer einfacheren Nutzerfluss.
+- **Preset-Farben neu strukturiert**: 10 Schnellfarben, darunter `Transparent` als normaler Preset-Swatch statt als Sonderbutton.
+- **Spacing und globale Wiederverwendung verbessert**: Picker in der ganzen App optisch aufgeraeumt und in die gemeinsamen UI-Komponenten verschoben.
+- **`ColorPicker` und `FloatingProperties` aus dem alten Inspector geloest**: Beide liegen jetzt unter `src/components/ui/`, der alte `Inspector`-Ordner wird nicht mehr gebraucht.
+
+### Neue Dateien
+| Datei | Zweck |
+|-------|-------|
+| `src/components/ui/ColorPicker.tsx` | Globaler, ueberarbeiteter Farb-Picker fuer App und SmartRoad-Editor |
+| `src/components/ui/FloatingProperties.tsx` | Gemeinsame Floating-Properties-Komponente unter `ui` |
+| `src/smartroads/shared/properties/stripDefinitions/types.ts` | Gemeinsame Typen fuer modulare Strip-Property-Definitionen |
+| `src/smartroads/shared/properties/stripDefinitions/shared.ts` | Gemeinsame Strip-Property-Helper |
+| `src/smartroads/shared/properties/stripDefinitions/lane.ts` | Lane-Property-Definition |
+| `src/smartroads/shared/properties/stripDefinitions/cyclepath.ts` | Cyclepath-Property-Definition |
+| `src/smartroads/shared/properties/stripDefinitions/parking.ts` | Parking-Property-Definition |
+| `src/smartroads/shared/properties/stripDefinitions/curb.ts` | Curb-Property-Definition |
+| `src/smartroads/shared/properties/markingDefinitions/registry.ts` | Registry fuer modulare Marking-Properties |
+| `src/smartroads/shared/properties/markingDefinitions/centerline.ts` | Centerline-Properties |
+| `src/smartroads/shared/properties/markingDefinitions/laneboundary.ts` | Lane-Boundary-Properties |
+| `src/smartroads/shared/properties/markingDefinitions/arrow.ts` | Richtungspfeil-Properties |
+| `src/smartroads/shared/properties/markingDefinitions/crosswalk.ts` | Zebrastreifen-Properties |
+| `src/smartroads/shared/properties/markingDefinitions/stopline.ts` | Haltelinien-Properties |
+
+### Geloeschte Dateien
+| Datei | Grund |
+|-------|-------|
+| `src/components/Inspector/ColorPicker.tsx` | Durch globale UI-Version unter `src/components/ui/` ersetzt |
+| `src/components/Inspector/FloatingProperties.tsx` | Durch globale UI-Version unter `src/components/ui/` ersetzt |
+
+### Verifikation
+- **`npm run lint`** laeuft sauber nach den heutigen Aenderungen.
+- Ein kompletter neuer `build` wurde in dieser Session nicht als Abschlusslauf dokumentiert; bekannte Altprobleme ausserhalb dieser Arbeiten koennen weiterhin separat bestehen.
 
 ---
 

@@ -18,6 +18,7 @@ function createPattern(width: number, height: number, draw: (ctx: CanvasRenderin
 let _paving: HTMLCanvasElement | null = null
 let _grass: HTMLCanvasElement | null = null
 let _asphalt: HTMLCanvasElement | null = null
+let _concrete: HTMLCanvasElement | null = null
 
 export function getPavingPattern(): HTMLCanvasElement {
   if (!_paving) {
@@ -61,4 +62,29 @@ export function getAsphaltPattern(): HTMLCanvasElement {
     })
   }
   return _asphalt
+}
+
+export function getConcretePattern(): HTMLCanvasElement {
+  if (!_concrete) {
+    _concrete = createPattern(10, 10, (ctx) => {
+      ctx.fillStyle = '#bbb2a5'
+      ctx.fillRect(0, 0, 10, 10)
+
+      ctx.fillStyle = '#c9c1b6'
+      ctx.globalAlpha = 0.55
+      ctx.fillRect(0, 0, 5, 5)
+      ctx.fillRect(5, 5, 5, 5)
+
+      ctx.fillStyle = '#9f978b'
+      ctx.globalAlpha = 0.22
+      ctx.beginPath()
+      ctx.arc(2.5, 7.5, 0.9, 0, Math.PI * 2)
+      ctx.arc(7.2, 3.1, 0.7, 0, Math.PI * 2)
+      ctx.arc(6.8, 8.1, 0.8, 0, Math.PI * 2)
+      ctx.fill()
+
+      ctx.globalAlpha = 1
+    })
+  }
+  return _concrete
 }

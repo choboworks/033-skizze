@@ -1,5 +1,5 @@
 import { createDefaultStraightRoad, normalizeLayerOrder } from './constants'
-import { getBusStripProps, getCyclepathStripProps, getDefaultStripProps, getLaneStripProps, getParkingStripProps } from './stripProps'
+import { getBusStripProps, getCurbStripProps, getCyclepathStripProps, getDefaultStripProps, getLaneStripProps, getParkingStripProps } from './stripProps'
 import { getStripDefaultWidth } from './rules/stripRules'
 import type { Marking, MarkingType, MarkingVariant, RoadClass, StraightRoadState, Strip, StripProps, StripType, StripVariant } from './types'
 
@@ -134,7 +134,7 @@ function sanitizeStrip(raw: unknown, roadLength: number, roadClass: RoadClass): 
     variant,
     width,
     ...(height != null ? { height } : {}),
-    ...(sanitizeColor(raw.color) ? { color: sanitizeColor(raw.color) } : {}),
+    ...(type !== 'curb' && sanitizeColor(raw.color) ? { color: sanitizeColor(raw.color) } : {}),
     ...(raw.direction === 'up' || raw.direction === 'down' ? { direction: raw.direction } : {}),
   }
 
@@ -150,6 +150,8 @@ function sanitizeStrip(raw: unknown, roadLength: number, roadClass: RoadClass): 
       return { ...strip, props: getCyclepathStripProps(candidate) }
     case 'parking':
       return { ...strip, props: getParkingStripProps(candidate) }
+    case 'curb':
+      return { ...strip, props: getCurbStripProps(candidate) }
     default:
       return { ...strip, props: getDefaultStripProps(type) }
   }

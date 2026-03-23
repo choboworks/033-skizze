@@ -1,12 +1,16 @@
-import type { Strip } from './types'
-import { getStripRenderLength, getStripRenderY } from './stripProps'
+import type { CyclepathSide, Strip } from './types'
+import { DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH, getCyclepathOverlaySide, getCyclepathStripProps, getStripRenderLength, getStripRenderY } from './stripProps'
 
 export interface StripPlacement {
   strip: Strip
   x: number
   y: number
   length: number
+  renderWidth: number
   isLaneOverlay: boolean
+  overlaySide?: CyclepathSide
+  safetyBufferWidth?: number
+  facingSide?: CyclepathSide
 }
 
 export function isLaneOverlayCyclepath(strip: Strip): boolean {
@@ -21,14 +25,151 @@ function isRoadwayAnchorStrip(strip: Strip): boolean {
   return strip.type === 'lane' || strip.type === 'bus'
 }
 
+function findRoadwayEdgeIndex(baseStrips: Strip[], side: CyclepathSide): number {
+  if (side === 'left') {
+    return baseStrips.findIndex(isRoadwayAnchorStrip)
+  }
+
+  for (let i = baseStrips.length - 1; i >= 0; i--) {
+    if (isRoadwayAnchorStrip(baseStrips[i])) return i
+  }
+  return -1
+}
+
+export function getImmediateOuterStrip(baseStrips: Strip[], side: CyclepathSide): Strip | null {
+  const roadwayIndex = findRoadwayEdgeIndex(baseStrips, side)
+  if (roadwayIndex === -1) return null
+
+  const adjacentIndex = side === 'left' ? roadwayIndex - 1 : roadwayIndex + 1
+  return adjacentIndex >= 0 && adjacentIndex < baseStrips.length ? baseStrips[adjacentIndex] : null
+}
+
+export function getFacingRoadwaySide(strip: Strip, baseStrips: Strip[]): CyclepathSide | undefined {
+  const stripIndex = baseStrips.findIndex((candidate) => candidate.id === strip.id)
+  if (stripIndex === -1) return undefined
+
+  let leftDistance = 0
+  let rightDistance = 0
+  let leftFound = false
+  let rightFound = false
+
+  for (let i = stripIndex - 1; i >= 0; i--) {
+    const candidate = baseStrips[i]
+    if (isRoadwayAnchorStrip(candidate)) {
+      leftFound = true
+      break
+    }
+    leftDistance += getSafeStripWidth(candidate)
+  }
+
+  for (let i = stripIndex + 1; i < baseStrips.length; i++) {
+    const candidate = baseStrips[i]
+    if (isRoadwayAnchorStrip(candidate)) {
+      rightFound = true
+      break
+    }
+    rightDistance += getSafeStripWidth(candidate)
+  }
+
+  if (leftFound && rightFound) {
+    return leftDistance <= rightDistance ? 'left' : 'right'
+  }
+  if (leftFound) return 'left'
+  if (rightFound) return 'right'
+  return undefined
+}
+
+export function getLaneOverlaySafetyBufferWidth(strip: Strip, baseStrips: Strip[]): number {
+  if (!isLaneOverlayCyclepath(strip)) return 0
+
+  const side = getCyclepathOverlaySide(strip)
+  const adjacentStrip = getImmediateOuterStrip(baseStrips, side)
+  if (adjacentStrip?.type !== 'parking') return 0
+
+  const configured = getCyclepathStripProps(strip).safetyBufferWidth
+  return Math.max(0, configured ?? DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH)
+}
+
+export function getLaneOverlayOccupancyWidth(strip: Strip, baseStrips: Strip[]): number {
+  return getSafeStripWidth(strip) + getLaneOverlaySafetyBufferWidth(strip, baseStrips)
+}
+
+export function getCyclepathRenderMetrics({
+  strip,
+  renderWidth,
+  overlaySide = 'right',
+  safetyBufferWidth = 0,
+}: {
+  strip: Strip
+  renderWidth: number
+  overlaySide?: CyclepathSide
+  safetyBufferWidth?: number
+}) {
+  const totalWidth = Math.max(0.1, renderWidth)
+
+  if (strip.variant === 'protected') {
+    return {
+      totalWidth,
+      paintedX: 0,
+      paintedWidth: totalWidth,
+      laneBoundaryX: 0,
+      leftBoundaryX: 0,
+      rightBoundaryX: totalWidth,
+      centerLineX: totalWidth / 2,
+      safetyBufferWidth: 0,
+      safetyBufferX: 0,
+    }
+  }
+
+  const clampedBuffer = Math.max(0, Math.min(safetyBufferWidth, Math.max(0, totalWidth - 0.1)))
+  const paintedWidth = Math.max(0.1, totalWidth - clampedBuffer)
+  const paintedX = overlaySide === 'left' ? clampedBuffer : 0
+  const laneBoundaryX = overlaySide === 'left' ? paintedX + paintedWidth : paintedX
+  const safetyBufferX = overlaySide === 'left' ? 0 : paintedX + paintedWidth
+
+  return {
+    totalWidth,
+    paintedX,
+    paintedWidth,
+    laneBoundaryX,
+    leftBoundaryX: undefined,
+    rightBoundaryX: undefined,
+    centerLineX: undefined,
+    safetyBufferWidth: clampedBuffer,
+    safetyBufferX,
+  }
+}
+
+export function normalizeLaneOverlayCyclepaths(strips: Strip[]): Strip[] {
+  const seenSides = new Set<CyclepathSide>()
+  const next: Strip[] = []
+
+  for (let i = strips.length - 1; i >= 0; i--) {
+    const strip = strips[i]
+    if (!isLaneOverlayCyclepath(strip)) {
+      next.push(strip)
+      continue
+    }
+
+    const side = getCyclepathOverlaySide(strip)
+    if (seenSides.has(side)) continue
+    seenSides.add(side)
+    next.push(strip)
+  }
+
+  return next.reverse()
+}
+
 export function getCrossSectionStrips(strips: Strip[]): Strip[] {
-  const hasRoadwayAnchor = strips.some(isRoadwayAnchorStrip)
-  return strips.filter((strip) => !(hasRoadwayAnchor && isLaneOverlayCyclepath(strip)))
+  const normalized = normalizeLaneOverlayCyclepaths(strips)
+  const hasRoadwayAnchor = normalized.some(isRoadwayAnchorStrip)
+  return normalized.filter((strip) => !(hasRoadwayAnchor && isLaneOverlayCyclepath(strip)))
 }
 
 export function getStripPlacements(strips: Strip[], roadLength: number): StripPlacement[] {
   const placements: StripPlacement[] = []
-  const baseStrips = getCrossSectionStrips(strips)
+  const normalizedStrips = normalizeLaneOverlayCyclepaths(strips)
+  const baseStrips = getCrossSectionStrips(normalizedStrips)
   const basePlacementById = new Map<string, StripPlacement>()
 
   let xOffset = 0
@@ -38,32 +179,45 @@ export function getStripPlacements(strips: Strip[], roadLength: number): StripPl
       x: xOffset,
       y: getStripRenderY(strip),
       length: getStripRenderLength(strip, roadLength),
+      renderWidth: getSafeStripWidth(strip),
       isLaneOverlay: false,
+      facingSide: getFacingRoadwaySide(strip, baseStrips),
     }
     placements.push(placement)
     basePlacementById.set(strip.id, placement)
     xOffset += getSafeStripWidth(strip)
   }
 
+  const leftmostRoadwayPlacement = placements.find((placement) => isRoadwayAnchorStrip(placement.strip)) ?? null
   const rightmostRoadwayPlacement = [...placements].reverse().find((placement) => isRoadwayAnchorStrip(placement.strip)) ?? null
 
-  for (const strip of strips) {
+  for (const strip of normalizedStrips) {
     if (!isLaneOverlayCyclepath(strip)) continue
+
+    const overlaySide = getCyclepathOverlaySide(strip)
+    const anchorPlacement = overlaySide === 'left' ? leftmostRoadwayPlacement : rightmostRoadwayPlacement
+    const safetyBufferWidth = getLaneOverlaySafetyBufferWidth(strip, baseStrips)
+    const renderWidth = getLaneOverlayOccupancyWidth(strip, baseStrips)
 
     const placement: StripPlacement = {
       strip,
-      x: rightmostRoadwayPlacement
-        ? rightmostRoadwayPlacement.x + Math.max(0, getSafeStripWidth(rightmostRoadwayPlacement.strip) - getSafeStripWidth(strip))
+      x: anchorPlacement
+        ? overlaySide === 'left'
+          ? anchorPlacement.x
+          : anchorPlacement.x + Math.max(0, anchorPlacement.renderWidth - renderWidth)
         : 0,
       y: getStripRenderY(strip),
       length: getStripRenderLength(strip, roadLength),
-      isLaneOverlay: Boolean(rightmostRoadwayPlacement),
+      renderWidth,
+      isLaneOverlay: Boolean(anchorPlacement),
+      overlaySide,
+      safetyBufferWidth,
     }
     placements.push(placement)
     basePlacementById.set(strip.id, placement)
   }
 
-  return strips
+  return normalizedStrips
     .map((strip) => basePlacementById.get(strip.id))
     .filter((placement): placement is StripPlacement => Boolean(placement))
 }

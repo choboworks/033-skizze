@@ -1,15 +1,26 @@
 import { MARKING_RULES } from './rules/markingRules'
-import type { BusStripProps, CyclepathLineMode, CyclepathPathType, CyclepathProtectedPlacement, CyclepathStripProps, LaneStripProps, ParkingStripProps, Strip, StripPropsByType, StripType } from './types'
+import type { BusStripProps, CurbKind, CurbStripProps, CyclepathLineMode, CyclepathPathType, CyclepathProtectedPlacement, CyclepathSide, CyclepathStripProps, LaneStripProps, ParkingStripProps, Strip, StripPropsByType, StripType } from './types'
 
 export const DEFAULT_PARKING_BAY_LENGTH = 5.7
+export const DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH = 0.75
+export const DEFAULT_CURB_LOWERED_SECTION_LENGTH = 3.0
 
 const DEFAULT_STRIP_PROPS: { [K in StripType]: StripPropsByType[K] } = {
   lane: { startOffset: 0, endOffset: 0 },
   sidewalk: {},
-  cyclepath: { pathType: 'one-way', protectedPlacement: 'single-side' },
+  cyclepath: {
+    pathType: 'one-way',
+    protectedPlacement: 'single-side',
+    overlaySide: 'right',
+    safetyBufferWidth: DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH,
+  },
   parking: { bayLength: DEFAULT_PARKING_BAY_LENGTH },
   green: {},
-  curb: {},
+  curb: {
+    kind: 'standard',
+    loweredSectionLength: DEFAULT_CURB_LOWERED_SECTION_LENGTH,
+    loweredSectionOffset: 0,
+  },
   gutter: {},
   median: {},
   bus: { startOffset: 0, endOffset: 0 },
@@ -40,11 +51,20 @@ function normalizeLineMetric(value: unknown, fallback: number): number {
   return Math.max(0.01, value)
 }
 
+function normalizeSectionLength(value: unknown, fallback: number): number {
+  if (!isFiniteNumber(value)) return fallback
+  return Math.max(0.5, value)
+}
+
 function normalizeCyclepathPathType(raw: unknown): CyclepathPathType {
   if (raw === 'two-way' || raw === 'two-way-both-sides' || raw === 'two-way-single-side') {
     return 'two-way'
   }
   return 'one-way'
+}
+
+function normalizeCyclepathSide(raw: unknown): CyclepathSide {
+  return raw === 'left' ? 'left' : 'right'
 }
 
 function normalizeCyclepathProtectedPlacement(
@@ -139,6 +159,34 @@ export function getParkingStripProps(strip: Strip): ParkingStripProps {
   }
 }
 
+export function getCurbStripProps(strip: Strip): CurbStripProps {
+  if (strip.type !== 'curb') {
+    return {
+      kind: 'standard',
+      loweredSectionLength: DEFAULT_CURB_LOWERED_SECTION_LENGTH,
+      loweredSectionOffset: 0,
+    }
+  }
+
+  const raw = (strip.props as Record<string, unknown> | undefined) ?? {}
+  const kind = (() => {
+    if (raw.kind === 'standard' || raw.kind === 'lowered' || raw.kind === 'driveway') {
+      return raw.kind as CurbKind
+    }
+    // Legacy migration: the old boolean "lowered" described the driveway segment.
+    if (raw.lowered === true) return 'driveway'
+    return 'standard'
+  })()
+  return {
+    kind,
+    loweredSectionLength: normalizeSectionLength(
+      raw.loweredSectionLength,
+      DEFAULT_CURB_LOWERED_SECTION_LENGTH,
+    ),
+    loweredSectionOffset: clampNonNegative(raw.loweredSectionOffset, 0),
+  }
+}
+
 export function getCyclepathStripProps(strip: Strip): CyclepathStripProps {
   if (strip.type !== 'cyclepath') {
     return { pathType: 'one-way', protectedPlacement: 'single-side' }
@@ -155,10 +203,16 @@ export function getCyclepathStripProps(strip: Strip): CyclepathStripProps {
   const rawCenterLineGapLength = rawProps.centerLineGapLength
   const rawBoundaryLineDashLength = rawProps.boundaryLineDashLength
   const rawBoundaryLineGapLength = rawProps.boundaryLineGapLength
+  const rawCenterLinePhase = rawProps.centerLinePhase
+  const rawBoundaryLinePhase = rawProps.boundaryLinePhase
+  const rawOverlaySide = rawProps.overlaySide
+  const rawSafetyBufferWidth = rawProps.safetyBufferWidth
 
   return {
     pathType: normalizeCyclepathPathType(rawPathType),
     protectedPlacement: normalizeCyclepathProtectedPlacement(rawPathType, rawProtectedPlacement),
+    overlaySide: normalizeCyclepathSide(rawOverlaySide),
+    safetyBufferWidth: clampNonNegative(rawSafetyBufferWidth, DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH),
     ...(legacyLineMode && strip.variant === 'protected'
       ? { centerLineMode: legacyLineMode }
       : legacyLineMode
@@ -172,6 +226,8 @@ export function getCyclepathStripProps(strip: Strip): CyclepathStripProps {
     ...(isFiniteNumber(rawCenterLineGapLength) ? { centerLineGapLength: normalizeLineMetric(rawCenterLineGapLength, 1.5) } : {}),
     ...(isFiniteNumber(rawBoundaryLineDashLength) ? { boundaryLineDashLength: normalizeLineMetric(rawBoundaryLineDashLength, 1) } : {}),
     ...(isFiniteNumber(rawBoundaryLineGapLength) ? { boundaryLineGapLength: normalizeLineMetric(rawBoundaryLineGapLength, 1) } : {}),
+    ...(isFiniteNumber(rawCenterLinePhase) ? { centerLinePhase: rawCenterLinePhase } : {}),
+    ...(isFiniteNumber(rawBoundaryLinePhase) ? { boundaryLinePhase: rawBoundaryLinePhase } : {}),
   }
 }
 
@@ -197,6 +253,10 @@ export function getDefaultCyclepathCenterDashPattern(): [number, number] {
 
 export function isTwoWayCyclepath(pathType: CyclepathPathType | undefined): boolean {
   return pathType === 'two-way'
+}
+
+export function getCyclepathOverlaySide(strip: Strip): CyclepathSide {
+  return getCyclepathStripProps(strip).overlaySide ?? 'right'
 }
 
 export function resolveCyclepathBoundaryLineMode(

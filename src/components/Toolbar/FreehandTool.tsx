@@ -1,6 +1,6 @@
 import { useAppStore } from '@/store'
 import { Pencil } from 'lucide-react'
-import { ColorPicker } from '@/components/Inspector/ColorPicker'
+import { ColorPicker } from '@/components/ui/ColorPicker'
 import {
   PanelHeader,
   PanelSection,
@@ -68,12 +68,10 @@ export function FreehandToolPopover({
       {/* FARBE */}
       <PanelSection title="Farbe">
         <PanelColorLabel label="Strichfarbe" />
-        <div className="color-picker-well">
-          <ColorPicker
-            value={toolOptions.strokeColor}
-            onChange={(c) => setToolOptions({ strokeColor: c })}
-          />
-        </div>
+        <ColorPicker
+          value={toolOptions.strokeColor}
+          onChange={(c) => setToolOptions({ strokeColor: c })}
+        />
       </PanelSection>
     </div>
   )

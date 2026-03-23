@@ -196,12 +196,14 @@ export function StripProperties({ strip, roadLength, onUpdate }: Props) {
         </div>
       ))}
 
-      <ElementColorField
-        value={resolvedColor}
-        hasCustomColor={Boolean(strip.color)}
-        onChange={(color) => onUpdate({ color })}
-        onReset={() => onUpdate({ color: undefined })}
-      />
+      {strip.type !== 'curb' && (
+        <ElementColorField
+          value={resolvedColor}
+          hasCustomColor={Boolean(strip.color)}
+          onChange={(color) => onUpdate({ color })}
+          onReset={() => onUpdate({ color: undefined })}
+        />
+      )}
     </div>
   )
 }

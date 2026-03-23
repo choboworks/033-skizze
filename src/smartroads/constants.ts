@@ -56,6 +56,7 @@ export const STRIP_COLORS: Record<StripType, string> = {
 export const DEFAULT_MARKING_COLOR = '#ffffff'
 
 export function getStripSwatchColor(strip: Pick<Strip, 'type' | 'variant' | 'color'>): string {
+  if (strip.type === 'curb') return STRIP_COLORS.curb
   if (strip.color) return strip.color
 
   if (strip.type === 'cyclepath') {
@@ -115,8 +116,14 @@ export function getStripDisplayLabel(strip: Strip): string {
   }
 
   if (strip.type === 'cyclepath') {
-    if (strip.variant === 'advisory') return 'Schutzstreifen'
-    if (strip.variant === 'lane-marked') return 'Radfahrstreifen'
+    if (strip.variant === 'advisory') {
+      const side = getCyclepathStripProps(strip).overlaySide === 'left' ? ' links' : ' rechts'
+      return `Schutzstreifen${side}`
+    }
+    if (strip.variant === 'lane-marked') {
+      const side = getCyclepathStripProps(strip).overlaySide === 'left' ? ' links' : ' rechts'
+      return `Radfahrstreifen${side}`
+    }
     if (strip.variant === 'protected') {
       const { pathType, protectedPlacement } = getCyclepathStripProps(strip)
       if (pathType === 'two-way' && protectedPlacement === 'both-sides') return 'Zweirichtungsradweg (Sonderfall)'

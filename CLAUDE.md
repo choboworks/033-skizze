@@ -1,107 +1,178 @@
-# CLAUDE.md – Projekt-Kontext
+# CLAUDE.md - Projekt-Kontext
 
-> Was Claude wissen muss, das nicht aus dem Code ablesbar ist.
-> Changelog → `CHANGELOG.md`. Straßennormen → `Nachschlagewerk_Strasseninfrastruktur_Deutschland.md`.
+> Was man fuer dieses Projekt wissen muss, das nicht sauber aus dem Code allein ableitbar ist.
+> Changelog -> `changelog.md`
+> Strassen-Normen -> `Nachschlagewerk_Strasseninfrastruktur_Deutschland.md`
+> Radverkehr -> `Radverkehrs Nachschlagewerk.md`
 
 ---
 
 ## Was ist das?
 
-**033-Skizze V2** — Verkehrsunfallskizzen-Tool für die Polizei. Web-App im Figma/Photoshop-Stil.
+**033-Skizze V2** ist ein Verkehrsunfallskizzen-Tool fuer die Polizei.
+Die App soll **modern und stylisch** wirken, aber darunter ein belastbares Fachwerkzeug sein.
 
-- **Zielgruppe**: Polizeivollzugsbeamte (PVBs) — Einfachheit vor Funktionalität
-- **Tech**: React 19, TypeScript 5.9, Vite 8, Konva (react-konva), Zustand + zundo, Tailwind CSS 4, Radix UI
-- **Offline-first**: PWA mit vite-plugin-pwa, null externe Verbindungen
-- **Repo**: https://github.com/choboworks/033-skizze
+- **Zielgruppe**: Polizeivollzugsbeamte
+- **Prinzip**: Einfachheit in der Bedienung, aber fachlich ernstzunehmende Ergebnisse
+- **Tech**: React 19, TypeScript, Vite, react-konva, Zustand, Tailwind CSS 4, Radix UI
+- **Offline-first**: PWA, keine externen Laufzeitabhaengigkeiten fuer den Kernworkflow
 
 ```bash
-npm run dev      # Vite Dev-Server (localhost:5173)
-npm run build    # tsc -b && vite build
-npm run lint     # ESLint
+npm run dev
+npm run build
+npm run lint
 ```
 
 ---
 
-## Aktueller Stand (Session 7, 22.03.2026)
+## Aktueller Stand (Session 9, 23.03.2026)
 
-### Fertig
-- Canvas: DIN A4, Pan/Zoom, Spacebar-Pan, Scroll-Zoom
-- 6 Tools: V=Auswahl, P=Freihand, O=Formen (9), T=Text, M=Bemaßung, A=Ausschnitt
-- SmartRoads: Constrained Editor mit Strip-System, Presets, Markierungen, Properties
-- Ausschnitt-Tool: Druckbereich auf A4, Frame verschieben/skalieren
-- RightSidebar: Tabs (Library/Metadata) + EbenenPanel mit Type-Icons
-- Unified Panel System: CSS-Tokens + Utility-Klassen (`.meta-input`, `.editor-panel-card`, `.color-picker-well`, `.divider-v`, `.value-display`)
-- MetadataPanel: Pflichtfeld-Validierung, Dienststellen-Autocomplete (JSON-Datenbank), Zusatzfelder bei manueller Eingabe
-- Auto-Header auf A4 Canvas: Konva-Rendering aus Metadaten (Dienststelle, Vorgangsnummer, Adresse, Telefon, Datum, Sachbearbeiter)
-- SignatureBlock: Draggable/resizable/rotierbar, Konva Transformer, nicht im Ebenen-Manager
-- Floating Properties: Draggable Modal für Objekt-Eigenschaften
-- Undo/Redo: zundo + custom Debounce (150ms) + Flush-before-Undo, Ctrl+Z/Y/Shift+Z
-- Tooltips: Alle Toolbar/TopBar-Buttons mit Shortcut-Hints
-- Kontextmenü: Rechtsklick auf Canvas (Duplizieren, Löschen, Vordergrund/Hintergrund, Eigenschaften)
-- Toast-Benachrichtigungen: Success/Info/Error mit Auto-Dismiss
-- Zoom-Controls in StatusBar: +/- Buttons, Einpassen, Auswahl-Info
-- Light Mode: Vollständig redesigned, alle hardcoded RGBA → CSS-Tokens
-- Keyboard-Shortcuts: Ctrl+Z/Y (Undo/Redo), Ctrl+D (Duplizieren), Ctrl+A, Delete
+### Fertig / tragfaehig
+
+- Hauptcanvas mit DIN-A4-Seite, Pan/Zoom, Auswahl, Freihand, Formen, Text, Bemaessung, Ausschnitt
+- Rechte Sidebar als 3-Modus-Bereich: `Ebenen`, `Library`, `Metadaten`
+- Floating Properties als globale UI-Komponente
+- Globaler `ColorPicker` unter `src/components/ui/`
+- Undo/Redo, Kontextmenue, Tooltips, Toasts, Auto-Header, SignatureBlock
+
+### SmartRoads aktuell
+
+- **Gerade** ist der aktive und weit fortgeschrittene Editor
+- Strip-basiertes Querschnittsmodell plus freie Markierungen
+- Layer-Manager im Editor ist funktional und steuert die Z-Order wirklich
+- Properties koennen ueber Layer-Manager oder Doppelklick im Preview geoeffnet werden
+- Strips lassen sich direkt anfassen, ohne Vorselektion
+- `lane` und `bus` haben Laengslogik ueber `startOffset` / `endOffset`
+- `roadClass` ist aktiv und wichtig: `innerorts`, `ausserorts`, `autobahn`
+- Strip-Properties sind modularisiert unter:
+  - `src/smartroads/shared/properties/stripDefinitions/`
+- Marking-Properties sind modularisiert unter:
+  - `src/smartroads/shared/properties/markingDefinitions/`
+
+### Radwege aktuell
+
+- `cyclepath.protected` = **baulich getrennter Radweg** = echter Strip im Querschnitt
+- `cyclepath.advisory` = **Schutzstreifen** = fahrbahngebundenes Overlay
+- `cyclepath.lane-marked` = **Radfahrstreifen** = fahrbahngebundenes Overlay
+- Schutzstreifen und Radfahrstreifen werden standardmaessig **rechts** eingefuegt
+- Seitenwechsel erfolgt **nicht** ueber eine Property, sondern per Preview-Drag
+- Pro Seite gibt es nur eine fahrbahngebundene Radanlage
+- Radweg-Linien, Farben, Strichstaerken, Strichlaengen und Luecken sind editierbar
+- Kleine Linienmasse werden im UI in `cm` gezeigt
+
+### Bauliches aktuell
+
+- Eigene Palette-Kategorie: `Bauliches`
+- Darunter aktuell u. a.:
+  - `Bordstein`
+  - `Rinne`
+  - `Leitplanke`
+  - `Gruenstreifen`
+  - `Begruenter Mittelstreifen`
+- Bordstein besitzt aktuell die Arten:
+  - `Standard`
+  - `Abgeflacht`
+  - `Ein- oder Ausfahrt`
+- `Ein- oder Ausfahrt` ist ein lokaler abgesenkter Abschnitt
+- Default-Laenge fuer `Ein- oder Ausfahrt` ist `3.00 m`
+- Der Ein-/Ausfahrtsbereich ist im Preview vertikal verschiebbar
 
 ### Offen
-- SmartRoad: Kurven, Kreuzungen, Kreisverkehre
-- Fahrzeuge & Library-Objekte (SVG-basiert) — ToolTypes vorbereitet
-- PDF/PNG/SVG-Export (jszip vorhanden, `validation.ts` mit `isMetadataComplete()` vorbereitet)
-- Save/Load (dexie/IndexedDB vorhanden)
+
+- SmartRoads: Kurven, Kreuzungen, Kreisverkehre
+- Mehr bauliche Elemente mit echter Fachlogik
+- Fahrzeuge und weitere Library-Objekte
+- Export / Save-Load fertigziehen
+- Weitere Norm-Validierungen und mehr Presets, sobald der Editor stabil finalisiert ist
 
 ---
 
-## Architektur-Entscheidungen
+## Verbindliche Architektur-Entscheidungen
 
-Diese Entscheidungen sind **verbindlich** und dürfen nicht ohne Absprache geändert werden.
+Diese Entscheidungen gelten, bis sie bewusst gemeinsam geaendert werden.
 
-1. **Zwei Objekt-Welten**: Zeichenobjekte (Pixel, frei skalierbar) vs. reale Objekte (Meter, parametrisch im Editor). Nie vermischen.
-2. **Flache Objektliste**: Keine Layer-Gruppierung. `objects` + `objectOrder` im Store.
-3. **Properties als Floating Modal**: Nicht Sidebar-fixiert. Draggable mit GripHorizontal.
-4. **Position/Größe/Rotation nur auf Canvas**: Keine numerischen Eingabefelder für Geometrie.
-5. **SmartRoads = Constrained Editor**: Strip-Array als Datenmodell. Streifen immer bündig, keine Lücken.
-6. **Konva Shapes für Roads**: Nicht SVG — SVG erst beim Export.
-7. **Auto-Maßstab**: `recalculateScale()` bei jeder Mutation realer Objekte. 25 Stufen (1:10 bis 1:5000).
-8. **editorState als JSON-String**: `CanvasObject.editorState` ist `string`. Bei Migrationen vorsichtig.
-9. **Library-Drawer überlagert Canvas**: Absolut positioniert, kein Layout-Shift.
-10. **Undo/Redo via custom Hook**: zundo's `undo()` ist inkompatibel mit Zustand v5 (ersetzt State statt merge). `useUndoRedo.ts` managed Past/Future-Stacks manuell mit Pause/Resume + Debounce-Flush.
-11. **PageHeader ist statisch (listening=false)**: Konva-Layer zwischen Paper und Objects. SignatureBlock ist separat und interaktiv.
+1. **Zwei Objekt-Welten**
+   Zeichenobjekte arbeiten in Pixeln. Reale Objekte arbeiten in Metern. Diese Welten nicht vermischen.
+
+2. **SmartRoads sind ein Editor im Editor**
+   Auf dem Hauptcanvas liegt ein SmartRoad-Objekt. Geometrie wird im SmartRoad-Editor gebaut, nicht frei auf dem Hauptcanvas.
+
+3. **Strips bleiben das Kernmodell**
+   SmartRoad-Geometrie basiert auf `strips[]`. Markierungen sind getrennt davon. Kein freies "Malen" fuer Strassenkoerper.
+
+4. **Fahrbahngebundene Radwege sind keine echten Neben-Strips**
+   `Schutzstreifen` und `Radfahrstreifen` sind Teil der Fahrbahn und werden als Overlays modelliert.
+   `Baulich getrennt` bleibt dagegen ein echter Strip.
+
+5. **Overlay-Radwege werden per direkter Manipulation umpositioniert**
+   Keine sichtbare `links/rechts`-Property im Panel. Standardmaessig rechts einfuegen, dann per Preview-Drag auf die andere Seite setzen.
+
+6. **RoadClass ist keine rein dekorative Auswahl**
+   `innerorts`, `ausserorts`, `autobahn` steuern relevante Defaults:
+   - Fahrstreifenbreiten
+   - auto-generierte Mittelmarkierungen
+   - Strichbreiten / Dash-Defaults
+
+7. **Properties bleiben ein Floating Modal**
+   Eigenschaften nicht in der Hauptsidebar verankern. Die Floating Properties sind Teil der Produktlogik.
+
+8. **Position, Groesse und Rotation gehoeren auf den Canvas**
+   Keine allgemeine Rueckkehr zu numerischen Geometrieformularen fuer freie Objekte.
+   Direkte Manipulation hat Prioritaet.
+
+9. **SmartRoads nicht auf dem Hauptcanvas freiskalieren**
+   Parametrik nur im Editor. Hauptcanvas nur Positionierung / Auswahl / Kontext.
+
+10. **`editorState` ist weiterhin ein JSON-String**
+    Migrationen an `StraightRoadState` und Strip-/Marking-Props vorsichtig behandeln.
+
+11. **Properties-Definitionen bleiben modular**
+    Neue Strip-Properties in `stripDefinitions/`, neue Marking-Properties in `markingDefinitions/`.
+    Nicht wieder alles in eine monolithische Registry zurueckkippen.
+
+12. **Globale UI-Komponenten gehoeren unter `src/components/ui/`**
+    `ColorPicker` und `FloatingProperties` sind globale UI-Bausteine, nicht mehr "Inspector"-Spezialfaelle.
+
+13. **Normnahe Defaults, aber bewusst editierbar**
+    Die App darf "constrained freedom" geben:
+    - Defaults und Startwerte sollen normnah sein
+    - Nutzer duerfen bewusst abweichen
+    - Validierungen duerfen warnen, aber nicht alles hart blockieren
 
 ---
 
 ## Konventionen
 
-- **UI-Sprache**: Deutsch (Labels, Tooltips, Platzhalter)
-- **Code-Sprache**: Englisch (Variablen, Kommentare, Commits)
-- **Styling**: Tailwind CSS 4 + CSS Custom Properties. Neue Inline-Styles MÜSSEN Tokens nutzen (`var(--surface)`, nicht `rgba(255,255,255,0.06)`)
-- **State**: Zustand mit flachen Actions, kein Immer
-- **Komponenten**: Funktional, keine Klassen
-- **Icons**: Lucide React (einzige Icon-Library)
-- **Markierungen**: RMS-1 konforme Maße (Nachschlagewerk als Referenz)
-- **Shared Constants**: `src/constants/shared.ts` für `LINE_STYLES`, `MARKING_TYPE_LABELS`
-- **Shared Utilities**: `src/utils/objectHelpers.ts` für `objectDisplayName()`
+- **UI-Sprache**: Deutsch
+- **Code-Sprache**: Englisch
+- **Styling**: Tokens und zentrale UI-Muster statt harter Einzelfall-Stile
+- **Icons**: Lucide React
+- **State**: Zustand, flache Actions, kein Immer
+- **Rendering**: Konva fuer Editor und Hauptcanvas
+- **Normbezug**: Strassen- und Radverkehrs-Nachschlagewerke sind Referenz fuer Defaults und Validierungen
 
 ---
 
-## Don'ts
+## Donts
 
-- **Kein `useEffect` für State-Sync** — Zustand Actions nutzen
-- **Keine neuen Dependencies** ohne Absprache
-- **Keine Zahlen-Inputs für Position/Größe** — nur Canvas-Manipulation
-- **Kein freier Canvas für Straßen** — immer Constrained Editor
-- **Kein Resize von SmartRoads auf dem Hauptcanvas** — nur im Editor parametrisch änderbar
-- **`effectiveScale` immer über Store lesen** — nie lokal berechnen
-- **Keine hardcoded `rgba(255,255,255,...)` in TSX** — immer CSS-Tokens nutzen
-- **Kein `useAppStore.temporal.getState().undo()`** — immer `undoAction()` / `redoAction()` aus `useUndoRedo.ts`
-- **Nicht committen ohne explizite Anweisung** — User entscheidet wann
+- Kein neues freies Strassen-Canvas statt SmartRoad-Editor
+- Keine SVG-Strassen als Kernmodell
+- Keine neue Sidebar-fixe Properties-Architektur
+- Keine versteckten Sonderlogiken fuer Radwege, wenn sie als direkte Manipulation loesbar sind
+- Keine hardcodierten Einzel-Property-Monolithen fuer Strips/Markings
+- Keine neuen globalen UI-Komponenten im alten `Inspector`-Pfad
+- Keine Resize-Handles fuer SmartRoad-Geometrie auf dem Hauptcanvas
+- Keine neuen Dependencies ohne Absprache
+- Nicht committen ohne ausdrueckliche Anweisung
 
 ---
 
 ## Pitfalls
 
-- **`SketchCanvas.tsx` (~750 LoC)**: Größte Datei. Pan/Zoom/Drawing/Dimension/Ausschnitt/ContextMenu/EmptyHint/SignatureBlock. Vorsichtig refactoren.
-- **`RoadTopView.tsx` (644 LoC)**: Zweiter Hotspot. Interaktive Draufsicht mit Snap, Selection, Phase-Drag.
-- **`editorState` ist ein JSON-String**: Bei Änderungen am `StraightRoadState`-Typ → bestehende Objekte können brechen.
-- **Undo-Debounce**: `_undoDebounce` in `store/index.ts` ist module-level State. `useUndoRedo.ts` flushed den Timer vor Undo. Wenn die Debounce-Logik geändert wird, beide Dateien synchron halten.
-- **Dienststellen-JSON**: ~300 Einträge in 7 JSON-Dateien. Werden beim Import sortiert. Adressformat: `"Straße, PLZ Stadt"`.
-- **SignatureBlock Position**: Default unten-links, aber User kann es frei verschieben. Position wird NICHT im Store persistiert (geht verloren bei Reload).
+- **`editorState` als String**: Aenderungen an SmartRoad-Typen koennen alte Objekte brechen
+- **`RoadTopView.tsx`**: Zentrale Interaktionsdatei, leicht regressionsanfaellig
+- **`layout.ts`**: Enthaelt Querschnittslogik, Overlay-Radwege, Facing-Side-Logik und Platzierungen
+- **Cyclepath-Overlay-Logik**: Schutzstreifen und Radfahrstreifen sind fachlich heikel; nicht wie normale freie Strips behandeln
+- **Bordstein-Arten**: `Abgeflacht` und `Ein- oder Ausfahrt` muessen in Preview und Hauptcanvas gleich gelesen werden
+- **Quick Settings**: Nicht wieder mit zu vielen semantischen Toggles aufblasen; `roadClass`, `Laenge`, `Spuren` plus Hinweise ist aktuell die richtige Richtung
+- **ColorPicker**: Nutzt Portal-/Layer-Logik; bei Umbauten immer Haupt-App und SmartRoad-Dialog testen

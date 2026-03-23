@@ -10,6 +10,7 @@ import { createDefaultStraightRoad, createStrip, totalWidth, ROAD_CLASS_CONFIG, 
 import { isLaneOverlayCyclepath } from '../layout'
 import { MARKING_RULES } from '../rules/markingRules'
 import { applyRoadClassWidthToStrips } from '../rules/stripRules'
+import { getCyclepathOverlaySide } from '../stripProps'
 import { normalizeStraightRoadState } from '../state'
 import { applyCyclepathGeometryConstraints } from '../validation'
 import type { Strip, Marking, StraightRoadState, StripType, StripVariant, MarkingType, MarkingVariant, RoadClass } from '../types'
@@ -117,12 +118,24 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
   }, [selectedStripId, buildStripAnchoredLayerOrder, rebuildMarkingsForStrips])
 
   const handleAddStrip = useCallback((type: StripType, variant: StripVariant, side: 'left' | 'right') => {
-    const newStrip = createStrip(type, variant, undefined, roadClass)
+    const newStripBase = createStrip(type, variant, undefined, roadClass)
+    const newStrip = type === 'cyclepath' && (variant === 'advisory' || variant === 'lane-marked')
+      ? {
+          ...newStripBase,
+          props: {
+            ...(newStripBase.props ?? {}),
+            overlaySide: side,
+          },
+        }
+      : newStripBase
     setStrips((prev) => {
       const updated = (() => {
         if (type === 'cyclepath' && (variant === 'advisory' || variant === 'lane-marked')) {
-          const withoutLaneOverlays = prev.filter((strip) => !isLaneOverlayCyclepath(strip))
-          return [...withoutLaneOverlays, newStrip]
+          const withoutLaneOverlaysOnSameSide = prev.filter((strip) => {
+            if (!isLaneOverlayCyclepath(strip)) return true
+            return getCyclepathOverlaySide(strip) !== side
+          })
+          return [...withoutLaneOverlaysOnSameSide, newStrip]
         }
 
         return side === 'left' ? [newStrip, ...prev] : [...prev, newStrip]
@@ -212,19 +225,19 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
     })
   }, [buildStripAnchoredLayerOrder, rebuildMarkingsForStrips, roadClass])
 
-  // --- Road class ---
-  const handleRoadClassChange = useCallback((rc: RoadClass) => {
-    setRoadClass(rc)
+  const handleRoadClassChange = useCallback((nextRoadClass: RoadClass) => {
+    if (nextRoadClass === roadClass) return
+    setRoadClass(nextRoadClass)
     setStrips((prev) => {
-      const nextStrips = applyCyclepathGeometryConstraints(applyRoadClassWidthToStrips(prev, rc))
+      const updated = applyCyclepathGeometryConstraints(applyRoadClassWidthToStrips(prev, nextRoadClass))
       setMarkings((current) => {
-        const nextMarkings = rebuildMarkingsForStrips(nextStrips, current, rc, length)
-        setLayerOrder(buildStripAnchoredLayerOrder(nextStrips, nextMarkings))
+        const nextMarkings = rebuildMarkingsForStrips(updated, current, nextRoadClass, length)
+        setLayerOrder(buildStripAnchoredLayerOrder(updated, nextMarkings))
         return nextMarkings
       })
-      return nextStrips
+      return updated
     })
-  }, [buildStripAnchoredLayerOrder, rebuildMarkingsForStrips, length])
+  }, [buildStripAnchoredLayerOrder, rebuildMarkingsForStrips, roadClass, length])
 
   // --- Presets ---
   const handleLoadPreset = useCallback((state: StraightRoadState) => {
@@ -242,6 +255,18 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
   const handleReorderLayers = useCallback((nextLayerOrder: string[]) => {
     setLayerOrder(normalizeLayerOrder(nextLayerOrder, strips, markings))
   }, [strips, markings])
+
+  const handleReset = useCallback(() => {
+    const defaultState = normalizeStraightRoadState(createDefaultStraightRoad(), createDefaultStraightRoad())
+    setStrips(defaultState.strips)
+    setMarkings(defaultState.markings)
+    setLayerOrder(normalizeLayerOrder(defaultState.layerOrder, defaultState.strips, defaultState.markings))
+    setLength(defaultState.length)
+    setRoadClass(defaultState.roadClass ?? 'innerorts')
+    setSelectedStripId(null)
+    setSelectedMarkingId(null)
+    setPropertiesOpen(false)
+  }, [])
 
   // --- Finish ---
   const handleFinish = () => {
@@ -371,6 +396,7 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       title="Gerade"
       onFinish={handleFinish}
       onCancel={onCancel}
+      onReset={handleReset}
       sidebar={sidebar}
       editor={editor}
       quickSettings={quickSettings}

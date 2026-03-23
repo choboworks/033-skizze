@@ -53,9 +53,12 @@ export type SidewalkStripProps = Record<string, never>
 export type CyclepathPathType = 'one-way' | 'two-way'
 export type CyclepathProtectedPlacement = 'single-side' | 'both-sides'
 export type CyclepathLineMode = 'none' | 'dashed' | 'solid'
+export type CyclepathSide = 'left' | 'right'
 export interface CyclepathStripProps {
   pathType?: CyclepathPathType
   protectedPlacement?: CyclepathProtectedPlacement
+  overlaySide?: CyclepathSide
+  safetyBufferWidth?: number
   centerLineMode?: CyclepathLineMode
   boundaryLineMode?: CyclepathLineMode
   centerLineStrokeWidth?: number
@@ -64,12 +67,19 @@ export interface CyclepathStripProps {
   centerLineGapLength?: number
   boundaryLineDashLength?: number
   boundaryLineGapLength?: number
+  centerLinePhase?: number
+  boundaryLinePhase?: number
 }
 export interface ParkingStripProps {
   bayLength?: number
 }
 export type GreenStripProps = Record<string, never>
-export type CurbStripProps = Record<string, never>
+export type CurbKind = 'standard' | 'lowered' | 'driveway'
+export interface CurbStripProps {
+  kind?: CurbKind
+  loweredSectionLength?: number
+  loweredSectionOffset?: number
+}
 export type GutterStripProps = Record<string, never>
 export type MedianStripProps = Record<string, never>
 export interface BusStripProps {

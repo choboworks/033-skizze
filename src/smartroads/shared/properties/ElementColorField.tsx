@@ -1,4 +1,4 @@
-import { ColorPicker } from '@/components/Inspector/ColorPicker'
+import { ColorPicker } from '@/components/ui/ColorPicker'
 
 interface Props {
   value: string
@@ -11,9 +11,7 @@ export function ElementColorField({ value, hasCustomColor, onChange, onReset }: 
   return (
     <div className="flex flex-col gap-2">
       <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>Farbe</span>
-      <div className="color-picker-well">
-        <ColorPicker value={value} onChange={onChange} />
-      </div>
+      <ColorPicker value={value} onChange={onChange} />
       <button
         type="button"
         className="toggle-btn h-8 rounded-lg text-[11px] font-medium"

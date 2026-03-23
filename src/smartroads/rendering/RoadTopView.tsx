@@ -1,12 +1,26 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
-import { Stage, Layer, Rect, Line as KonvaLine, Text } from 'react-konva'
+import { Stage, Layer, Group, Rect, Line as KonvaLine, Text } from 'react-konva'
 import { StripRenderer } from './StripRenderer'
 import { MarkingRenderer } from './MarkingRenderer'
 import { totalWidth, STRIP_LABELS, STRIP_MIN_WIDTHS, FIXED_WIDTH_STRIPS, orderMarkingsByLayer } from '../constants'
 import type { Strip, Marking } from '../types'
 import type Konva from 'konva'
-import { getStripRenderLength, getStripRenderY } from '../stripProps'
-import { getCrossSectionStrips, getStripPlacements, isLaneOverlayCyclepath } from '../layout'
+import {
+  DEFAULT_CURB_LOWERED_SECTION_LENGTH,
+  getCurbStripProps,
+  getCyclepathOverlaySide,
+  getCyclepathStripProps,
+  getStripRenderLength,
+  getStripRenderY,
+  mergeStripProps,
+  resolveCyclepathBoundaryDashPattern,
+  resolveCyclepathBoundaryLineMode,
+  resolveCyclepathBoundaryStrokeWidth,
+  resolveCyclepathCenterDashPattern,
+  resolveCyclepathCenterLineMode,
+  resolveCyclepathCenterStrokeWidth,
+} from '../stripProps'
+import { getCrossSectionStrips, getCyclepathRenderMetrics, getLaneOverlayOccupancyWidth, getStripPlacements, isLaneOverlayCyclepath } from '../layout'
 
 // ============================================================
 // RoadTopView – Interactive top-down view
@@ -63,6 +77,12 @@ export function RoadTopView({
   const crossSectionStrips = useMemo(() => getCrossSectionStrips(strips), [strips])
   const stripPlacements = useMemo(() => getStripPlacements(strips, safeRoadLength), [strips, safeRoadLength])
   const placementById = useMemo(() => new Map(stripPlacements.map((placement) => [placement.strip.id, placement])), [stripPlacements])
+  const roadwayPlacements = useMemo(
+    () => stripPlacements.filter((placement) => !placement.isLaneOverlay && (placement.strip.type === 'lane' || placement.strip.type === 'bus')),
+    [stripPlacements],
+  )
+  const leftmostRoadwayPlacement = roadwayPlacements[0] ?? null
+  const rightmostRoadwayPlacement = roadwayPlacements[roadwayPlacements.length - 1] ?? null
   const orderedMarkings = useMemo(
     () => orderMarkingsByLayer(markings, layerOrder),
     [markings, layerOrder]
@@ -96,6 +116,28 @@ export function RoadTopView({
   const roadHeightPx = safeRoadLength * displayScale
   const offsetX = (containerSize.width - roadWidthPx) / 2
   const offsetY = (containerSize.height - roadHeightPx) / 2
+
+  const getOverlaySnapPosition = useCallback((strip: Strip, side: 'left' | 'right') => {
+    const candidateStrip = {
+      ...strip,
+      ...mergeStripProps(strip, { overlaySide: side }),
+    }
+    const renderWidth = getLaneOverlayOccupancyWidth(candidateStrip, crossSectionStrips)
+
+    if (side === 'left') {
+      return {
+        x: leftmostRoadwayPlacement?.x ?? 0,
+        renderWidth,
+      }
+    }
+
+    return {
+      x: rightmostRoadwayPlacement
+        ? rightmostRoadwayPlacement.x + Math.max(0, rightmostRoadwayPlacement.renderWidth - renderWidth)
+        : 0,
+      renderWidth,
+    }
+  }, [crossSectionStrips, leftmostRoadwayPlacement, rightmostRoadwayPlacement])
 
   // --- Delete selected strip or marking ---
   useEffect(() => {
@@ -184,6 +226,11 @@ export function RoadTopView({
   const [dragPreviewIndex, setDragPreviewIndex] = useState<number | null>(null)
   const [dragGhostX, setDragGhostX] = useState<number | null>(null) // ghost strip X in meters
   const [isDragging, setIsDragging] = useState(false)
+  const overlayDragRef = useRef<{ stripId: string; originalSide: 'left' | 'right' } | null>(null)
+  const overlayTargetSideRef = useRef<'left' | 'right' | null>(null)
+  const [overlayPreviewSide, setOverlayPreviewSide] = useState<'left' | 'right' | null>(null)
+  const [overlayGhostX, setOverlayGhostX] = useState<number | null>(null)
+  const [isDraggingOverlay, setIsDraggingOverlay] = useState(false)
 
   const startDragReorder = useCallback((stripId: string, stripIndex: number, e: Konva.KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
@@ -260,6 +307,92 @@ export function RoadTopView({
     window.addEventListener('mouseup', onUp)
   }, [strips, offsetX, displayScale, onStripsUpdate])
 
+  const startOverlaySideDrag = useCallback((strip: Strip, e: Konva.KonvaEventObject<MouseEvent>) => {
+    e.cancelBubble = true
+    if (!leftmostRoadwayPlacement || !rightmostRoadwayPlacement) return
+
+    const stage = stageRef.current
+    if (!stage) return
+
+    const pointer = stage.getPointerPosition()
+    if (!pointer) return
+
+    const originalSide = getCyclepathOverlaySide(strip)
+    const currentSnap = getOverlaySnapPosition(strip, originalSide)
+    const grabOffsetPx = pointer.x - offsetX - currentSnap.x * displayScale
+
+    overlayDragRef.current = { stripId: strip.id, originalSide }
+    overlayTargetSideRef.current = originalSide
+
+    let moved = false
+
+    const onMove = (me: MouseEvent) => {
+      if (!overlayDragRef.current || !stageRef.current) return
+      const stageBox = stageRef.current.container().getBoundingClientRect()
+      const currentX = me.clientX - stageBox.left
+      const currentY = me.clientY - stageBox.top
+      const deltaX = currentX - pointer.x
+      const deltaY = currentY - pointer.y
+
+      if (!moved) {
+        if (Math.hypot(deltaX, deltaY) < 5) return
+        moved = true
+        setIsDraggingOverlay(true)
+      }
+
+      const ghostX = (currentX - grabOffsetPx - offsetX) / displayScale
+      const leftSnap = getOverlaySnapPosition(strip, 'left')
+      const rightSnap = getOverlaySnapPosition(strip, 'right')
+      const targetSide = Math.abs(ghostX - leftSnap.x) <= Math.abs(ghostX - rightSnap.x) ? 'left' : 'right'
+
+      overlayTargetSideRef.current = targetSide
+      setOverlayPreviewSide(targetSide)
+      setOverlayGhostX(ghostX)
+    }
+
+    const onUp = () => {
+      const ref = overlayDragRef.current
+      const targetSide = overlayTargetSideRef.current
+
+      if (ref && targetSide && moved && targetSide !== ref.originalSide) {
+        const nextStrips = strips.map((candidate) => {
+          if (!isLaneOverlayCyclepath(candidate)) return candidate
+
+          const candidateSide = getCyclepathOverlaySide(candidate)
+          if (candidate.id === ref.stripId) {
+            return { ...candidate, ...mergeStripProps(candidate, { overlaySide: targetSide }) }
+          }
+
+          if (candidateSide === targetSide) {
+            return { ...candidate, ...mergeStripProps(candidate, { overlaySide: ref.originalSide }) }
+          }
+
+          return candidate
+        })
+        onStripsUpdate?.(nextStrips)
+      }
+
+      overlayDragRef.current = null
+      overlayTargetSideRef.current = null
+      setOverlayPreviewSide(null)
+      setOverlayGhostX(null)
+      setIsDraggingOverlay(false)
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }, [
+    leftmostRoadwayPlacement,
+    rightmostRoadwayPlacement,
+    getOverlaySnapPosition,
+    offsetX,
+    displayScale,
+    strips,
+    onStripsUpdate,
+  ])
+
   // --- Length drag ---
   const [draggingLength, setDraggingLength] = useState(false)
   const lengthDragStart = useRef<{ startY: number; startLength: number } | null>(null)
@@ -293,8 +426,32 @@ export function RoadTopView({
     window.addEventListener('mouseup', onUp)
   }, [length, displayScale, onLengthChange])
 
+  const cyclepathPhaseDragRef = useRef<Record<string, { phase: number; cycle: number }>>({})
+  const curbLoweredDragRef = useRef<Record<string, { startOffset: number; maxOffset: number }>>({})
+
+  const wrapDashPhase = useCallback((phase: number, cycle: number) => {
+    if (cycle <= 0) return 0
+    return (((phase % cycle) + cycle) % cycle)
+  }, [])
+
+  const updateCyclepathPhase = useCallback((
+    stripId: string,
+    prop: 'boundaryLinePhase' | 'centerLinePhase',
+    phase: number,
+  ) => {
+    onStripsUpdate?.(strips.map((candidate) => (
+      candidate.id === stripId
+        ? { ...candidate, ...mergeStripProps(candidate, { [prop]: phase }) }
+        : candidate
+    )))
+  }, [onStripsUpdate, strips])
+
   // --- Animated shifts for iOS-style "make room" effect ---
-  const draggedStripId = isDragging ? dragRef.current?.stripId : null
+  const draggedStripId = isDragging
+    ? dragRef.current?.stripId
+    : isDraggingOverlay
+      ? overlayDragRef.current?.stripId
+      : null
 
   // Compute target shifts per strip
   const targetShiftsRef = useRef<Record<string, number>>({})
@@ -399,6 +556,7 @@ export function RoadTopView({
     if (!placement) continue
     const stripY = placement.y
     const stripHeight = placement.length
+    const stripRenderWidth = placement.renderWidth
     const isBeingDragged = strip.id === draggedStripId
     const shift = animShifts[strip.id] || 0
     const sx = placement.x + (placement.isLaneOverlay ? 0 : shift)
@@ -408,28 +566,49 @@ export function RoadTopView({
 
     // Strip visual
     stripNodes.push(
-      <StripRenderer key={strip.id} strip={strip} x={sx} y={stripY} length={stripHeight} />
+      <StripRenderer
+        key={strip.id}
+        strip={strip}
+        x={sx}
+        y={stripY}
+        length={stripHeight}
+        renderWidth={stripRenderWidth}
+        overlaySide={placement.overlaySide}
+        safetyBufferWidth={placement.safetyBufferWidth}
+        facingSide={placement.facingSide}
+      />
     )
     // Dim original during drag
     if (isBeingDragged) {
       stripNodes.push(
         <Rect
           key={`dim-${strip.id}`}
-          x={sx} y={stripY} width={strip.width} height={stripHeight}
+          x={sx} y={stripY} width={stripRenderWidth} height={stripHeight}
           fill="rgba(0,0,0,0.35)" listening={false}
         />
       )
     }
 
     // Label (centered in strip)
-    if (strip.width * displayScale > 25) {
-      const maxChars = Math.floor(strip.width * displayScale / 5.5)
+    const cyclepathMetrics = strip.type === 'cyclepath'
+      ? getCyclepathRenderMetrics({
+          strip,
+          renderWidth: stripRenderWidth,
+          overlaySide: placement.overlaySide,
+          safetyBufferWidth: placement.safetyBufferWidth,
+        })
+      : null
+    const labelWidth = cyclepathMetrics ? cyclepathMetrics.paintedWidth : stripRenderWidth
+    const labelX = cyclepathMetrics ? sx + cyclepathMetrics.paintedX : sx
+
+    if (labelWidth * displayScale > 25) {
+      const maxChars = Math.floor(labelWidth * displayScale / 5.5)
       const label = (STRIP_LABELS[strip.type] || '').slice(0, maxChars)
       stripNodes.push(
         <Text
           key={`l-${strip.id}`}
-          x={sx} y={stripY + 0.15}
-          width={strip.width}
+          x={labelX} y={stripY + 0.15}
+          width={labelWidth}
           align="center"
           text={label}
           fontSize={0.45}
@@ -448,7 +627,7 @@ export function RoadTopView({
         key={`hit-${strip.id}`}
         x={sx}
         y={stripY}
-        width={strip.width}
+        width={stripRenderWidth}
         height={stripHeight}
           fill={isSelected ? 'rgba(74,158,255,0.12)' : 'rgba(0,0,0,0.001)'}
         stroke={isSelected ? '#4a9eff' : undefined}
@@ -460,16 +639,18 @@ export function RoadTopView({
         onMouseDown={(e) => {
           onSelectStrip(strip.id)
           onSelectMarking(null)
-          if (!isOverlay) {
+          if (isOverlay) {
+            startOverlaySideDrag(strip, e)
+          } else {
             startDragReorder(strip.id, i, e)
           }
         }}
-        cursor={isSelected && !isOverlay ? 'grab' : 'pointer'}
+        cursor={isSelected ? 'grab' : 'pointer'}
       />
     )
 
     // Selection highlight + resize edges (only for selected strip)
-    if (isSelected) {
+    if (isSelected && !isBeingDragged) {
 
       // Left edge resize handle (if not fixed and not first strip)
       if (!isFixed && i > 0) {
@@ -491,6 +672,7 @@ export function RoadTopView({
           <Rect
             key={`resize-r-${strip.id}`}
             x={sx + strip.width - 0.2} y={stripY}
+            
             width={0.4} height={stripHeight}
             fill="rgba(0,0,0,0.001)"
             cursor="col-resize"
@@ -498,12 +680,187 @@ export function RoadTopView({
           />
         )
       }
+
+      if (strip.type === 'cyclepath') {
+        const cyclepathProps = getCyclepathStripProps(strip)
+        const boundaryMode = resolveCyclepathBoundaryLineMode(strip.variant, cyclepathProps.boundaryLineMode)
+        const centerMode = resolveCyclepathCenterLineMode(strip.variant, cyclepathProps.centerLineMode, cyclepathProps.pathType)
+        const boundaryStroke = resolveCyclepathBoundaryStrokeWidth(strip.variant, cyclepathProps.boundaryLineStrokeWidth)
+        const centerStroke = resolveCyclepathCenterStrokeWidth(cyclepathProps.centerLineStrokeWidth)
+        const boundaryDash = boundaryMode === 'dashed'
+          ? resolveCyclepathBoundaryDashPattern(strip.variant, cyclepathProps.boundaryLineDashLength, cyclepathProps.boundaryLineGapLength)
+          : null
+        const centerDash = centerMode === 'dashed'
+          ? resolveCyclepathCenterDashPattern(cyclepathProps.centerLineDashLength, cyclepathProps.centerLineGapLength)
+          : null
+        const renderMetrics = getCyclepathRenderMetrics({
+          strip,
+          renderWidth: stripRenderWidth,
+          overlaySide: placement.overlaySide,
+          safetyBufferWidth: placement.safetyBufferWidth,
+        })
+
+        const createPhaseHandle = (
+          key: string,
+          lineX: number,
+          prop: 'boundaryLinePhase' | 'centerLinePhase',
+          phase: number,
+          dash: [number, number],
+          strokeWidth: number,
+        ) => {
+          const cycle = dash[0] + dash[1]
+          const hitWidth = Math.max(0.45, strokeWidth * 5)
+
+          interactionNodes.push(
+            <Group
+              key={key}
+              x={lineX}
+              y={stripY}
+              draggable
+              onDragStart={() => {
+                cyclepathPhaseDragRef.current[key] = { phase, cycle }
+              }}
+              onDragMove={(e) => {
+                const node = e.target
+                const dragY = node.y() - stripY
+                node.x(lineX)
+                node.y(stripY)
+
+                const current = cyclepathPhaseDragRef.current[key]
+                if (!current) return
+                updateCyclepathPhase(strip.id, prop, wrapDashPhase(current.phase - dragY, current.cycle))
+              }}
+              onDragEnd={(e) => {
+                const node = e.target
+                node.x(lineX)
+                node.y(stripY)
+                delete cyclepathPhaseDragRef.current[key]
+              }}
+            >
+              <Rect
+                x={-hitWidth / 2}
+                y={0}
+                width={hitWidth}
+                height={stripHeight}
+                fill="rgba(0,0,0,0.001)"
+                cursor="ns-resize"
+              />
+            </Group>
+          )
+        }
+
+        if (boundaryDash) {
+          const boundaryPhase = cyclepathProps.boundaryLinePhase ?? 0
+          createPhaseHandle(
+            `cyclepath-boundary-primary-${strip.id}`,
+            sx + renderMetrics.laneBoundaryX,
+            'boundaryLinePhase',
+            boundaryPhase,
+            boundaryDash,
+            boundaryStroke,
+          )
+          if (strip.variant === 'protected') {
+            createPhaseHandle(
+              `cyclepath-boundary-right-${strip.id}`,
+              sx + (renderMetrics.rightBoundaryX ?? stripRenderWidth),
+              'boundaryLinePhase',
+              boundaryPhase,
+              boundaryDash,
+              boundaryStroke,
+            )
+          }
+        }
+
+        if (strip.variant === 'protected' && centerDash) {
+          createPhaseHandle(
+            `cyclepath-center-${strip.id}`,
+            sx + (renderMetrics.centerLineX ?? stripRenderWidth / 2),
+            'centerLinePhase',
+            cyclepathProps.centerLinePhase ?? 0,
+            centerDash,
+            centerStroke,
+          )
+        }
+      }
+
+      if (strip.type === 'curb') {
+        const curbProps = getCurbStripProps(strip)
+        if (curbProps.kind === 'driveway') {
+          const loweredLength = Math.max(0.5, Math.min(curbProps.loweredSectionLength ?? DEFAULT_CURB_LOWERED_SECTION_LENGTH, stripHeight))
+          const maxOffset = Math.max(0, stripHeight - loweredLength)
+          const loweredOffset = Math.max(0, Math.min(curbProps.loweredSectionOffset ?? 0, maxOffset))
+
+          interactionNodes.push(
+            <Group
+              key={`curb-lowered-handle-${strip.id}`}
+              x={sx}
+              y={stripY + loweredOffset}
+              draggable
+              onMouseDown={(e) => { e.cancelBubble = true }}
+              onDragStart={() => {
+                curbLoweredDragRef.current[strip.id] = {
+                  startOffset: loweredOffset,
+                  maxOffset,
+                }
+              }}
+              onDragMove={(e) => {
+                const node = e.target
+                const current = curbLoweredDragRef.current[strip.id]
+                if (!current) return
+
+                const dragY = node.y() - (stripY + current.startOffset)
+                const nextOffset = Math.max(0, Math.min(current.startOffset + dragY, current.maxOffset))
+                node.x(sx)
+                node.y(stripY + current.startOffset)
+
+                onStripsUpdate?.(strips.map((candidate) => (
+                  candidate.id === strip.id
+                    ? {
+                        ...candidate,
+                        ...mergeStripProps(candidate, {
+                          loweredSectionOffset: Math.round(nextOffset * 100) / 100,
+                        }),
+                      }
+                    : candidate
+                )))
+              }}
+              onDragEnd={(e) => {
+                const node = e.target
+                node.x(sx)
+                node.y(stripY + loweredOffset)
+                delete curbLoweredDragRef.current[strip.id]
+              }}
+            >
+              <Rect
+                width={stripRenderWidth}
+                height={loweredLength}
+                fill="rgba(74,158,255,0.08)"
+                stroke="rgba(74,158,255,0.45)"
+                strokeWidth={1 / displayScale}
+                dash={[0.2, 0.16]}
+                cornerRadius={0.05}
+                cursor="ns-resize"
+              />
+              <KonvaLine
+                points={[
+                  Math.max(0.06, stripRenderWidth * 0.22), loweredLength / 2,
+                  Math.max(0.06, stripRenderWidth * 0.78), loweredLength / 2,
+                ]}
+                stroke="rgba(74,158,255,0.72)"
+                strokeWidth={0.04}
+                lineCap="round"
+                listening={false}
+              />
+            </Group>
+          )
+        }
+      }
     }
 
     // Subtle edge line between strips of different types
     const baseIndex = crossSectionStrips.findIndex((candidate) => candidate.id === strip.id)
     if (!isOverlay && baseIndex >= 0 && baseIndex < crossSectionStrips.length - 1 && strip.type !== crossSectionStrips[baseIndex + 1].type) {
-      const edgeX = sx + strip.width
+      const edgeX = sx + stripRenderWidth
       const nextPlacement = placementById.get(crossSectionStrips[baseIndex + 1].id)
       if (nextPlacement) {
       stripNodes.push(
@@ -568,6 +925,76 @@ export function RoadTopView({
           listening={false}
         />
       )
+    }
+  }
+
+  if (isDraggingOverlay && overlayGhostX != null && overlayDragRef.current && overlayPreviewSide) {
+    const ghostStrip = strips.find((candidate) => candidate.id === overlayDragRef.current?.stripId)
+    if (ghostStrip && isLaneOverlayCyclepath(ghostStrip)) {
+      const ghostPlacement = placementById.get(ghostStrip.id)
+      if (ghostPlacement) {
+        const previewSnap = getOverlaySnapPosition(ghostStrip, overlayPreviewSide)
+        const ghostStripWithPreviewSide = {
+          ...ghostStrip,
+          ...mergeStripProps(ghostStrip, { overlaySide: overlayPreviewSide }),
+        }
+        const ghostY = getStripRenderY(ghostStrip)
+        const ghostHeight = getStripRenderLength(ghostStrip, safeRoadLength)
+        const pad = 0.18
+
+        ghostNodes.push(
+          <Rect
+            key="overlay-ghost-shadow"
+            x={overlayGhostX - pad + 0.05}
+            y={ghostY - pad + 0.08}
+            width={previewSnap.renderWidth + pad * 2}
+            height={ghostHeight + pad * 2}
+            fill="rgba(0,0,0,0.12)"
+            cornerRadius={0.12}
+            listening={false}
+          />
+        )
+        ghostNodes.push(
+          <Rect
+            key="overlay-ghost-glow"
+            x={overlayGhostX - pad}
+            y={ghostY - pad}
+            width={previewSnap.renderWidth + pad * 2}
+            height={ghostHeight + pad * 2}
+            fill="rgba(74,158,255,0.06)"
+            stroke="rgba(74,158,255,0.2)"
+            strokeWidth={2 / displayScale}
+            cornerRadius={0.12}
+            listening={false}
+          />
+        )
+        ghostNodes.push(
+          <StripRenderer
+            key="overlay-ghost-strip"
+            strip={ghostStripWithPreviewSide}
+            x={overlayGhostX}
+            y={ghostY}
+            length={ghostHeight}
+            renderWidth={previewSnap.renderWidth}
+            overlaySide={overlayPreviewSide}
+            safetyBufferWidth={overlayPreviewSide === 'left' || overlayPreviewSide === 'right'
+              ? previewSnap.renderWidth - ghostStrip.width
+              : ghostPlacement.safetyBufferWidth}
+          />
+        )
+        ghostNodes.push(
+          <Rect
+            key="overlay-ghost-accent"
+            x={overlayGhostX}
+            y={ghostY}
+            width={previewSnap.renderWidth}
+            height={ghostHeight}
+            stroke="rgba(74,158,255,0.45)"
+            strokeWidth={1 / displayScale}
+            listening={false}
+          />
+        )
+      }
     }
   }
 
