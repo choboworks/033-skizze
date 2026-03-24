@@ -1,4 +1,4 @@
-import { FIXED_WIDTH_STRIPS, STRIP_MIN_WIDTHS, VARIANT_LABELS } from '../../../constants'
+import { DEFAULT_ROAD_LENGTH, FIXED_WIDTH_STRIPS, STRIP_MIN_WIDTHS, VARIANT_LABELS } from '../../../constants'
 import { getBusStripProps, getLaneStripProps, getStripRenderLength, mergeStripProps } from '../../../stripProps'
 import type { StripType, StripVariant } from '../../../types'
 import type { StripChoiceOption, StripPropertySectionDefinition } from './types'
@@ -27,6 +27,11 @@ const VARIANT_OPTIONS: Partial<Record<StripType, StripChoiceOption[]>> = {
     { value: 'dedicated', label: 'Eigentrasse' },
     { value: 'flush', label: 'Bündig' },
   ],
+  path: [
+    { value: 'dirt', label: 'Erdweg' },
+    { value: 'gravel', label: 'Schotter' },
+    { value: 'forest', label: 'Waldweg' },
+  ],
 }
 
 export function geometrySection(includeHeight = true): StripPropertySectionDefinition {
@@ -49,7 +54,7 @@ export function geometrySection(includeHeight = true): StripPropertySectionDefin
       kind: 'number',
       id: 'height',
       label: 'Höhe',
-      getValue: ({ strip, roadLength }) => strip.height ?? roadLength ?? 10,
+      getValue: ({ strip, roadLength }) => strip.height ?? roadLength ?? DEFAULT_ROAD_LENGTH,
       applyValue: (value, { roadLength }) => ({
         height: roadLength != null && value >= roadLength ? undefined : value,
       }),
@@ -75,7 +80,7 @@ export function heightOnlyGeometrySection(): StripPropertySectionDefinition {
         kind: 'number',
         id: 'height',
         label: 'Höhe',
-        getValue: ({ strip, roadLength }) => strip.height ?? roadLength ?? 10,
+        getValue: ({ strip, roadLength }) => strip.height ?? roadLength ?? DEFAULT_ROAD_LENGTH,
         applyValue: (value, { roadLength }) => ({
           height: roadLength != null && value >= roadLength ? undefined : value,
         }),
@@ -128,11 +133,11 @@ export function longitudinalSection(kind: 'lane' | 'bus'): StripPropertySectionD
         getValue: ({ strip }) => getProps(strip).startOffset ?? 0,
         applyValue: (value, { strip, roadLength }) => {
           const current = getProps(strip)
-          const maxStart = Math.max(0, (roadLength ?? 10) - (current.endOffset ?? 0) - 0.5)
+          const maxStart = Math.max(0, (roadLength ?? DEFAULT_ROAD_LENGTH) - (current.endOffset ?? 0) - 0.5)
           return mergeStripProps(strip, { startOffset: Math.min(value, maxStart) })
         },
         min: () => 0,
-        max: ({ strip, roadLength }) => Math.max(0, (roadLength ?? 10) - (getProps(strip).endOffset ?? 0) - 0.5),
+        max: ({ strip, roadLength }) => Math.max(0, (roadLength ?? DEFAULT_ROAD_LENGTH) - (getProps(strip).endOffset ?? 0) - 0.5),
         step: 0.25,
       },
       {
@@ -142,22 +147,22 @@ export function longitudinalSection(kind: 'lane' | 'bus'): StripPropertySectionD
         getValue: ({ strip }) => getProps(strip).endOffset ?? 0,
         applyValue: (value, { strip, roadLength }) => {
           const current = getProps(strip)
-          const maxEnd = Math.max(0, (roadLength ?? 10) - (current.startOffset ?? 0) - 0.5)
+          const maxEnd = Math.max(0, (roadLength ?? DEFAULT_ROAD_LENGTH) - (current.startOffset ?? 0) - 0.5)
           return mergeStripProps(strip, { endOffset: Math.min(value, maxEnd) })
         },
         min: () => 0,
-        max: ({ strip, roadLength }) => Math.max(0, (roadLength ?? 10) - (getProps(strip).startOffset ?? 0) - 0.5),
+        max: ({ strip, roadLength }) => Math.max(0, (roadLength ?? DEFAULT_ROAD_LENGTH) - (getProps(strip).startOffset ?? 0) - 0.5),
         step: 0.25,
       },
       {
         kind: 'number',
         id: `${kind}-visible-length`,
         label: 'Länge',
-        getValue: ({ strip, roadLength }) => getStripRenderLength(strip, roadLength ?? 10),
+        getValue: ({ strip, roadLength }) => getStripRenderLength(strip, roadLength ?? DEFAULT_ROAD_LENGTH),
         applyValue: () => ({}),
         min: () => 0.5,
         readOnly: () => true,
-        readOnlyLabel: ({ strip, roadLength }) => `${getStripRenderLength(strip, roadLength ?? 10)}m`,
+        readOnlyLabel: ({ strip, roadLength }) => `${getStripRenderLength(strip, roadLength ?? DEFAULT_ROAD_LENGTH)}m`,
       },
     ],
   }

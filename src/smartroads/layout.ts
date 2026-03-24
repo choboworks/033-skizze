@@ -10,7 +10,7 @@ export interface StripPlacement {
   isLaneOverlay: boolean
   overlaySide?: CyclepathSide
   safetyBufferWidth?: number
-  facingSide?: CyclepathSide
+  facingSide?: FacingSide
 }
 
 export function isLaneOverlayCyclepath(strip: Strip): boolean {
@@ -44,36 +44,24 @@ export function getImmediateOuterStrip(baseStrips: Strip[], side: CyclepathSide)
   return adjacentIndex >= 0 && adjacentIndex < baseStrips.length ? baseStrips[adjacentIndex] : null
 }
 
-export function getFacingRoadwaySide(strip: Strip, baseStrips: Strip[]): CyclepathSide | undefined {
+export type FacingSide = 'left' | 'right' | 'both' | undefined
+
+export function getFacingRoadwaySide(strip: Strip, baseStrips: Strip[]): FacingSide {
   const stripIndex = baseStrips.findIndex((candidate) => candidate.id === strip.id)
   if (stripIndex === -1) return undefined
 
-  let leftDistance = 0
-  let rightDistance = 0
   let leftFound = false
   let rightFound = false
 
   for (let i = stripIndex - 1; i >= 0; i--) {
-    const candidate = baseStrips[i]
-    if (isRoadwayAnchorStrip(candidate)) {
-      leftFound = true
-      break
-    }
-    leftDistance += getSafeStripWidth(candidate)
+    if (isRoadwayAnchorStrip(baseStrips[i])) { leftFound = true; break }
   }
 
   for (let i = stripIndex + 1; i < baseStrips.length; i++) {
-    const candidate = baseStrips[i]
-    if (isRoadwayAnchorStrip(candidate)) {
-      rightFound = true
-      break
-    }
-    rightDistance += getSafeStripWidth(candidate)
+    if (isRoadwayAnchorStrip(baseStrips[i])) { rightFound = true; break }
   }
 
-  if (leftFound && rightFound) {
-    return leftDistance <= rightDistance ? 'left' : 'right'
-  }
+  if (leftFound && rightFound) return 'both'
   if (leftFound) return 'left'
   if (rightFound) return 'right'
   return undefined

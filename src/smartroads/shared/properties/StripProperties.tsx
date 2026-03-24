@@ -196,7 +196,7 @@ export function StripProperties({ strip, roadLength, onUpdate }: Props) {
         </div>
       ))}
 
-      {strip.type !== 'curb' && (
+      {strip.type === 'cyclepath' && (
         <ElementColorField
           value={resolvedColor}
           hasCustomColor={Boolean(strip.color)}

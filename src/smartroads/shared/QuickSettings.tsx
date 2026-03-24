@@ -3,6 +3,7 @@ import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import { AlertTriangle, ChevronDown, Minus, Plus } from 'lucide-react'
 import type { Marking, RoadClass, Strip } from '../types'
 import { totalWidth } from '../constants'
+import { getStripDefaultWidth } from '../rules/stripRules'
 import { getCrossSectionStrips, getLaneOverlayOccupancyWidth, getLaneOverlaySafetyBufferWidth, isLaneOverlayCyclepath } from '../layout'
 import { getCyclepathOverlaySide } from '../stripProps'
 import { validateStraightRoadState } from '../validation'
@@ -165,7 +166,7 @@ export function QuickSettings({ strips, markings, length, roadClass, onUpdateStr
       id: crypto.randomUUID(),
       type: 'lane',
       variant: 'standard',
-      width: laneTemplate?.type === 'lane' ? laneTemplate.width : 3.25,
+      width: laneTemplate?.type === 'lane' ? laneTemplate.width : getStripDefaultWidth('lane', 'standard', roadClass),
       direction: laneTemplate?.type === 'lane' ? laneTemplate.direction : 'down',
       ...(laneTemplate?.type === 'lane' && laneTemplate.props ? { props: laneTemplate.props } : {}),
     }

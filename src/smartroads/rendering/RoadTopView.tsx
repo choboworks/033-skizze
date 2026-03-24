@@ -1,8 +1,8 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
-import { Stage, Layer, Group, Rect, Line as KonvaLine, Text } from 'react-konva'
+import { Stage, Layer, Group, Rect, Line as KonvaLine } from 'react-konva'
 import { StripRenderer } from './StripRenderer'
 import { MarkingRenderer } from './MarkingRenderer'
-import { totalWidth, STRIP_LABELS, STRIP_MIN_WIDTHS, FIXED_WIDTH_STRIPS, orderMarkingsByLayer } from '../constants'
+import { totalWidth, STRIP_MIN_WIDTHS, FIXED_WIDTH_STRIPS, orderMarkingsByLayer } from '../constants'
 import type { Strip, Marking } from '../types'
 import type Konva from 'konva'
 import {
@@ -87,6 +87,27 @@ export function RoadTopView({
     () => orderMarkingsByLayer(markings, layerOrder),
     [markings, layerOrder]
   )
+
+  // Strip render order: follow layerOrder so the layer manager controls z-order.
+  // Falls back to array order for strips not in layerOrder.
+  const stripRenderOrder = useMemo(() => {
+    if (!layerOrder || layerOrder.length === 0) return strips.map((_, i) => i)
+    const stripIdToIndex = new Map(strips.map((s, i) => [s.id, i]))
+    const ordered: number[] = []
+    const seen = new Set<number>()
+    for (const id of layerOrder) {
+      const idx = stripIdToIndex.get(id)
+      if (idx != null && !seen.has(idx)) {
+        ordered.push(idx)
+        seen.add(idx)
+      }
+    }
+    // Append any strips not in layerOrder
+    for (let i = 0; i < strips.length; i++) {
+      if (!seen.has(i)) ordered.push(i)
+    }
+    return ordered
+  }, [strips, layerOrder])
 
   // Snap positions: cumulative strip edges (boundaries between strips)
   const stripEdges: number[] = []
@@ -195,8 +216,9 @@ export function RoadTopView({
 
       if (neighbor) {
         const neighborMinW = STRIP_MIN_WIDTHS[neighbor.type] || 0.10
-        const neighborNewWidth = Math.max(neighborMinW, neighborStartWidth - deltaMeter * (side === 'left' ? -1 : 1))
-        if (neighborNewWidth < neighborMinW) return
+        const rawNeighborWidth = neighborStartWidth - deltaMeter * (side === 'left' ? -1 : 1)
+        if (rawNeighborWidth < neighborMinW) return
+        const neighborNewWidth = rawNeighborWidth
 
         onStripsUpdate?.(strips.map((s, i) => {
           if (i === stripIndex) return { ...s, width: Math.round(newWidth * 100) / 100 }
@@ -233,6 +255,7 @@ export function RoadTopView({
   const [isDraggingOverlay, setIsDraggingOverlay] = useState(false)
 
   const startDragReorder = useCallback((stripId: string, stripIndex: number, e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (selectedStripId !== stripId) return
     e.cancelBubble = true
     dragRef.current = { stripId, originalIndex: stripIndex }
     dragTargetRef.current = null
@@ -305,7 +328,7 @@ export function RoadTopView({
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
-  }, [strips, offsetX, displayScale, onStripsUpdate])
+  }, [strips, offsetX, displayScale, onStripsUpdate, selectedStripId])
 
   const startOverlaySideDrag = useCallback((strip: Strip, e: Konva.KonvaEventObject<MouseEvent>) => {
     e.cancelBubble = true
@@ -411,7 +434,7 @@ export function RoadTopView({
       const stageBox = stage.container().getBoundingClientRect()
       const currentY = me.clientY - stageBox.top
       const deltaY = currentY - lengthDragStart.current.startY
-      const newLength = Math.max(2, lengthDragStart.current.startLength + deltaY / displayScale)
+      const newLength = Math.max(5, lengthDragStart.current.startLength + deltaY / displayScale)
       onLengthChange?.(Math.round(newLength * 10) / 10)
     }
 
@@ -547,7 +570,8 @@ export function RoadTopView({
   }, [isDragging])
 
   // --- Build strip visuals ---
-  const stripNodes: React.ReactNode[] = []
+  // Render visuals in layerOrder (z-order), interaction nodes in array order.
+  const stripVisualsByIndex: Map<number, React.ReactNode[]> = new Map()
   const interactionNodes: React.ReactNode[] = []
 
   for (let i = 0; i < strips.length; i++) {
@@ -564,8 +588,11 @@ export function RoadTopView({
     const isOverlay = placement.isLaneOverlay
     const isFixed = FIXED_WIDTH_STRIPS.includes(strip.type) || isOverlay
 
+    // Collect visuals per strip index for z-ordering later
+    const visuals: React.ReactNode[] = []
+
     // Strip visual
-    stripNodes.push(
+    visuals.push(
       <StripRenderer
         key={strip.id}
         strip={strip}
@@ -580,41 +607,11 @@ export function RoadTopView({
     )
     // Dim original during drag
     if (isBeingDragged) {
-      stripNodes.push(
+      visuals.push(
         <Rect
           key={`dim-${strip.id}`}
           x={sx} y={stripY} width={stripRenderWidth} height={stripHeight}
           fill="rgba(0,0,0,0.35)" listening={false}
-        />
-      )
-    }
-
-    // Label (centered in strip)
-    const cyclepathMetrics = strip.type === 'cyclepath'
-      ? getCyclepathRenderMetrics({
-          strip,
-          renderWidth: stripRenderWidth,
-          overlaySide: placement.overlaySide,
-          safetyBufferWidth: placement.safetyBufferWidth,
-        })
-      : null
-    const labelWidth = cyclepathMetrics ? cyclepathMetrics.paintedWidth : stripRenderWidth
-    const labelX = cyclepathMetrics ? sx + cyclepathMetrics.paintedX : sx
-
-    if (labelWidth * displayScale > 25) {
-      const maxChars = Math.floor(labelWidth * displayScale / 5.5)
-      const label = (STRIP_LABELS[strip.type] || '').slice(0, maxChars)
-      stripNodes.push(
-        <Text
-          key={`l-${strip.id}`}
-          x={labelX} y={stripY + 0.15}
-          width={labelWidth}
-          align="center"
-          text={label}
-          fontSize={0.45}
-          fontFamily="Inter, sans-serif"
-          fill="#ffffff" opacity={0.4}
-          listening={false}
         />
       )
     }
@@ -751,15 +748,20 @@ export function RoadTopView({
 
         if (boundaryDash) {
           const boundaryPhase = cyclepathProps.boundaryLinePhase ?? 0
-          createPhaseHandle(
-            `cyclepath-boundary-primary-${strip.id}`,
-            sx + renderMetrics.laneBoundaryX,
-            'boundaryLinePhase',
-            boundaryPhase,
-            boundaryDash,
-            boundaryStroke,
-          )
-          if (strip.variant === 'protected') {
+          const bSides = cyclepathProps.boundaryLineSides ?? 'both'
+          const showLeftHandle = !strip.variant || strip.variant !== 'protected' || bSides === 'both' || bSides === 'left'
+          const showRightHandle = strip.variant === 'protected' && (bSides === 'both' || bSides === 'right')
+          if (showLeftHandle) {
+            createPhaseHandle(
+              `cyclepath-boundary-primary-${strip.id}`,
+              sx + renderMetrics.laneBoundaryX,
+              'boundaryLinePhase',
+              boundaryPhase,
+              boundaryDash,
+              boundaryStroke,
+            )
+          }
+          if (showRightHandle) {
             createPhaseHandle(
               `cyclepath-boundary-right-${strip.id}`,
               sx + (renderMetrics.rightBoundaryX ?? stripRenderWidth),
@@ -863,17 +865,26 @@ export function RoadTopView({
       const edgeX = sx + stripRenderWidth
       const nextPlacement = placementById.get(crossSectionStrips[baseIndex + 1].id)
       if (nextPlacement) {
-      stripNodes.push(
-        <KonvaLine
-          key={`edge-${i}`}
-          points={[edgeX, Math.min(stripY, nextPlacement.y), edgeX, Math.max(stripY + stripHeight, nextPlacement.y + nextPlacement.length)]}
-          stroke="rgba(128,128,128,0.2)"
-          strokeWidth={0.3 / displayScale}
-          listening={false}
-        />
-      )
+        visuals.push(
+          <KonvaLine
+            key={`edge-${i}`}
+            points={[edgeX, Math.min(stripY, nextPlacement.y), edgeX, Math.max(stripY + stripHeight, nextPlacement.y + nextPlacement.length)]}
+            stroke="rgba(128,128,128,0.2)"
+            strokeWidth={0.3 / displayScale}
+            listening={false}
+          />
+        )
       }
     }
+
+    stripVisualsByIndex.set(i, visuals)
+  }
+
+  // Assemble strip visuals in layer order (z-order from layerOrder)
+  const stripNodes: React.ReactNode[] = []
+  for (const idx of stripRenderOrder) {
+    const nodes = stripVisualsByIndex.get(idx)
+    if (nodes) stripNodes.push(...nodes)
   }
 
   // Ghost strip — iOS-style lifted element

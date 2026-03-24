@@ -10,6 +10,7 @@ export interface StripDimensionRule {
 
 export interface StripVariantDimensionRule {
   width: number
+  editorMinWidth?: number
   source: RuleSourceRef[]
   note?: string
 }
@@ -63,11 +64,11 @@ export const STRIP_BASE_RULES: Record<StripType, StripDimensionRule> = {
   },
   sidewalk: {
     defaultWidth: 2.50,
-    editorMinWidth: 1.50,
+    editorMinWidth: 2.20,
     source: [
       reference('2.5 Gehwege und Fussverkehr (RASt 06 / EFA 2002)', 'Gehweg (Regelfall)'),
     ],
-    note: 'The editor minimum is a guardrail, not a full accessibility validation.',
+    note: 'editorMinWidth 2,20 m nach VwV-StVO (Mindestbreite bei Gehwegparken).',
   },
   cyclepath: {
     defaultWidth: 2.25,
@@ -135,11 +136,20 @@ export const STRIP_BASE_RULES: Record<StripType, StripDimensionRule> = {
     ],
     note: 'This base default matches the rural shoulder/bankett case. Autobahn shoulders require profile-specific overrides later.',
   },
+  path: {
+    defaultWidth: 3.00,
+    editorMinWidth: 1.50,
+    source: [
+      editorDefault('Feldweg / Wirtschaftsweg default; no dedicated normative source in the root rulebook.'),
+    ],
+    note: 'Typical rural path width. Variants override for narrower forest paths or wider gravel roads.',
+  },
 }
 
 export const STRIP_VARIANT_RULES: Partial<Record<StripVariant, StripVariantDimensionRule>> = {
   'lane-marked': {
     width: 2.25,
+    editorMinWidth: 1.85,
     source: [
       reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Radfahrstreifen'),
     ],
@@ -147,9 +157,11 @@ export const STRIP_VARIANT_RULES: Partial<Record<StripVariant, StripVariantDimen
   },
   advisory: {
     width: 1.50,
+    editorMinWidth: 1.25,
     source: [
       reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Schutzstreifen'),
     ],
+    note: 'editorMinWidth 1,25 m erlaubt beengte Bestandssituationen unterhalb der Regelbreite.',
   },
   protected: {
     width: 2.00,
@@ -159,17 +171,19 @@ export const STRIP_VARIANT_RULES: Partial<Record<StripVariant, StripVariantDimen
   },
   'shared-bike': {
     width: 2.50,
+    editorMinWidth: 2.50,
     source: [
-      reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Gemeins. Geh-/Radweg (ausserorts)'),
+      reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Gemeins. Geh-/Radweg (innerorts mind. 2,50 m)'),
     ],
-    note: 'Used as the current shared-path default until a dedicated bidirectional/shared-facility model exists.',
+    note: 'Innerorts mind. 2,50 m (RASt 06); ausserorts 2,00-2,50 m je Verkehrsaufkommen.',
   },
   'separated-bike': {
     width: 4.50,
+    editorMinWidth: 3.90,
     source: [
       reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Getrennter Geh-/Radweg innerorts (2,00 m Radteil + 2,50 m Gehteil)'),
     ],
-    note: 'Modeled as total facility width in the straight editor.',
+    note: 'Modeled as total facility width in the straight editor. editorMinWidth 3,90 m = schmaler Rad- und Gehteil.',
   },
   parallel: {
     width: 2.00,
@@ -219,6 +233,25 @@ export const STRIP_VARIANT_RULES: Partial<Record<StripVariant, StripVariantDimen
     width: 3.00,
     source: [
       editorDefault('Flush tram-way width is currently a project default.'),
+    ],
+  },
+  dirt: {
+    width: 3.00,
+    source: [
+      editorDefault('Feldweg / Erdweg typical width.'),
+    ],
+  },
+  gravel: {
+    width: 3.50,
+    source: [
+      editorDefault('Schotterweg / Wirtschaftsweg typical width.'),
+    ],
+  },
+  forest: {
+    width: 2.50,
+    editorMinWidth: 1.50,
+    source: [
+      editorDefault('Waldweg / schmaler Forstweg typical width.'),
     ],
   },
 }
@@ -306,7 +339,10 @@ export function getStripDefaultWidth(
   return STRIP_VARIANT_RULES[variant]?.width ?? STRIP_BASE_RULES[type].defaultWidth
 }
 
-export function getStripEditorMinWidth(type: StripType): number {
+export function getStripEditorMinWidth(type: StripType, variant?: StripVariant): number {
+  if (variant && STRIP_VARIANT_RULES[variant]?.editorMinWidth != null) {
+    return STRIP_VARIANT_RULES[variant]!.editorMinWidth!
+  }
   return STRIP_BASE_RULES[type].editorMinWidth
 }
 

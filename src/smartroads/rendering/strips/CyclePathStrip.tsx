@@ -10,7 +10,7 @@ import {
   resolveCyclepathCenterLineMode,
   resolveCyclepathCenterStrokeWidth,
 } from '../../stripProps'
-import type { CyclepathLineMode, CyclepathPathType, CyclepathSide, Strip, StripVariant } from '../../types'
+import type { CyclepathBoundaryLineSides, CyclepathLineMode, CyclepathPathType, CyclepathSide, Strip, StripVariant } from '../../types'
 
 interface Props {
   x: number
@@ -24,6 +24,7 @@ interface Props {
   pathType?: CyclepathPathType
   centerLineMode?: CyclepathLineMode
   boundaryLineMode?: CyclepathLineMode
+  boundaryLineSides?: CyclepathBoundaryLineSides
   centerLineStrokeWidth?: number
   boundaryLineStrokeWidth?: number
   centerLineDashLength?: number
@@ -46,6 +47,7 @@ export function CyclePathStrip({
   pathType = 'one-way',
   centerLineMode,
   boundaryLineMode,
+  boundaryLineSides = 'both',
   centerLineStrokeWidth,
   boundaryLineStrokeWidth,
   centerLineDashLength,
@@ -128,18 +130,20 @@ export function CyclePathStrip({
 
       {showBoundaryLines && (
         <>
-          <Line
-            points={[metrics.laneBoundaryX, 0, metrics.laneBoundaryX, length]}
-            stroke={white}
-            strokeWidth={boundaryStroke}
-            dash={boundaryDash}
-            dashOffset={boundaryDashOffset}
-            lineCap="butt"
-            listening={false}
-          />
-          {isProtected && (
+          {(!isProtected || boundaryLineSides === 'both' || boundaryLineSides === 'left') && (
             <Line
-              points={[metrics.rightBoundaryX ?? width, 0, metrics.rightBoundaryX ?? width, length]}
+              points={[metrics.laneBoundaryX + (isProtected ? boundaryStroke / 2 : 0), 0, metrics.laneBoundaryX + (isProtected ? boundaryStroke / 2 : 0), length]}
+              stroke={white}
+              strokeWidth={boundaryStroke}
+              dash={boundaryDash}
+              dashOffset={boundaryDashOffset}
+              lineCap="butt"
+              listening={false}
+            />
+          )}
+          {isProtected && (boundaryLineSides === 'both' || boundaryLineSides === 'right') && (
+            <Line
+              points={[(metrics.rightBoundaryX ?? width) - boundaryStroke / 2, 0, (metrics.rightBoundaryX ?? width) - boundaryStroke / 2, length]}
               stroke={white}
               strokeWidth={boundaryStroke}
               dash={boundaryDash}

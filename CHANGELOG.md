@@ -2,6 +2,64 @@
 
 ---
 
+## Session 10 – 24.03.2026
+
+**Teilnehmer**: Alex + Claude
+**Fokus**: Code-Review, Bugfixes, Layer-Z-Order, Belagstexturen, Gehweg- und Fahrbahnausbau
+
+### Code-Review & Bugfixes (14 Fixes)
+- **Resize-Guard unerreichbar**: `Math.max`-Clamp machte die Guard-Bedingung in `RoadTopView` dauerhaft `false` — auf raw-Width-Prüfung umgestellt.
+- **Crosswalk-Clipping**: Letzter Zebrastreifen-Streifen ragte über die Strip-Breite hinaus — Clipping ergänzt.
+- **Leitlinien-X falsch bei Overlays**: `generateLaneMarkings` zählte Overlay-Cyclepaths in die X-Position — nutzt jetzt `getCrossSectionStrips()`.
+- **Drag-Guard wiederhergestellt**: `selectedStripId !== stripId`-Check war in Session 8/9 entfernt worden — Regression behoben.
+- **Längen-Drag-Minimum**: Von 2m auf 5m angehoben (konsistent mit QuickSettings).
+- **Umlaute wiederhergestellt**: `STRIP_LABELS`, `VARIANT_LABELS` und `getStripDisplayLabel` nutzten ASCII-Ersatz — echte Umlaute zurück.
+- **Hardcodierter 3.25-Fallback**: `QuickSettings.addLane` nutzt jetzt `getStripDefaultWidth('lane', 'standard', roadClass)`.
+- **Strichbreiten aus Rules**: `markingDefinitions/shared.ts` referenziert jetzt `MARKING_DEFAULTS` statt String-Literale.
+- **Advisory-Minimalbreite**: `editorMinWidth` für `advisory` (1.25m) und `lane-marked` (1.85m) in `stripRules.ts` ergänzt.
+- **Safety-Buffer-Konstante**: `cyclepath.ts` importiert jetzt `DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH` statt `0.75`.
+- **roadLength-Fallback**: `stripDefinitions/shared.ts` nutzt `DEFAULT_ROAD_LENGTH` (30) statt `10`.
+- **short-dash ergänzt**: `'short-dash'` als Centerline-Variant-Option hinzugefügt.
+- **Sidewalk/shared-bike Minima in Rules**: `editorMinWidth` für `separated-bike` (3.90m), `shared-bike` (2.50m) in `stripRules.ts` hinterlegt.
+- **Redundante Normalisierung**: Doppelter `normalizeLayerOrder`-Aufruf in `EditorLayerManager` → `StraightEditor` bereinigt.
+
+### Layer-Z-Order — Editor-Layermanager funktioniert jetzt echt
+- **Strip-Rendering folgt jetzt dem layerOrder**: Strips werden nicht mehr in Array-Reihenfolge gerendert, sondern nach der im Layer-Manager gesetzten Z-Order.
+- **Fahrstreifen immer unten**: `normalizeLayerOrder` partitioniert Strips in Fahrstreifen (lane/bus) und Rest — Fahrstreifen liegen immer auf der niedrigsten Z-Ebene.
+- **AA-Overlap beibehalten**: Anti-Aliasing-Overlap (0.02m) zwischen Fahrstreifen bleibt aktiv, überdeckt aber keine Boundary-Lines mehr.
+
+### Radweg: Begrenzungslinien-Verbesserungen
+- **Boundary-Inset**: Begrenzungslinien für `protected`-Radwege um `boundaryStroke / 2` nach innen versetzt — werden nicht mehr von Nachbar-Strips abgeschnitten.
+- **Begrenzungslinien-Seiten**: Neue Option für baulich getrennte Radwege: `Beide`, `Links`, `Rechts` — im Properties-Panel unter "Begrenzung Seiten".
+- **boundaryLineSides in stripProps**: Neuer Prop wird korrekt aus `getCyclepathStripProps` gelesen und im Rendering/Phase-Handles berücksichtigt.
+
+### Fahrstreifen: Belag-Auswahl
+- **Neuer Prop `surfaceType`** auf `LaneStripProps`: `asphalt` (Default), `concrete`, `cobblestone`, `paving`.
+- **Realistische Texturen**: Asphalt (Körnung), Beton (Dehnungsfugen, Aggregate, Haarrisse), Kopfsteinpflaster (27 elliptische Natursteine mit Highlights/Schatten), Pflaster (Reihenverband mit 8 Farbvarianten).
+- **Properties-Panel**: "Belag"-Auswahl im Fahrstreifen-Properties unter der Geometrie-Section.
+- **Farboption eingeschränkt**: Farb-Picker nur noch bei Radwegen sichtbar.
+
+### Gehwege: Komplettausbau
+- **Editor-Minima korrigiert**: Standard-Gehweg von 1.50m auf 2.20m (VwV-StVO), Gem. Geh-/Radweg von 2.00m auf 2.50m (ERA 2010).
+- **Belag-Auswahl**: 5 Optionen für Standard-Gehwege: Pflaster (Default), Betonplatten, Naturstein, Klinker, Asphalt.
+- **Dedizierte Gehweg-Texturen**: `getSidewalkPattern` (Betonplatten mit 3D-Fugen), `getNaturalStonePattern` (Granit-Mischformat mit Glimmer), `getClinkerPattern` (rote Ziegel im Verband) — jeweils als 32x32 tileable Canvas-Patterns.
+- **facingSide-Logik erweitert**: Neuer Wert `'both'` wenn ein Gehweg zwischen zwei Fahrbahnen liegt — zeigt Kanten beidseitig.
+- **Begrenzungslinien für Gehwege**: Gestrichelt / Durchgezogen / Keine, mit Seiten-Auswahl (Beide/Links/Rechts), Stärke, Strichlänge, Lückenlänge — identische Optionen wie beim baulich getrennten Radweg.
+- **Varianten-Auswahl entfernt**: Nutzer wählt im Elementmenü direkt den Typ (Standard, Gem. Rad, Getr. Rad) — kein redundanter Dropdown im Properties-Panel.
+
+### Neuer Strip-Typ: Wege
+- **`path`-Typ** mit drei Varianten: Erdweg (3.00m), Schotterweg (3.50m), Waldweg (2.50m).
+- **Realistische Texturen**: Warme braune Erde, dichte Schottersteine, dunkler Waldboden mit Laub und Moos.
+- **Komplett verdrahtet**: Types → Rules → Constants → stripProps → state.ts → Patterns → PathStrip-Renderer → StripRenderer → PropertyRegistry → ElementPalette.
+
+### CLAUDE.md überarbeitet
+- Auf echte Umlaute (ä, ö, ü, ß) umgestellt.
+- Neue Sektionen: Dateibeziehungen (SmartRoads-Kern), Rules-System.
+- Konventionen erweitert: Undo/Redo, Dev-Server, Maßeinheiten, Workflow für neue Werte.
+- Donts und Pitfalls ergänzt für `stripProps.ts`, `state.ts`, `constants.ts`, `validation.ts`.
+
+---
+
 ## Session 9 - 23.03.2026
 
 **Teilnehmer**: Alex + Codex

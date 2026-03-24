@@ -10,6 +10,7 @@ import {
   Save,
   Search,
   SeparatorHorizontal,
+  Footprints,
   TreePine,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -37,6 +38,7 @@ const STRIP_SUBCATEGORIES: SubcategoryDef[] = [
   { id: 'parking', label: 'Parken' },
   { id: 'median', label: 'Mittelstr.' },
   { id: 'bus', label: 'Bus' },
+  { id: 'path', label: 'Wege' },
 ]
 
 const STRUCTURAL_SUBCATEGORIES: SubcategoryDef[] = [
@@ -77,6 +79,11 @@ const STRIP_ELEMENTS: Record<string, { variant: StripVariant; label: string; sub
     { variant: 'marking-only', label: 'Markierung', sublabel: 'Mittelstreifen' },
   ],
   bus: [{ variant: 'standard', label: 'Busstreifen' }],
+  path: [
+    { variant: 'dirt', label: 'Erdweg', sublabel: 'Weg' },
+    { variant: 'gravel', label: 'Schotterweg', sublabel: 'Weg' },
+    { variant: 'forest', label: 'Waldweg', sublabel: 'Weg' },
+  ],
 }
 
 const STRUCTURAL_ELEMENTS: Array<{
@@ -165,6 +172,7 @@ const STRIP_ICONS: Record<string, LucideIcon> = {
   parking: ParkingCircle,
   median: Minus,
   bus: Car,
+  path: Footprints,
 }
 
 interface Props {

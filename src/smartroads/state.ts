@@ -1,9 +1,9 @@
 import { createDefaultStraightRoad, normalizeLayerOrder } from './constants'
-import { getBusStripProps, getCurbStripProps, getCyclepathStripProps, getDefaultStripProps, getLaneStripProps, getParkingStripProps } from './stripProps'
+import { getBusStripProps, getCurbStripProps, getCyclepathStripProps, getDefaultStripProps, getLaneStripProps, getParkingStripProps, getSidewalkStripProps } from './stripProps'
 import { getStripDefaultWidth } from './rules/stripRules'
 import type { Marking, MarkingType, MarkingVariant, RoadClass, StraightRoadState, Strip, StripProps, StripType, StripVariant } from './types'
 
-const STRIP_TYPES: StripType[] = ['lane', 'sidewalk', 'cyclepath', 'parking', 'green', 'curb', 'gutter', 'median', 'bus', 'tram', 'shoulder']
+const STRIP_TYPES: StripType[] = ['lane', 'sidewalk', 'cyclepath', 'parking', 'green', 'curb', 'gutter', 'median', 'bus', 'tram', 'shoulder', 'path']
 const MARKING_TYPES: MarkingType[] = ['centerline', 'laneboundary', 'stopline', 'crosswalk', 'arrow', 'blocked-area', 'yield-line', 'bike-crossing', 'bus-stop', 'speed-limit', 'parking-marking', 'free-line']
 const ROAD_CLASSES: RoadClass[] = ['innerorts', 'ausserorts', 'autobahn']
 
@@ -19,6 +19,7 @@ const STRIP_VARIANTS_BY_TYPE: Record<StripType, StripVariant[]> = {
   bus: ['standard'],
   tram: ['dedicated', 'flush'],
   shoulder: ['standard'],
+  path: ['dirt', 'gravel', 'forest'],
 }
 
 const MARKING_VARIANTS_BY_TYPE: Partial<Record<MarkingType, MarkingVariant[]>> = {
@@ -43,6 +44,7 @@ const DEFAULT_VARIANT_BY_TYPE: Record<StripType, StripVariant> = {
   bus: 'standard',
   tram: 'dedicated',
   shoulder: 'standard',
+  path: 'dirt',
 }
 
 const DEFAULT_MARKING_VARIANT_BY_TYPE: Partial<Record<MarkingType, MarkingVariant>> = {
@@ -152,6 +154,8 @@ function sanitizeStrip(raw: unknown, roadLength: number, roadClass: RoadClass): 
       return { ...strip, props: getParkingStripProps(candidate) }
     case 'curb':
       return { ...strip, props: getCurbStripProps(candidate) }
+    case 'sidewalk':
+      return { ...strip, props: getSidewalkStripProps(candidate) }
     default:
       return { ...strip, props: getDefaultStripProps(type) }
   }

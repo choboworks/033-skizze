@@ -1,4 +1,5 @@
 import type { CyclepathSide, Strip } from '../types'
+import type { FacingSide } from '../layout'
 import { LaneStrip } from './strips/LaneStrip'
 import { SidewalkStrip } from './strips/SidewalkStrip'
 import { CyclePathStrip } from './strips/CyclePathStrip'
@@ -6,7 +7,8 @@ import { ParkingStrip } from './strips/ParkingStrip'
 import { GreenStrip } from './strips/GreenStrip'
 import { CurbStrip } from './strips/CurbStrip'
 import { GenericStrip } from './strips/GenericStrip'
-import { getCurbStripProps, getCyclepathStripProps, getParkingStripProps } from '../stripProps'
+import { PathStrip } from './strips/PathStrip'
+import { getCurbStripProps, getCyclepathStripProps, getLaneStripProps, getParkingStripProps, getSidewalkStripProps } from '../stripProps'
 
 // ============================================================
 // StripRenderer – Dispatches to the correct Konva component
@@ -16,7 +18,7 @@ import { getCurbStripProps, getCyclepathStripProps, getParkingStripProps } from 
 // anti-aliasing seams between adjacent Konva Rects.
 // ============================================================
 
-// Anti-aliasing overlap: 2cm — invisible at road scale, eliminates seams
+// Anti-aliasing overlap: 2cm — invisible at road scale, eliminates seams between lanes
 const AA = 0.02
 
 interface Props {
@@ -27,19 +29,34 @@ interface Props {
   renderWidth?: number
   overlaySide?: CyclepathSide
   safetyBufferWidth?: number
-  facingSide?: CyclepathSide
+  facingSide?: FacingSide
 }
 
 export function StripRenderer({ strip, x, y = 0, length, renderWidth, overlaySide, safetyBufferWidth, facingSide }: Props) {
   const baseWidth = Math.max(0.1, Number.isFinite(renderWidth ?? strip.width) ? (renderWidth ?? strip.width) : 0.1)
-  const safeWidth = strip.type === 'cyclepath' ? baseWidth : baseWidth + AA
+  const safeWidth = baseWidth + AA
   const safeLength = Math.max(0.5, Number.isFinite(length) ? length : 0.5)
   switch (strip.type) {
     case 'lane':
     case 'bus':
-      return <LaneStrip x={x} y={y} width={safeWidth} length={safeLength} color={strip.color} />
-    case 'sidewalk':
-      return <SidewalkStrip x={x} y={y} width={safeWidth} length={safeLength} variant={strip.variant} color={strip.color} />
+      return <LaneStrip x={x} y={y} width={safeWidth} length={safeLength} color={strip.color} surfaceType={getLaneStripProps(strip).surfaceType} />
+    case 'sidewalk': {
+      const sidewalkProps = getSidewalkStripProps(strip)
+      return (
+        <SidewalkStrip
+          x={x} y={y} width={safeWidth} length={safeLength}
+          variant={strip.variant} color={strip.color}
+          surfaceType={sidewalkProps.surfaceType}
+          facingSide={facingSide}
+          boundaryLineMode={sidewalkProps.boundaryLineMode}
+          boundaryLineSides={sidewalkProps.boundaryLineSides}
+          boundaryLineStrokeWidth={sidewalkProps.boundaryLineStrokeWidth}
+          boundaryLineDashLength={sidewalkProps.boundaryLineDashLength}
+          boundaryLineGapLength={sidewalkProps.boundaryLineGapLength}
+          boundaryLinePhase={sidewalkProps.boundaryLinePhase}
+        />
+      )
+    }
     case 'cyclepath': {
       const cyclepathProps = getCyclepathStripProps(strip)
       return (
@@ -63,6 +80,7 @@ export function StripRenderer({ strip, x, y = 0, length, renderWidth, overlaySid
           boundaryLineGapLength={cyclepathProps.boundaryLineGapLength}
           centerLinePhase={cyclepathProps.centerLinePhase}
           boundaryLinePhase={cyclepathProps.boundaryLinePhase}
+          boundaryLineSides={cyclepathProps.boundaryLineSides}
         />
       )
     }
@@ -87,6 +105,8 @@ export function StripRenderer({ strip, x, y = 0, length, renderWidth, overlaySid
     }
     case 'gutter':
       return <CurbStrip x={x} y={y} width={safeWidth} length={safeLength} color={strip.color} facingSide={facingSide} />
+    case 'path':
+      return <PathStrip x={x} y={y} width={safeWidth} length={safeLength} variant={strip.variant} color={strip.color} />
     default:
       return <GenericStrip x={x} y={y} width={safeWidth} length={safeLength} type={strip.type} color={strip.color} />
   }

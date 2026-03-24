@@ -23,8 +23,10 @@ export function Crosswalk({ marking, draggable, selected, snapPositions, onDragE
 
   const stripes: React.ReactNode[] = []
   for (let sx = 0; sx < width; sx += stripeW + gap) {
+    const clippedW = Math.min(stripeW, width - sx)
+    if (clippedW <= 0) break
     stripes.push(
-      <Rect key={sx} x={sx} y={0} width={stripeW} height={depth} fill={color} />
+      <Rect key={sx} x={sx} y={0} width={clippedW} height={depth} fill={color} />
     )
   }
 

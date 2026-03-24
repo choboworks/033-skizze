@@ -1,4 +1,5 @@
 import type { MarkingVariant } from '../../../types'
+import { MARKING_DEFAULTS } from '../../../constants'
 import type { MarkingChoiceOption, MarkingPropertySectionDefinition } from './types'
 
 const MARKING_VARIANT_OPTIONS: Partial<Record<string, MarkingChoiceOption[]>> = {
@@ -6,6 +7,7 @@ const MARKING_VARIANT_OPTIONS: Partial<Record<string, MarkingChoiceOption[]>> = 
     { value: 'standard-dash', label: 'Leitlinie I' },
     { value: 'rural-dash', label: 'Leitlinie A' },
     { value: 'autobahn-dash', label: 'Leitlinie AB' },
+    { value: 'short-dash', label: 'Kurzstrich' },
     { value: 'warning-dash', label: 'Warnlinie I' },
     { value: 'rural-warning', label: 'Warnlinie A' },
     { value: 'autobahn-warning', label: 'Warnlinie AB' },
@@ -64,7 +66,7 @@ export function strokeWidthSection(options: MarkingChoiceOption[]): MarkingPrope
         kind: 'choice',
         id: 'strokeWidth',
         label: 'Strichbreite',
-        getValue: ({ marking }) => String(marking.strokeWidth || 0.12),
+        getValue: ({ marking }) => String(marking.strokeWidth || MARKING_DEFAULTS.schmalstrich),
         applyValue: (value) => ({ strokeWidth: parseFloat(value) }),
         options: () => options,
       },
@@ -73,13 +75,13 @@ export function strokeWidthSection(options: MarkingChoiceOption[]): MarkingPrope
 }
 
 export const CENTERLINE_STROKE_WIDTH_OPTIONS: MarkingChoiceOption[] = [
-  { value: '0.12', label: '12cm' },
-  { value: '0.15', label: '15cm' },
+  { value: String(MARKING_DEFAULTS.schmalstrich), label: `${MARKING_DEFAULTS.schmalstrich * 100}cm` },
+  { value: String(MARKING_DEFAULTS.schmalstrichAutobahn), label: `${MARKING_DEFAULTS.schmalstrichAutobahn * 100}cm` },
 ]
 
 export const BOUNDARY_STROKE_WIDTH_OPTIONS: MarkingChoiceOption[] = [
-  { value: '0.12', label: '12cm' },
-  { value: '0.15', label: '15cm' },
-  { value: '0.25', label: '25cm' },
-  { value: '0.30', label: '30cm' },
+  { value: String(MARKING_DEFAULTS.schmalstrich), label: `${MARKING_DEFAULTS.schmalstrich * 100}cm` },
+  { value: String(MARKING_DEFAULTS.schmalstrichAutobahn), label: `${MARKING_DEFAULTS.schmalstrichAutobahn * 100}cm` },
+  { value: String(MARKING_DEFAULTS.breitstrich), label: `${MARKING_DEFAULTS.breitstrich * 100}cm` },
+  { value: String(MARKING_DEFAULTS.breitstrichAutobahn), label: `${MARKING_DEFAULTS.breitstrichAutobahn * 100}cm` },
 ]

@@ -132,13 +132,16 @@ export function EditorLayerManager({
       return
     }
 
+    // displayOrder is normalizedOrder.reverse(), so "above" in the UI
+    // means higher z-order = later in normalizedOrder = splice after target.
+    // "below" in the UI = lower z-order = splice before target.
     if (dropPosition === 'above') {
       nextOrder.splice(targetIdx + 1, 0, dragId)
     } else {
       nextOrder.splice(targetIdx, 0, dragId)
     }
 
-    onReorderLayers(normalizeLayerOrder(nextOrder, strips, markings))
+    onReorderLayers(nextOrder)
     setDragId(null)
     setDropTargetId(null)
     setDropPosition(null)

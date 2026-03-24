@@ -51,6 +51,7 @@ export const STRIP_COLORS: Record<StripType, string> = {
   bus: '#3a3a3a',
   tram: '#555555',
   shoulder: '#999999',
+  path: '#8B7355',
 }
 
 export const DEFAULT_MARKING_COLOR = '#ffffff'
@@ -69,6 +70,12 @@ export function getStripSwatchColor(strip: Pick<Strip, 'type' | 'variant' | 'col
     return STRIP_COLORS.sidewalk
   }
 
+  if (strip.type === 'path') {
+    if (strip.variant === 'gravel') return '#9a9080'
+    if (strip.variant === 'forest') return '#5a4a38'
+    return '#8B7355'
+  }
+
   return STRIP_COLORS[strip.type] || '#666666'
 }
 
@@ -77,13 +84,14 @@ export const STRIP_LABELS: Record<StripType, string> = {
   sidewalk: 'Gehweg',
   cyclepath: 'Radweg',
   parking: 'Parkstreifen',
-  green: 'Gruenstreifen',
+  green: 'Grünstreifen',
   curb: 'Bordstein',
   gutter: 'Rinne',
   median: 'Mittelstreifen',
   bus: 'Busstreifen',
-  tram: 'Gleiskoerper',
+  tram: 'Gleiskörper',
   shoulder: 'Seitenstreifen',
+  path: 'Weg',
 }
 
 export const VARIANT_LABELS: Partial<Record<StripVariant, string>> = {
@@ -96,15 +104,18 @@ export const VARIANT_LABELS: Partial<Record<StripVariant, string>> = {
   advisory: 'Schutzstreifen',
   'shared-bike': 'Gemeinsamer Geh-/Radweg',
   'separated-bike': 'Getrennter Geh-/Radweg',
-  parallel: 'Laengsparken',
-  angled: 'Schraegparken',
+  parallel: 'Längsparken',
+  angled: 'Schrägparken',
   perpendicular: 'Querparken',
   'marking-only': 'Markierung',
-  'green-median': 'Gruenstreifen',
+  'green-median': 'Grünstreifen',
   barrier: 'Leitplanke',
   'tree-strip': 'Baumstreifen',
   dedicated: 'Eigentrasse',
-  flush: 'Buendig',
+  flush: 'Bündig',
+  dirt: 'Erdweg',
+  gravel: 'Schotterweg',
+  forest: 'Waldweg',
 }
 
 export function getStripDisplayLabel(strip: Strip): string {
@@ -139,27 +150,34 @@ export function getStripDisplayLabel(strip: Strip): string {
   }
 
   if (strip.type === 'parking') {
-    if (strip.variant === 'parallel') return 'Laengsparken'
-    if (strip.variant === 'angled') return 'Schraegparken'
+    if (strip.variant === 'parallel') return 'Längsparken'
+    if (strip.variant === 'angled') return 'Schrägparken'
     if (strip.variant === 'perpendicular') return 'Querparken'
     return 'Parkstreifen'
   }
 
   if (strip.type === 'green') {
     if (strip.variant === 'tree-strip') return 'Baumstreifen'
-    return 'Gruenstreifen'
+    return 'Grünstreifen'
   }
 
   if (strip.type === 'median') {
     if (strip.variant === 'marking-only') return 'Mittelstreifen-Markierung'
-    if (strip.variant === 'green-median') return 'Gruenstreifen'
+    if (strip.variant === 'green-median') return 'Grünstreifen'
     if (strip.variant === 'barrier') return 'Leitplanke'
     return 'Mittelstreifen'
   }
 
   if (strip.type === 'tram') {
     if (strip.variant === 'dedicated') return 'Eigentrasse'
-    if (strip.variant === 'flush') return 'Buendiger Gleiskoerper'
+    if (strip.variant === 'flush') return 'Bündiger Gleiskörper'
+  }
+
+  if (strip.type === 'path') {
+    if (strip.variant === 'dirt') return 'Erdweg'
+    if (strip.variant === 'gravel') return 'Schotterweg'
+    if (strip.variant === 'forest') return 'Waldweg'
+    return 'Weg'
   }
 
   return STRIP_LABELS[strip.type] || strip.type
@@ -207,11 +225,12 @@ export function generateLaneMarkings(
   const markings: Marking[] = []
   let x = 0
   const effectiveRoadLength = roadLength ?? DEFAULT_ROAD_LENGTH
+  const baseStrips = getCrossSectionStrips(strips)
 
-  for (let i = 0; i < strips.length - 1; i++) {
-    x += Math.max(0.1, Number.isFinite(strips[i].width) ? strips[i].width : 0.1)
-    const a = strips[i]
-    const b = strips[i + 1]
+  for (let i = 0; i < baseStrips.length - 1; i++) {
+    x += Math.max(0.1, Number.isFinite(baseStrips[i].width) ? baseStrips[i].width : 0.1)
+    const a = baseStrips[i]
+    const b = baseStrips[i + 1]
     if ((a.type === 'lane' || a.type === 'bus') && (b.type === 'lane' || b.type === 'bus')) {
       const startOffset = Math.max(getStripRenderY(a), getStripRenderY(b))
       const lineEnd = Math.min(
@@ -251,6 +270,10 @@ export function normalizeLayerOrder(
   const stripIdSet = new Set(stripIds)
   const markingIdSet = new Set(markingIds)
 
+  // Lanes (lane + bus) always stay at the bottom of the z-order.
+  // Other strips are layered above them; markings always on top.
+  const laneIds = new Set(strips.filter((s) => s.type === 'lane' || s.type === 'bus').map((s) => s.id))
+
   const orderedStrips = proposed.filter((id) => stripIdSet.has(id))
   const orderedMarkings = proposed.filter((id) => markingIdSet.has(id))
 
@@ -262,7 +285,11 @@ export function normalizeLayerOrder(
     if (!orderedMarkings.includes(markingId)) orderedMarkings.push(markingId)
   }
 
-  return [...orderedStrips, ...orderedMarkings]
+  // Partition strips: lanes first (bottom), then everything else
+  const laneOrder = orderedStrips.filter((id) => laneIds.has(id))
+  const nonLaneOrder = orderedStrips.filter((id) => !laneIds.has(id))
+
+  return [...laneOrder, ...nonLaneOrder, ...orderedMarkings]
 }
 
 export function orderMarkingsByLayer(markings: Marking[], layerOrder?: string[]): Marking[] {

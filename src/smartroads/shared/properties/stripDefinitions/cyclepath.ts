@@ -1,6 +1,7 @@
 import { STRIP_MIN_WIDTHS } from '../../../constants'
-import { getProtectedCyclepathRule } from '../../../rules/stripRules'
+import { getProtectedCyclepathRule, getStripEditorMinWidth } from '../../../rules/stripRules'
 import {
+  DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH,
   getCyclepathStripProps,
   getDefaultCyclepathBoundaryDashPattern,
   getDefaultCyclepathCenterDashPattern,
@@ -16,8 +17,9 @@ import { geometrySection } from './shared'
 
 function cyclepathMinWidth(strip: Strip): number {
   if (strip.type !== 'cyclepath') return STRIP_MIN_WIDTHS.cyclepath || 1
-  if (strip.variant === 'lane-marked') return 1.85
-  if (strip.variant === 'advisory') return 1.25
+  if (strip.variant === 'lane-marked' || strip.variant === 'advisory') {
+    return getStripEditorMinWidth('cyclepath', strip.variant)
+  }
   if (strip.variant !== 'protected') return STRIP_MIN_WIDTHS.cyclepath || 1
   const props = getCyclepathStripProps(strip)
   return getProtectedCyclepathRule(props.pathType, props.protectedPlacement).editorMinWidth
@@ -115,7 +117,7 @@ function overlayCyclepathSection(strip: Strip): StripPropertySectionDefinition |
         kind: 'number',
         id: 'cyclepath-safety-buffer-width',
         label: 'Sicherheitsstreifen',
-        getValue: ({ strip }) => getCyclepathStripProps(strip).safetyBufferWidth ?? 0.75,
+        getValue: ({ strip }) => getCyclepathStripProps(strip).safetyBufferWidth ?? DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH,
         applyValue: (value, { strip }) => mergeStripProps(strip, { safetyBufferWidth: value }),
         min: () => 0,
         step: 0.05,
@@ -213,6 +215,20 @@ function cyclepathLineSections(strip: Strip): StripPropertySectionDefinition[] {
         applyValue: (value, { strip }) => mergeStripProps(strip, { boundaryLineMode: value }),
         options: () => lineOptions,
       },
+      ...(boundaryMode !== 'none' && strip.variant === 'protected'
+        ? [{
+            kind: 'choice' as const,
+            id: 'cyclepath-boundary-line-sides',
+            label: 'Begrenzung Seiten',
+            getValue: ({ strip }: StripPropertyContext) => getCyclepathStripProps(strip).boundaryLineSides ?? 'both',
+            applyValue: (value: string, { strip }: StripPropertyContext) => mergeStripProps(strip, { boundaryLineSides: value }),
+            options: () => [
+              { value: 'both', label: 'Beide' },
+              { value: 'left', label: 'Links' },
+              { value: 'right', label: 'Rechts' },
+            ],
+          }]
+        : []),
       ...(boundaryMode !== 'none'
         ? [{
             kind: 'number' as const,

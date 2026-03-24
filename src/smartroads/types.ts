@@ -15,6 +15,7 @@ export type StripType =
   | 'bus'           // Busstreifen
   | 'tram'          // Gleiskörper
   | 'shoulder'      // Seitenstreifen / Bankett
+  | 'path'          // Weg (Feldweg, Schotterweg, Waldweg)
 
 // --- Strip Variants ---
 export type StripVariant =
@@ -43,16 +44,32 @@ export type StripVariant =
   // Tram
   | 'dedicated'       // Eigentrasse
   | 'flush'           // Bündig
+  // Path
+  | 'dirt'            // Erdweg / Feldweg
+  | 'gravel'          // Schotterweg
+  | 'forest'          // Waldweg
 
 // --- Strip (a single cross-section element) ---
+export type LaneSurfaceType = 'asphalt' | 'concrete' | 'cobblestone' | 'paving'
 export interface LaneStripProps {
   startOffset?: number
   endOffset?: number
+  surfaceType?: LaneSurfaceType
 }
-export type SidewalkStripProps = Record<string, never>
+export type SidewalkSurfaceType = 'slabs' | 'paving' | 'natural-stone' | 'clinker' | 'asphalt' | 'gravel-bound'
+export interface SidewalkStripProps {
+  surfaceType?: SidewalkSurfaceType
+  boundaryLineMode?: CyclepathLineMode
+  boundaryLineSides?: CyclepathBoundaryLineSides
+  boundaryLineStrokeWidth?: number
+  boundaryLineDashLength?: number
+  boundaryLineGapLength?: number
+  boundaryLinePhase?: number
+}
 export type CyclepathPathType = 'one-way' | 'two-way'
 export type CyclepathProtectedPlacement = 'single-side' | 'both-sides'
 export type CyclepathLineMode = 'none' | 'dashed' | 'solid'
+export type CyclepathBoundaryLineSides = 'both' | 'left' | 'right'
 export type CyclepathSide = 'left' | 'right'
 export interface CyclepathStripProps {
   pathType?: CyclepathPathType
@@ -61,6 +78,7 @@ export interface CyclepathStripProps {
   safetyBufferWidth?: number
   centerLineMode?: CyclepathLineMode
   boundaryLineMode?: CyclepathLineMode
+  boundaryLineSides?: CyclepathBoundaryLineSides
   centerLineStrokeWidth?: number
   boundaryLineStrokeWidth?: number
   centerLineDashLength?: number
@@ -88,6 +106,7 @@ export interface BusStripProps {
 }
 export type TramStripProps = Record<string, never>
 export type ShoulderStripProps = Record<string, never>
+export type PathStripProps = Record<string, never>
 
 export interface StripPropsByType {
   lane: LaneStripProps
@@ -101,6 +120,7 @@ export interface StripPropsByType {
   bus: BusStripProps
   tram: TramStripProps
   shoulder: ShoulderStripProps
+  path: PathStripProps
 }
 
 export type StripProps = StripPropsByType[StripType]

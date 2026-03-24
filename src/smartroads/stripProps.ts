@@ -1,5 +1,5 @@
 import { MARKING_RULES } from './rules/markingRules'
-import type { BusStripProps, CurbKind, CurbStripProps, CyclepathLineMode, CyclepathPathType, CyclepathProtectedPlacement, CyclepathSide, CyclepathStripProps, LaneStripProps, ParkingStripProps, Strip, StripPropsByType, StripType } from './types'
+import type { BusStripProps, CurbKind, CurbStripProps, CyclepathLineMode, CyclepathPathType, CyclepathProtectedPlacement, CyclepathSide, CyclepathStripProps, LaneStripProps, LaneSurfaceType, ParkingStripProps, SidewalkStripProps, SidewalkSurfaceType, Strip, StripPropsByType, StripType } from './types'
 
 export const DEFAULT_PARKING_BAY_LENGTH = 5.7
 export const DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH = 0.75
@@ -7,7 +7,7 @@ export const DEFAULT_CURB_LOWERED_SECTION_LENGTH = 3.0
 
 const DEFAULT_STRIP_PROPS: { [K in StripType]: StripPropsByType[K] } = {
   lane: { startOffset: 0, endOffset: 0 },
-  sidewalk: {},
+  sidewalk: { surfaceType: 'paving' },
   cyclepath: {
     pathType: 'one-way',
     protectedPlacement: 'single-side',
@@ -26,6 +26,7 @@ const DEFAULT_STRIP_PROPS: { [K in StripType]: StripPropsByType[K] } = {
   bus: { startOffset: 0, endOffset: 0 },
   tram: {},
   shoulder: {},
+  path: {},
 }
 
 export function getDefaultStripProps<T extends StripType>(type: T): StripPropsByType[T] {
@@ -92,15 +93,52 @@ export function mergeStripProps(strip: Strip, patch: Record<string, unknown>): P
   }
 }
 
+const VALID_SURFACE_TYPES: LaneSurfaceType[] = ['asphalt', 'concrete', 'cobblestone', 'paving']
+
+function normalizeSurfaceType(value: unknown): LaneSurfaceType | undefined {
+  if (typeof value === 'string' && VALID_SURFACE_TYPES.includes(value as LaneSurfaceType)) {
+    return value as LaneSurfaceType
+  }
+  return undefined
+}
+
 export function getLaneStripProps(strip: Strip): LaneStripProps {
-  if (strip.type !== 'lane') {
+  if (strip.type !== 'lane' && strip.type !== 'bus') {
     return { startOffset: 0, endOffset: 0 }
   }
 
-  const raw = (strip.props as LaneStripProps | undefined) ?? {}
+  const raw = (strip.props as Record<string, unknown> | undefined) ?? {}
   return {
-    startOffset: clampNonNegative(raw.startOffset, DEFAULT_STRIP_PROPS.lane.startOffset ?? 0),
-    endOffset: clampNonNegative(raw.endOffset, DEFAULT_STRIP_PROPS.lane.endOffset ?? 0),
+    startOffset: clampNonNegative(raw.startOffset, 0),
+    endOffset: clampNonNegative(raw.endOffset, 0),
+    ...(normalizeSurfaceType(raw.surfaceType) ? { surfaceType: normalizeSurfaceType(raw.surfaceType) } : {}),
+  }
+}
+
+const VALID_SIDEWALK_SURFACES: SidewalkSurfaceType[] = ['slabs', 'paving', 'natural-stone', 'clinker', 'asphalt', 'gravel-bound']
+
+function normalizeSidewalkSurface(value: unknown): SidewalkSurfaceType | undefined {
+  if (typeof value === 'string' && VALID_SIDEWALK_SURFACES.includes(value as SidewalkSurfaceType)) {
+    return value as SidewalkSurfaceType
+  }
+  return undefined
+}
+
+export function getSidewalkStripProps(strip: Strip): SidewalkStripProps {
+  if (strip.type !== 'sidewalk') return {}
+  const raw = (strip.props as Record<string, unknown> | undefined) ?? {}
+  const rawBoundaryLineMode = normalizeCyclepathLineMode(raw.boundaryLineMode)
+  const rawBoundaryLineSides = raw.boundaryLineSides
+  return {
+    ...(normalizeSidewalkSurface(raw.surfaceType) ? { surfaceType: normalizeSidewalkSurface(raw.surfaceType) } : {}),
+    ...(rawBoundaryLineMode ? { boundaryLineMode: rawBoundaryLineMode } : {}),
+    ...(rawBoundaryLineSides === 'both' || rawBoundaryLineSides === 'left' || rawBoundaryLineSides === 'right'
+      ? { boundaryLineSides: rawBoundaryLineSides }
+      : {}),
+    ...(isFiniteNumber(raw.boundaryLineStrokeWidth) ? { boundaryLineStrokeWidth: normalizeLineMetric(raw.boundaryLineStrokeWidth, MARKING_RULES.lineWidths.otherRoads.schmalstrich) } : {}),
+    ...(isFiniteNumber(raw.boundaryLineDashLength) ? { boundaryLineDashLength: normalizeLineMetric(raw.boundaryLineDashLength, 1) } : {}),
+    ...(isFiniteNumber(raw.boundaryLineGapLength) ? { boundaryLineGapLength: normalizeLineMetric(raw.boundaryLineGapLength, 1) } : {}),
+    ...(isFiniteNumber(raw.boundaryLinePhase) ? { boundaryLinePhase: raw.boundaryLinePhase } : {}),
   }
 }
 
@@ -205,6 +243,7 @@ export function getCyclepathStripProps(strip: Strip): CyclepathStripProps {
   const rawBoundaryLineGapLength = rawProps.boundaryLineGapLength
   const rawCenterLinePhase = rawProps.centerLinePhase
   const rawBoundaryLinePhase = rawProps.boundaryLinePhase
+  const rawBoundaryLineSides = rawProps.boundaryLineSides
   const rawOverlaySide = rawProps.overlaySide
   const rawSafetyBufferWidth = rawProps.safetyBufferWidth
 
@@ -228,6 +267,9 @@ export function getCyclepathStripProps(strip: Strip): CyclepathStripProps {
     ...(isFiniteNumber(rawBoundaryLineGapLength) ? { boundaryLineGapLength: normalizeLineMetric(rawBoundaryLineGapLength, 1) } : {}),
     ...(isFiniteNumber(rawCenterLinePhase) ? { centerLinePhase: rawCenterLinePhase } : {}),
     ...(isFiniteNumber(rawBoundaryLinePhase) ? { boundaryLinePhase: rawBoundaryLinePhase } : {}),
+    ...(rawBoundaryLineSides === 'both' || rawBoundaryLineSides === 'left' || rawBoundaryLineSides === 'right'
+      ? { boundaryLineSides: rawBoundaryLineSides }
+      : {}),
   }
 }
 
