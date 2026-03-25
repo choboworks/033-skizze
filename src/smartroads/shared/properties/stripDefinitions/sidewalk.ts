@@ -135,7 +135,7 @@ function boundaryLineSection(strip: Strip): StripPropertySectionDefinition[] {
 export function getSidewalkPropertySections(context: StripPropertyContext): StripPropertySectionDefinition[] {
   return [
     sidewalkGeometrySection(),
-    ...(context.strip.variant === 'standard' ? [surfaceSection()] : []),
+    ...(context.strip.variant !== 'separated-bike' ? [surfaceSection()] : []),
     ...boundaryLineSection(context.strip),
   ]
 }

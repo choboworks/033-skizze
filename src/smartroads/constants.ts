@@ -43,7 +43,7 @@ export const STRIP_COLORS: Record<StripType, string> = {
   lane: '#3a3a3a',
   sidewalk: '#c8c0b0',
   cyclepath: '#EF4444',
-  parking: '#555555',
+  parking: '#3a3a3a',
   green: '#7a9a5a',
   curb: '#999999',
   gutter: '#888888',
@@ -66,7 +66,6 @@ export function getStripSwatchColor(strip: Pick<Strip, 'type' | 'variant' | 'col
   }
 
   if (strip.type === 'sidewalk') {
-    if (strip.variant === 'shared-bike') return '#aebebc'
     return STRIP_COLORS.sidewalk
   }
 
@@ -197,7 +196,7 @@ export function createStrip(
     variant,
     width: getStripDefaultWidth(type, variant, roadClass),
     direction,
-    props: getDefaultStripProps(type),
+    props: getDefaultStripProps(type, variant),
   }
 }
 

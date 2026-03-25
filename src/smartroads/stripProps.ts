@@ -1,7 +1,13 @@
 import { MARKING_RULES } from './rules/markingRules'
-import type { BusStripProps, CurbKind, CurbStripProps, CyclepathLineMode, CyclepathPathType, CyclepathProtectedPlacement, CyclepathSide, CyclepathStripProps, LaneStripProps, LaneSurfaceType, ParkingStripProps, SidewalkStripProps, SidewalkSurfaceType, Strip, StripPropsByType, StripType } from './types'
+import type { BusStripProps, CurbKind, CurbStripProps, CyclepathLineMode, CyclepathPathType, CyclepathProtectedPlacement, CyclepathSide, CyclepathStripProps, LaneStripProps, LaneSurfaceType, ParkingStripProps, SidewalkStripProps, SidewalkSurfaceType, Strip, StripPropsByType, StripType, StripVariant } from './types'
 
 export const DEFAULT_PARKING_BAY_LENGTH = 5.7
+export const DEFAULT_PARKING_ANGLE = 45
+export const PARKING_BAY_DEFAULTS: Record<string, number> = {
+  parallel: 5.70,
+  angled: 3.50,
+  perpendicular: 2.50,
+}
 export const DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH = 0.75
 export const DEFAULT_CURB_LOWERED_SECTION_LENGTH = 3.0
 
@@ -29,8 +35,12 @@ const DEFAULT_STRIP_PROPS: { [K in StripType]: StripPropsByType[K] } = {
   path: {},
 }
 
-export function getDefaultStripProps<T extends StripType>(type: T): StripPropsByType[T] {
-  return { ...DEFAULT_STRIP_PROPS[type] }
+export function getDefaultStripProps<T extends StripType>(type: T, variant?: StripVariant): StripPropsByType[T] {
+  const base = { ...DEFAULT_STRIP_PROPS[type] }
+  if (type === 'parking' && variant && PARKING_BAY_DEFAULTS[variant]) {
+    ;(base as ParkingStripProps).bayLength = PARKING_BAY_DEFAULTS[variant]
+  }
+  return base
 }
 
 function isFiniteNumber(value: unknown): value is number {
@@ -112,6 +122,12 @@ export function getLaneStripProps(strip: Strip): LaneStripProps {
     startOffset: clampNonNegative(raw.startOffset, 0),
     endOffset: clampNonNegative(raw.endOffset, 0),
     ...(normalizeSurfaceType(raw.surfaceType) ? { surfaceType: normalizeSurfaceType(raw.surfaceType) } : {}),
+    boundaryLineMode: normalizeCyclepathLineMode(raw.boundaryLineMode) ?? 'none',
+    boundaryLineSides: raw.boundaryLineSides === 'both' || raw.boundaryLineSides === 'left' || raw.boundaryLineSides === 'right' ? raw.boundaryLineSides : 'both',
+    ...(isFiniteNumber(raw.boundaryLineStrokeWidth) ? { boundaryLineStrokeWidth: normalizeLineMetric(raw.boundaryLineStrokeWidth, MARKING_RULES.lineWidths.otherRoads.breitstrich) } : {}),
+    ...(isFiniteNumber(raw.boundaryLineDashLength) ? { boundaryLineDashLength: normalizeLineMetric(raw.boundaryLineDashLength, 0.5) } : {}),
+    ...(isFiniteNumber(raw.boundaryLineGapLength) ? { boundaryLineGapLength: normalizeLineMetric(raw.boundaryLineGapLength, 0.5) } : {}),
+    ...(isFiniteNumber(raw.boundaryLinePhase) ? { boundaryLinePhase: raw.boundaryLinePhase as number } : {}),
   }
 }
 
@@ -187,13 +203,17 @@ export function getStripRenderLength(strip: Strip, roadLength: number): number {
   return safeRoadLength
 }
 
-export function getParkingStripProps(strip: Strip): ParkingStripProps {
+export function getParkingStripProps(strip: Strip): Required<ParkingStripProps> {
+  const defaultBay = PARKING_BAY_DEFAULTS[strip.variant] ?? DEFAULT_PARKING_BAY_LENGTH
   if (strip.type !== 'parking') {
-    return { bayLength: DEFAULT_PARKING_BAY_LENGTH }
+    return { bayLength: defaultBay, bayOffset: 0, angle: DEFAULT_PARKING_ANGLE, markingStyle: 'solid' }
   }
   const raw = (strip.props as ParkingStripProps | undefined) ?? {}
   return {
-    bayLength: normalizePositive(raw.bayLength, DEFAULT_PARKING_BAY_LENGTH),
+    bayLength: normalizePositive(raw.bayLength, defaultBay),
+    bayOffset: isFiniteNumber(raw.bayOffset) ? raw.bayOffset as number : 0,
+    angle: isFiniteNumber(raw.angle) ? Math.max(30, Math.min(75, raw.angle)) : DEFAULT_PARKING_ANGLE,
+    markingStyle: raw.markingStyle === 'solid' || raw.markingStyle === 'dashed' || raw.markingStyle === 'none' ? raw.markingStyle : 'solid',
   }
 }
 

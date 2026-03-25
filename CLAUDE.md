@@ -25,7 +25,7 @@ npm run lint
 
 ---
 
-## Aktueller Stand (Session 9, 23.03.2026)
+## Aktueller Stand (Session 11, 25.03.2026)
 
 ### Fertig / tragfähig
 
@@ -40,10 +40,13 @@ npm run lint
 - **Gerade** ist der aktive und weit fortgeschrittene Editor
 - Strip-basiertes Querschnittsmodell plus freie Markierungen
 - Layer-Manager im Editor ist funktional und steuert die Z-Order wirklich
-- Properties können über Layer-Manager oder Doppelklick im Preview geöffnet werden
+- **Kontextmenü** im Editor: Rechtsklick auf Strips/Markings → Eigenschaften, Duplizieren, Ebene hoch/runter, Löschen
+- Properties können über Layer-Manager, Doppelklick oder Kontextmenü geöffnet werden
 - Strips lassen sich direkt anfassen, ohne Vorselektion
 - `lane` und `bus` haben Längslogik über `startOffset` / `endOffset`
+- Fahrstreifen haben optionale Begrenzungslinien (Strichstärke abhängig von `roadClass`)
 - `roadClass` ist aktiv und wichtig: `innerorts`, `ausserorts`, `autobahn`
+- `median` (Mittelstreifen als Strip) und `bus` (Busspur) sind aus der Palette entfernt, bleiben aber im Type-System für Abwärtskompatibilität
 - Strip-Properties sind modularisiert unter:
   - `src/smartroads/shared/properties/stripDefinitions/`
 - Marking-Properties sind modularisiert unter:
@@ -59,6 +62,24 @@ npm run lint
 - Pro Seite gibt es nur eine fahrbahngebundene Radanlage
 - Radweg-Linien, Farben, Strichstärken, Strichlängen und Lücken sind editierbar
 - Kleine Linienmaße werden im UI in `cm` gezeigt
+
+### Gehwege aktuell
+
+- `sidewalk.standard` deckt alle Gehweg-Varianten ab (inkl. gemeinsamer Geh-/Radweg Z 240)
+- `shared-bike`-Variante wurde entfernt — physisch identisch mit Standard-Gehweg
+- Oberflächentypen: Betonplatten, Pflaster, Asphalt (mit realistischen Canvas-Patterns)
+- Begrenzungslinien mit Modus, Seiten, Strichstärke, Dash-Pattern
+- `separated-bike` (getrennter Geh-/Radweg Z 241) existiert noch als Variante, aber nicht in der Palette
+
+### Parkstreifen aktuell
+
+- Drei Varianten: `parallel` (Längs), `angled` (Schräg), `perpendicular` (Quer)
+- Querparken hat Kammmuster (Querlinien + Randlinie), Längsparken hat einfache Querlinien
+- Schrägparken spiegelt die Linienrichtung je nach Straßenseite (`facingSide`), damit Vorwärtseinparken immer möglich ist
+- Stellplatzmarkierungen sind per Drag verschiebbar (Phase-Shift wie bei Leitlinien)
+- Grip-Indikator erscheint nur bei selektiertem Strip
+- Stellplatzwinkel, Stellplatzlänge/-breite sind editierbar
+- Asphaltfarbe ist identisch mit Fahrstreifen
 
 ### Bauliches aktuell
 
@@ -80,6 +101,7 @@ npm run lint
 ### Offen
 
 - SmartRoads: Kurven, Kreuzungen, Kreisverkehre
+- Getrennter Geh-/Radweg (Z 241): editierbares Rad-/Gehteil-Verhältnis, Oberflächenwahl
 - Mehr bauliche Elemente mit echter Fachlogik
 - Fahrzeuge und weitere Library-Objekte
 - Export / Save-Load fertigziehen
@@ -99,6 +121,10 @@ stripPropertyRegistry.ts → stripDefinitions/*.ts
 RoadTopView.tsx → StripRenderer.tsx → strips/*.tsx
                 → MarkingRenderer.tsx → markings/*.tsx
                 → layout.ts (Querschnittslogik, Overlay-Platzierung)
+
+StraightEditor.tsx → EditorContextMenu.tsx (Rechtsklick-Menü)
+                   → FloatingEditorProperties.tsx
+                   → EditorLayerManager.tsx
 ```
 
 - `rules/` = normative Wahrheit (Strichbreiten, Dashlängen, Streifenmaße)
@@ -218,3 +244,6 @@ Diese Entscheidungen gelten, bis sie bewusst gemeinsam geändert werden.
 - **`state.ts`**: Sanitization beim Laden; neue Strip-/Marking-Felder müssen in `sanitizeStrip()`/`sanitizeMarking()` abgefangen werden
 - **`constants.ts`**: Abgeleitet aus `rules/`; Werte nicht hier manuell setzen, sondern in `rules/*.ts` pflegen
 - **`validation.ts`**: Info/Warning/Error-Level; Validierungen dürfen warnen, aber nicht die Eingabe blockieren
+- **Konva-Rechtsklick**: Konva zählt Linksklick + schnellen Rechtsklick als Doppelklick; `onDblClick` muss `e.evt.button === 0` prüfen
+- **Drag-Handler und Rechtsklick**: Alle Drag-Handler (Reorder, Overlay-Swap) müssen `e.evt.button !== 0` abfangen, sonst startet Rechtsklick einen Drag
+- **SmartRoad Bounding-Box**: `SmartRoadCanvasObject` hat ein unsichtbares Bounds-Rect, damit Konvas `getClientRect()` immer die exakte Straßengröße zurückgibt

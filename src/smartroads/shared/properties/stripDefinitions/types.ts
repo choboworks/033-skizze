@@ -1,8 +1,9 @@
-import type { Strip } from '../../../types'
+import type { RoadClass, Strip } from '../../../types'
 
 export interface StripPropertyContext {
   strip: Strip
   roadLength?: number
+  roadClass?: RoadClass
 }
 
 export interface StripChoiceOption {
@@ -20,7 +21,7 @@ export interface StripNumberFieldDefinition {
   min: (context: StripPropertyContext) => number
   max?: (context: StripPropertyContext) => number | undefined
   step?: number
-  displayUnit?: 'm' | 'cm'
+  displayUnit?: 'm' | 'cm' | '°'
   displayFactor?: number
   readOnly?: (context: StripPropertyContext) => boolean
   readOnlyLabel?: (context: StripPropertyContext) => string

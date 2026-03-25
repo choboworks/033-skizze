@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { GripHorizontal } from 'lucide-react'
-import type { Strip, Marking } from '../types'
+import type { Strip, Marking, RoadClass } from '../types'
 import { STRIP_LABELS } from '../constants'
 import { StripProperties } from './properties/StripProperties'
 import { MarkingProperties } from './properties/MarkingProperties'
@@ -16,12 +16,13 @@ interface Props {
   strip: Strip | null
   marking: Marking | null
   roadLength?: number
+  roadClass?: RoadClass
   onUpdateStrip?: (changes: Partial<Strip>) => void
   onUpdateMarking?: (changes: Partial<Marking>) => void
   onClose: () => void
 }
 
-export function FloatingEditorProperties({ strip, marking, roadLength, onUpdateStrip, onUpdateMarking, onClose }: Props) {
+export function FloatingEditorProperties({ strip, marking, roadLength, roadClass, onUpdateStrip, onUpdateMarking, onClose }: Props) {
   const PANEL_W = 320
 
   const [pos, setPos] = useState(() => ({
@@ -83,7 +84,7 @@ export function FloatingEditorProperties({ strip, marking, roadLength, onUpdateS
       {/* Properties content */}
       <div className="panel-section" style={{ maxHeight: '60vh', overflowY: 'auto', borderBottom: 'none' }}>
         {strip && onUpdateStrip && (
-          <StripProperties strip={strip} roadLength={roadLength} onUpdate={onUpdateStrip} />
+          <StripProperties strip={strip} roadLength={roadLength} roadClass={roadClass} onUpdate={onUpdateStrip} />
         )}
         {marking && onUpdateMarking && (
           <MarkingProperties marking={marking} onUpdate={onUpdateMarking} />

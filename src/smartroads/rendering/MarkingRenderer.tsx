@@ -18,6 +18,7 @@ export interface MarkingCommonProps {
   onDragEnd?: (id: string, x: number, y: number) => void
   onClick?: (id: string) => void
   onDoubleClick?: (id: string) => void
+  onRightClick?: (id: string) => void
   onDragging?: (isDragging: boolean) => void
 }
 

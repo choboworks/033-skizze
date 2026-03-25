@@ -8,6 +8,7 @@ import type Konva from 'konva'
 import {
   DEFAULT_CURB_LOWERED_SECTION_LENGTH,
   getCurbStripProps,
+  getParkingStripProps,
   getCyclepathOverlaySide,
   getCyclepathStripProps,
   getStripRenderLength,
@@ -47,6 +48,7 @@ interface Props {
   onMarkingMove?: (id: string, x: number, y: number) => void
   onMarkingDelete?: (id: string) => void
   onDoubleClickElement?: (kind: 'strip' | 'marking', id: string) => void
+  onContextMenuElement?: (e: React.MouseEvent, kind: 'strip' | 'marking', id: string) => void
   onLengthChange?: (length: number) => void
 }
 
@@ -65,10 +67,12 @@ export function RoadTopView({
   onMarkingMove,
   onMarkingDelete,
   onDoubleClickElement,
+  onContextMenuElement,
   onLengthChange,
 }: Props) {
   const stageRef = useRef<Konva.Stage>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const rightClickTargetRef = useRef<{ kind: 'strip' | 'marking'; id: string } | null>(null)
   const [containerSize, setContainerSize] = useState({ width: 800, height: 500 })
   const [isDraggingMarking, setIsDraggingMarking] = useState(false)
 
@@ -255,6 +259,7 @@ export function RoadTopView({
   const [isDraggingOverlay, setIsDraggingOverlay] = useState(false)
 
   const startDragReorder = useCallback((stripId: string, stripIndex: number, e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (e.evt.button !== 0) return
     if (selectedStripId !== stripId) return
     e.cancelBubble = true
     dragRef.current = { stripId, originalIndex: stripIndex }
@@ -331,6 +336,7 @@ export function RoadTopView({
   }, [strips, offsetX, displayScale, onStripsUpdate, selectedStripId])
 
   const startOverlaySideDrag = useCallback((strip: Strip, e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (e.evt.button !== 0) return
     e.cancelBubble = true
     if (!leftmostRoadwayPlacement || !rightmostRoadwayPlacement) return
 
@@ -451,6 +457,7 @@ export function RoadTopView({
 
   const cyclepathPhaseDragRef = useRef<Record<string, { phase: number; cycle: number }>>({})
   const curbLoweredDragRef = useRef<Record<string, { startOffset: number; maxOffset: number }>>({})
+  const parkingBayDragRef = useRef<Record<string, { startOffset: number; maxOffset: number }>>({})
 
   const wrapDashPhase = useCallback((phase: number, cycle: number) => {
     if (cycle <= 0) return 0
@@ -630,10 +637,16 @@ export function RoadTopView({
         stroke={isSelected ? '#4a9eff' : undefined}
         strokeWidth={isSelected ? 1.5 / displayScale : 0}
         onClick={(e) => { e.cancelBubble = true; onSelectStrip(strip.id); onSelectMarking(null) }}
-        onDblClick={(e) => { e.cancelBubble = true; onDoubleClickElement?.('strip', strip.id) }}
+        onDblClick={(e) => { if (e.evt.button !== 0) return; e.cancelBubble = true; onDoubleClickElement?.('strip', strip.id) }}
         onTap={(e) => { e.cancelBubble = true; onSelectStrip(strip.id); onSelectMarking(null) }}
         onDblTap={(e) => { e.cancelBubble = true; onDoubleClickElement?.('strip', strip.id) }}
         onMouseDown={(e) => {
+          if (e.evt.button === 2) {
+            rightClickTargetRef.current = { kind: 'strip', id: strip.id }
+            onSelectStrip(strip.id)
+            onSelectMarking(null)
+            return
+          }
           onSelectStrip(strip.id)
           onSelectMarking(null)
           if (isOverlay) {
@@ -859,6 +872,90 @@ export function RoadTopView({
       }
     }
 
+    // Parking bay phase drag — transparent overlay, ns-resize cursor
+      if (strip.type === 'parking' && selectedStripId === strip.id) {
+        const parkingProps = getParkingStripProps(strip)
+        if (parkingProps.markingStyle !== 'none' && parkingProps.bayLength > 0.1) {
+          const bayOffset = parkingProps.bayOffset ?? 0
+
+          const gripW = Math.min(1.2, stripRenderWidth * 0.4)
+          const gripH = 0.6
+          const gripX = sx + (stripRenderWidth - gripW) / 2
+          const gripY = stripY + stripHeight / 2 - gripH / 2
+          const gripGap = 0.12
+
+          // Selection tint (non-interactive)
+          interactionNodes.push(
+            <Rect
+              key={`parking-tint-${strip.id}`}
+              x={sx}
+              y={stripY}
+              width={stripRenderWidth}
+              height={stripHeight}
+              fill="rgba(74,158,255,0.08)"
+              listening={false}
+            />
+          )
+
+          // Grip handle — small draggable zone in the center
+          interactionNodes.push(
+            <Group
+              key={`parking-bay-handle-${strip.id}`}
+              x={gripX}
+              y={gripY}
+              draggable
+              onMouseDown={(e) => { e.cancelBubble = true }}
+              onDragStart={() => {
+                parkingBayDragRef.current[strip.id] = {
+                  startOffset: bayOffset,
+                  maxOffset: parkingProps.bayLength,
+                }
+              }}
+              onDragMove={(e) => {
+                const node = e.target
+                const current = parkingBayDragRef.current[strip.id]
+                if (!current) return
+
+                const dragY = node.y() - gripY
+                const nextOffset = current.startOffset + dragY
+                node.x(gripX)
+                node.y(gripY)
+
+                onStripsUpdate?.(strips.map((candidate) => (
+                  candidate.id === strip.id
+                    ? {
+                        ...candidate,
+                        ...mergeStripProps(candidate, {
+                          bayOffset: Math.round(nextOffset * 100) / 100,
+                        }),
+                      }
+                    : candidate
+                )))
+              }}
+              onDragEnd={(e) => {
+                const node = e.target
+                node.x(gripX)
+                node.y(gripY)
+                delete parkingBayDragRef.current[strip.id]
+              }}
+            >
+              {/* Hit area for grip */}
+              <Rect
+                width={gripW}
+                height={gripH}
+                fill="rgba(74,158,255,0.15)"
+                cornerRadius={0.06}
+                cursor="ns-resize"
+              />
+              {/* Grip lines */}
+              <KonvaLine points={[gripW * 0.2, gripH / 2 - gripGap, gripW * 0.8, gripH / 2 - gripGap]} stroke="rgba(74,158,255,0.7)" strokeWidth={0.04} lineCap="round" listening={false} />
+              <KonvaLine points={[gripW * 0.2, gripH / 2, gripW * 0.8, gripH / 2]} stroke="rgba(74,158,255,0.7)" strokeWidth={0.04} lineCap="round" listening={false} />
+              <KonvaLine points={[gripW * 0.2, gripH / 2 + gripGap, gripW * 0.8, gripH / 2 + gripGap]} stroke="rgba(74,158,255,0.7)" strokeWidth={0.04} lineCap="round" listening={false} />
+            </Group>
+          )
+        }
+      }
+
     // Subtle edge line between strips of different types
     const baseIndex = crossSectionStrips.findIndex((candidate) => candidate.id === strip.id)
     if (!isOverlay && baseIndex >= 0 && baseIndex < crossSectionStrips.length - 1 && strip.type !== crossSectionStrips[baseIndex + 1].type) {
@@ -1014,6 +1111,14 @@ export function RoadTopView({
       ref={containerRef}
       className="w-full h-full rounded-lg"
       style={{ background: '#f5f5f5', border: '1px solid var(--border)' }}
+      onContextMenu={(e) => {
+        e.preventDefault()
+        const target = rightClickTargetRef.current
+        rightClickTargetRef.current = null
+        if (target && onContextMenuElement) {
+          onContextMenuElement(e, target.kind, target.id)
+        }
+      }}
     >
       <Stage ref={stageRef} width={containerSize.width} height={containerSize.height}>
         {/* Background — click to deselect */}
@@ -1079,6 +1184,11 @@ export function RoadTopView({
                 onDragEnd={onMarkingMove}
                 onClick={(id) => { onSelectMarking(id); onSelectStrip(null) }}
                 onDoubleClick={(id) => onDoubleClickElement?.('marking', id)}
+                onRightClick={(id) => {
+                  rightClickTargetRef.current = { kind: 'marking', id }
+                  onSelectMarking(id)
+                  onSelectStrip(null)
+                }}
                 onDragging={setIsDraggingMarking}
               />
             )

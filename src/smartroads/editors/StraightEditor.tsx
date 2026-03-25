@@ -5,6 +5,7 @@ import { QuickSettings } from '../shared/QuickSettings'
 import { STRAIGHT_PRESETS } from '../shared/PresetList'
 import { EditorLayerManager } from '../shared/EditorLayerManager'
 import { FloatingEditorProperties } from '../shared/FloatingEditorProperties'
+import { EditorContextMenu } from '../shared/EditorContextMenu'
 import { RoadTopView } from '../rendering/RoadTopView'
 import { createDefaultStraightRoad, createStrip, totalWidth, ROAD_CLASS_CONFIG, generateLaneMarkings, normalizeLayerOrder } from '../constants'
 import { isLaneOverlayCyclepath } from '../layout'
@@ -57,6 +58,11 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
 
   // Floating properties panel
   const [propertiesOpen, setPropertiesOpen] = useState(false)
+
+  // Context menu
+  const [contextMenu, setContextMenu] = useState<{
+    x: number; y: number; kind: 'strip' | 'marking'; id: string
+  } | null>(null)
 
   const rebuildMarkingsForStrips = useCallback((nextStrips: Strip[], prevMarkings: Marking[], nextRoadClass: RoadClass = roadClass, nextLength: number = length) => {
     const config = ROAD_CLASS_CONFIG[nextRoadClass]
@@ -200,6 +206,50 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
     setMarkings(prev => prev.map(m => m.id === id ? { ...m, ...changes } : m))
   }, [])
 
+  // --- Context menu ---
+  const handleContextMenu = useCallback((e: React.MouseEvent, kind: 'strip' | 'marking', id: string) => {
+    if (kind === 'strip') { setSelectedStripId(id); setSelectedMarkingId(null) }
+    else { setSelectedMarkingId(id); setSelectedStripId(null) }
+    setContextMenu({ x: e.clientX, y: e.clientY, kind, id })
+  }, [])
+
+  const closeContextMenu = useCallback(() => setContextMenu(null), [])
+
+  const handleDuplicateStrip = useCallback((id: string) => {
+    setStrips((prev) => {
+      const idx = prev.findIndex((s) => s.id === id)
+      if (idx === -1) return prev
+      const clone = { ...prev[idx], id: crypto.randomUUID(), props: { ...(prev[idx].props ?? {}) } }
+      const updated = [...prev]
+      updated.splice(idx + 1, 0, clone)
+      const constrained = applyCyclepathGeometryConstraints(updated)
+      setMarkings((current) => {
+        const nextMarkings = rebuildMarkingsForStrips(constrained, current)
+        setLayerOrder(buildStripAnchoredLayerOrder(constrained, nextMarkings))
+        return nextMarkings
+      })
+      return constrained
+    })
+  }, [buildStripAnchoredLayerOrder, rebuildMarkingsForStrips])
+
+  const handleMoveLayerUp = useCallback((id: string) => {
+    const normalized = normalizeLayerOrder(layerOrder, strips, markings)
+    const idx = normalized.indexOf(id)
+    if (idx === -1 || idx >= normalized.length - 1) return
+    const next = [...normalized]
+    ;[next[idx], next[idx + 1]] = [next[idx + 1], next[idx]]
+    setLayerOrder(next)
+  }, [layerOrder, strips, markings])
+
+  const handleMoveLayerDown = useCallback((id: string) => {
+    const normalized = normalizeLayerOrder(layerOrder, strips, markings)
+    const idx = normalized.indexOf(id)
+    if (idx <= 0) return
+    const next = [...normalized]
+    ;[next[idx], next[idx - 1]] = [next[idx - 1], next[idx]]
+    setLayerOrder(next)
+  }, [layerOrder, strips, markings])
+
   // --- Open properties (gear icon or double-click) ---
   const handleOpenProperties = useCallback((_kind: 'strip' | 'marking', id: string) => {
     if (_kind === 'strip') { setSelectedStripId(id); setSelectedMarkingId(null) }
@@ -320,6 +370,7 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
           onMarkingMove={handleMarkingMove}
           onMarkingDelete={handleDeleteMarking}
           onDoubleClickElement={handleOpenProperties}
+          onContextMenuElement={handleContextMenu}
           onLengthChange={handleLengthChange}
         />
         </div>
@@ -331,9 +382,30 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
           strip={selectedStrip}
           marking={selectedMarking}
           roadLength={length}
+          roadClass={roadClass}
           onUpdateStrip={selectedStripId ? (changes) => handleUpdateStrip(selectedStripId, changes) : undefined}
           onUpdateMarking={selectedMarkingId ? (changes) => handleUpdateMarking(selectedMarkingId, changes) : undefined}
           onClose={() => setPropertiesOpen(false)}
+        />
+      )}
+
+      {/* Context menu */}
+      {contextMenu && (
+        <EditorContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          targetKind={contextMenu.kind}
+          onClose={closeContextMenu}
+          onProperties={() => {
+            handleOpenProperties(contextMenu.kind, contextMenu.id)
+          }}
+          onDelete={() => {
+            if (contextMenu.kind === 'strip') handleDeleteStrip(contextMenu.id)
+            else handleDeleteMarking(contextMenu.id)
+          }}
+          onDuplicate={contextMenu.kind === 'strip' ? () => handleDuplicateStrip(contextMenu.id) : undefined}
+          onMoveUp={contextMenu.kind === 'strip' ? () => handleMoveLayerUp(contextMenu.id) : undefined}
+          onMoveDown={contextMenu.kind === 'strip' ? () => handleMoveLayerDown(contextMenu.id) : undefined}
         />
       )}
     </div>

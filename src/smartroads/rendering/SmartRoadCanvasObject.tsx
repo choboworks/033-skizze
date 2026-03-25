@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useRef, useCallback } from 'react'
-import { Group } from 'react-konva'
+import { Group, Rect } from 'react-konva'
 import { StripRenderer } from './StripRenderer'
 import { MarkingRenderer } from './MarkingRenderer'
 import type { StraightRoadState } from '../types'
@@ -8,7 +8,7 @@ import { metersToPixels, pixelsToMeters } from '@/utils/scale'
 import { shapeRefs } from '@/components/Canvas/shapeRefs'
 import { useAppStore } from '@/store'
 import type Konva from 'konva'
-import { orderMarkingsByLayer } from '../constants'
+import { orderMarkingsByLayer, totalWidth } from '../constants'
 import { getStripPlacements } from '../layout'
 import { normalizeStraightRoadState } from '../state'
 
@@ -136,6 +136,8 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
       onDragEnd={handleDragEnd}
       onTransformEnd={handleTransformEnd}
     >
+      {/* Bounds rect — forces Konva's getClientRect() to match exact road dimensions */}
+      <Rect x={0} y={0} width={totalWidth(state.strips)} height={state.length} listening={false} />
       {stripNodes}
       {orderedMarkings.map((m) => (
         <MarkingRenderer key={m.id} marking={m} roadLength={state.length} />

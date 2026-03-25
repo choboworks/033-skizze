@@ -38,8 +38,22 @@ export function StripRenderer({ strip, x, y = 0, length, renderWidth, overlaySid
   const safeLength = Math.max(0.5, Number.isFinite(length) ? length : 0.5)
   switch (strip.type) {
     case 'lane':
-    case 'bus':
-      return <LaneStrip x={x} y={y} width={safeWidth} length={safeLength} color={strip.color} surfaceType={getLaneStripProps(strip).surfaceType} />
+    case 'bus': {
+      const laneProps = getLaneStripProps(strip)
+      return (
+        <LaneStrip
+          x={x} y={y} width={safeWidth} length={safeLength}
+          color={strip.color}
+          surfaceType={laneProps.surfaceType}
+          boundaryLineMode={laneProps.boundaryLineMode}
+          boundaryLineSides={laneProps.boundaryLineSides}
+          boundaryLineStrokeWidth={laneProps.boundaryLineStrokeWidth}
+          boundaryLineDashLength={laneProps.boundaryLineDashLength}
+          boundaryLineGapLength={laneProps.boundaryLineGapLength}
+          boundaryLinePhase={laneProps.boundaryLinePhase}
+        />
+      )
+    }
     case 'sidewalk': {
       const sidewalkProps = getSidewalkStripProps(strip)
       return (
@@ -84,8 +98,21 @@ export function StripRenderer({ strip, x, y = 0, length, renderWidth, overlaySid
         />
       )
     }
-    case 'parking':
-      return <ParkingStrip x={x} y={y} width={safeWidth} length={safeLength} bayLength={getParkingStripProps(strip).bayLength} color={strip.color} />
+    case 'parking': {
+      const parkingProps = getParkingStripProps(strip)
+      return (
+        <ParkingStrip
+          x={x} y={y} width={safeWidth} length={safeLength}
+          variant={strip.variant}
+          bayLength={parkingProps.bayLength}
+          bayOffset={parkingProps.bayOffset}
+          angle={parkingProps.angle}
+          markingStyle={parkingProps.markingStyle}
+          facingSide={facingSide}
+          color={strip.color}
+        />
+      )
+    }
     case 'green':
       return <GreenStrip x={x} y={y} width={safeWidth} length={safeLength} color={strip.color} />
     case 'curb': {

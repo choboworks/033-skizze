@@ -301,120 +301,109 @@ export function getConcretePattern(): HTMLCanvasElement {
 export function getSidewalkPattern(): HTMLCanvasElement {
   if (!_sidewalkStandard) {
     // Deutsche Gehwegplatten (30x30 / 40x40 cm) – Draufsicht
-    // 32x32 tile = 2x2 slabs (each 16x16), clear grout grid, per-slab color variation,
-    // fine aggregate texture, occasional weathering/stains, tileable.
-    _sidewalkStandard = createPattern(32, 32, (ctx) => {
+    // 64x64 tile = 2x2 large slabs (each 32x32), strong grout, per-slab color variation,
+    // concrete surface texture, tileable. Rendered at scale ~0.009 for visible plate size.
+    _sidewalkStandard = createPattern(64, 64, (ctx) => {
       // Deterministic PRNG
       let seed = 47
       const rand = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return (seed >> 16) / 32768 }
 
-      // --- Grout base (fills the 1px gap grid) ---
-      ctx.fillStyle = '#9e9688'
-      ctx.fillRect(0, 0, 32, 32)
+      // --- Dark grout base ---
+      ctx.fillStyle = '#8a8078'
+      ctx.fillRect(0, 0, 64, 64)
 
-      // --- Four individual slabs (16x16 minus grout) ---
-      // Each slab gets its own base color from a warm-grey palette
-      const slabBaseColors = ['#ccc4b6', '#c8c0b0', '#d0c8ba', '#c4bcac']
+      // --- Four slabs with noticeable color variation ---
+      const slabColors = ['#c6bfb2', '#bab2a4', '#ccc5b8', '#b5ada0']
       const slabs = [
-        { x: 0, y: 0 },   // top-left
-        { x: 16, y: 0 },  // top-right
-        { x: 0, y: 16 },  // bottom-left
-        { x: 16, y: 16 }, // bottom-right
+        { x: 0, y: 0 },
+        { x: 32, y: 0 },
+        { x: 0, y: 32 },
+        { x: 32, y: 32 },
       ]
-      const slabW = 15  // 16 minus 1px grout on right/bottom edge
-      const slabH = 15
+      const sw = 30  // 32 minus 2px grout gap
+      const sh = 30
 
       for (let si = 0; si < slabs.length; si++) {
         const sx = slabs[si].x
         const sy = slabs[si].y
-        const baseColor = slabBaseColors[si]
 
-        // --- Slab base fill ---
+        // --- Slab base ---
         ctx.globalAlpha = 1
-        ctx.fillStyle = baseColor
-        ctx.fillRect(sx, sy, slabW, slabH)
+        ctx.fillStyle = slabColors[si]
+        ctx.fillRect(sx, sy, sw, sh)
 
-        // --- Subtle overall tint shift (some slabs slightly yellowed/cooled) ---
-        ctx.globalAlpha = 0.05
-        const tintIdx = si % 3
-        ctx.fillStyle = tintIdx === 0 ? '#d8d0b0' : tintIdx === 1 ? '#b8b4b0' : '#d0c8a8'
-        ctx.fillRect(sx, sy, slabW, slabH)
+        // --- Subtle warm/cool tint per slab ---
+        ctx.globalAlpha = 0.07
+        ctx.fillStyle = si % 2 === 0 ? '#d8d0b8' : '#b0aaa4'
+        ctx.fillRect(sx, sy, sw, sh)
 
-        // --- Fine aggregate texture: random speckle across the slab ---
-        // Mix of slightly lighter and darker 1px dots to simulate exposed aggregate
-        for (let i = 0; i < 18; i++) {
-          const px = sx + Math.floor(rand() * slabW)
-          const py = sy + Math.floor(rand() * slabH)
-          const bright = rand() > 0.5
-          ctx.globalAlpha = bright ? 0.08 : 0.1
-          ctx.fillStyle = bright ? '#ddd8cc' : '#a49a8c'
+        // --- Concrete surface noise (speckle) ---
+        for (let i = 0; i < 55; i++) {
+          const px = sx + Math.floor(rand() * sw)
+          const py = sy + Math.floor(rand() * sh)
+          ctx.globalAlpha = rand() > 0.5 ? 0.08 : 0.12
+          ctx.fillStyle = rand() > 0.5 ? '#d8d2c8' : '#9a9488'
           ctx.fillRect(px, py, 1, 1)
         }
 
-        // --- Tiny pores (2-3 per slab, very small dark dots) ---
-        for (let i = 0; i < 3; i++) {
-          const px = sx + 2 + Math.floor(rand() * (slabW - 4))
-          const py = sy + 2 + Math.floor(rand() * (slabH - 4))
-          ctx.globalAlpha = 0.09
-          ctx.fillStyle = '#7a7268'
-          ctx.beginPath()
-          ctx.arc(px + 0.5, py + 0.5, 0.4, 0, Math.PI * 2)
-          ctx.fill()
+        // --- Micro pores ---
+        for (let i = 0; i < 5; i++) {
+          const px = sx + 3 + Math.floor(rand() * (sw - 6))
+          const py = sy + 3 + Math.floor(rand() * (sh - 6))
+          ctx.globalAlpha = 0.12
+          ctx.fillStyle = '#6a6258'
+          ctx.fillRect(px, py, 1, 1)
         }
 
-        // --- Occasional weathering stain on ~half the slabs ---
-        if (rand() > 0.45) {
-          const stainX = sx + 2 + Math.floor(rand() * (slabW - 6))
-          const stainY = sy + 2 + Math.floor(rand() * (slabH - 6))
-          const stainW = 2 + Math.floor(rand() * 3)
-          const stainH = 2 + Math.floor(rand() * 2)
-          ctx.globalAlpha = 0.045
-          ctx.fillStyle = rand() > 0.5 ? '#706050' : '#8a8070'
-          ctx.fillRect(stainX, stainY, stainW, stainH)
+        // --- Weathering stain on some slabs ---
+        if (rand() > 0.5) {
+          ctx.globalAlpha = 0.05
+          ctx.fillStyle = '#706050'
+          ctx.fillRect(
+            sx + 3 + Math.floor(rand() * (sw - 8)),
+            sy + 3 + Math.floor(rand() * (sh - 8)),
+            3 + Math.floor(rand() * 5),
+            3 + Math.floor(rand() * 4),
+          )
         }
+
+        // --- Slab edge bevel: light top/left, dark bottom/right ---
+        ctx.globalAlpha = 0.14
+        ctx.strokeStyle = '#ddd8d0'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(sx, sy + sh)
+        ctx.lineTo(sx, sy)
+        ctx.lineTo(sx + sw, sy)
+        ctx.stroke()
+
+        ctx.globalAlpha = 0.18
+        ctx.strokeStyle = '#7a7268'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(sx + sw, sy)
+        ctx.lineTo(sx + sw, sy + sh)
+        ctx.lineTo(sx, sy + sh)
+        ctx.stroke()
       }
 
-      // --- Grout lines (the defining visual feature) ---
-      // Horizontal grout line at y=15..15 (between row 0 and row 1 slabs)
-      ctx.globalAlpha = 0.45
-      ctx.strokeStyle = '#8a8278'
-      ctx.lineWidth = 1.2
-      // Horizontal joint
-      ctx.beginPath()
-      ctx.moveTo(0, 15.5)
-      ctx.lineTo(32, 15.5)
-      ctx.stroke()
-      // Vertical joint
-      ctx.beginPath()
-      ctx.moveTo(15.5, 0)
-      ctx.lineTo(15.5, 32)
-      ctx.stroke()
+      // --- Grout lines (strong, 2px gap) ---
+      ctx.globalAlpha = 0.65
+      ctx.fillStyle = '#6e665c'
+      ctx.fillRect(0, 30, 64, 2)   // horizontal grout
+      ctx.fillRect(30, 0, 2, 64)   // vertical grout
 
-      // --- Grout shadow (darker line right next to the main grout, bottom/right side) ---
-      ctx.globalAlpha = 0.18
-      ctx.strokeStyle = '#6a6258'
-      ctx.lineWidth = 0.5
-      ctx.beginPath()
-      ctx.moveTo(0, 16.2)
-      ctx.lineTo(32, 16.2)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(16.2, 0)
-      ctx.lineTo(16.2, 32)
-      ctx.stroke()
+      // --- Grout shadow (bottom/right) ---
+      ctx.globalAlpha = 0.3
+      ctx.fillStyle = '#5a5248'
+      ctx.fillRect(0, 31.5, 64, 0.7)
+      ctx.fillRect(31.5, 0, 0.7, 64)
 
-      // --- Grout highlight (lighter line on top/left side of grout = light catching edge) ---
-      ctx.globalAlpha = 0.1
-      ctx.strokeStyle = '#d0c8bc'
-      ctx.lineWidth = 0.4
-      ctx.beginPath()
-      ctx.moveTo(0, 14.8)
-      ctx.lineTo(32, 14.8)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(14.8, 0)
-      ctx.lineTo(14.8, 32)
-      ctx.stroke()
+      // --- Grout highlight (top/left) ---
+      ctx.globalAlpha = 0.12
+      ctx.fillStyle = '#c8c0b4'
+      ctx.fillRect(0, 30, 64, 0.5)
+      ctx.fillRect(30, 0, 0.5, 64)
 
       ctx.globalAlpha = 1
     })

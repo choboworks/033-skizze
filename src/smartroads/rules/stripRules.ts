@@ -171,11 +171,11 @@ export const STRIP_VARIANT_RULES: Partial<Record<StripVariant, StripVariantDimen
   },
   'shared-bike': {
     width: 2.50,
-    editorMinWidth: 2.50,
+    editorMinWidth: 2.00,
     source: [
       reference('2.4 Radverkehrsanlagen (ERA 2010 / E Klima 2022)', 'Gemeins. Geh-/Radweg (innerorts mind. 2,50 m)'),
     ],
-    note: 'Innerorts mind. 2,50 m (RASt 06); ausserorts 2,00-2,50 m je Verkehrsaufkommen.',
+    note: 'Innerorts mind. 2,50 m (RASt 06); ausserorts mind. 2,00 m (VwV-StVO). Default bleibt 2,50 m.',
   },
   'separated-bike': {
     width: 4.50,

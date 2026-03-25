@@ -15,10 +15,11 @@ interface Props {
   onDragEnd?: (id: string, x: number, y: number) => void
   onClick?: (id: string) => void
   onDoubleClick?: (id: string) => void
+  onRightClick?: (id: string) => void
   onDragging?: (isDragging: boolean) => void
 }
 
-export function CenterLine({ marking, roadLength, draggable, selected, snapPositions, peerPhases, onDragEnd, onClick, onDoubleClick, onDragging }: Props) {
+export function CenterLine({ marking, roadLength, draggable, selected, snapPositions, peerPhases, onDragEnd, onClick, onDoubleClick, onRightClick, onDragging }: Props) {
   const offsetY = marking.offsetY ?? 0
   const effectiveLength = marking.length ?? roadLength
   const dash = getCenterlineDashPattern(marking.variant)
@@ -104,6 +105,7 @@ export function CenterLine({ marking, roadLength, draggable, selected, snapPosit
         onDragging?.(false)
         onDragEnd?.(marking.id, e.target.x(), phaseRef.current)
       }}
+      onMouseDown={(e) => { if (e.evt.button === 2) { e.cancelBubble = true; onRightClick?.(marking.id) } }}
       onClick={(e) => { e.cancelBubble = true; onClick?.(marking.id) }}
       onDblClick={(e) => { e.cancelBubble = true; onDoubleClick?.(marking.id) }}
       onTap={(e) => { e.cancelBubble = true; onClick?.(marking.id) }}

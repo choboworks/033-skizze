@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import { Minus, Plus } from 'lucide-react'
-import type { Strip } from '../../types'
+import type { RoadClass, Strip } from '../../types'
 import { getStripDisplayLabel, getStripSwatchColor } from '../../constants'
 import {
   getStripPropertySections,
@@ -30,7 +30,7 @@ function NumberStepper({
   min: number
   max?: number
   step?: number
-  displayUnit?: 'm' | 'cm'
+  displayUnit?: 'm' | 'cm' | '°'
   displayFactor?: number
 }) {
   const [editing, setEditing] = useState(false)
@@ -92,6 +92,7 @@ function NumberStepper({
 interface Props {
   strip: Strip
   roadLength?: number
+  roadClass?: RoadClass
   onUpdate: (changes: Partial<Strip>) => void
 }
 
@@ -174,9 +175,9 @@ function renderField(
   return renderChoiceField(field, strip, roadLength, onUpdate)
 }
 
-export function StripProperties({ strip, roadLength, onUpdate }: Props) {
+export function StripProperties({ strip, roadLength, roadClass, onUpdate }: Props) {
   const label = getStripDisplayLabel(strip)
-  const sections = getStripPropertySections({ strip, roadLength })
+  const sections = getStripPropertySections({ strip, roadLength, roadClass })
   const resolvedColor = getStripSwatchColor(strip)
 
   return (
@@ -196,7 +197,7 @@ export function StripProperties({ strip, roadLength, onUpdate }: Props) {
         </div>
       ))}
 
-      {strip.type === 'cyclepath' && (
+      {(strip.type === 'cyclepath' || strip.type === 'parking') && (
         <ElementColorField
           value={resolvedColor}
           hasCustomColor={Boolean(strip.color)}

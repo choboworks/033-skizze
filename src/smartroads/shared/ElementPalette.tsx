@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
   ArrowUp,
-  Car,
   FolderOpen,
   Minus,
   ParkingCircle,
@@ -36,8 +35,6 @@ const STRIP_SUBCATEGORIES: SubcategoryDef[] = [
   { id: 'cyclepath', label: 'Radweg' },
   { id: 'sidewalk', label: 'Gehweg' },
   { id: 'parking', label: 'Parken' },
-  { id: 'median', label: 'Mittelstr.' },
-  { id: 'bus', label: 'Bus' },
   { id: 'path', label: 'Wege' },
 ]
 
@@ -68,17 +65,12 @@ const STRIP_ELEMENTS: Record<string, { variant: StripVariant; label: string; sub
   ],
   sidewalk: [
     { variant: 'standard', label: 'Standard', sublabel: 'Gehweg' },
-    { variant: 'shared-bike', label: 'Gem. Geh-/Radweg', sublabel: 'Gehweg' },
   ],
   parking: [
     { variant: 'parallel', label: 'Längs', sublabel: 'Parkstreifen' },
     { variant: 'angled', label: 'Schräg', sublabel: 'Parkstreifen' },
     { variant: 'perpendicular', label: 'Quer', sublabel: 'Parkstreifen' },
   ],
-  median: [
-    { variant: 'marking-only', label: 'Markierung', sublabel: 'Mittelstreifen' },
-  ],
-  bus: [{ variant: 'standard', label: 'Busstreifen' }],
   path: [
     { variant: 'dirt', label: 'Erdweg', sublabel: 'Weg' },
     { variant: 'gravel', label: 'Schotterweg', sublabel: 'Weg' },
@@ -170,8 +162,6 @@ const STRIP_ICONS: Record<string, LucideIcon> = {
   cyclepath: Route,
   sidewalk: Route,
   parking: ParkingCircle,
-  median: Minus,
-  bus: Car,
   path: Footprints,
 }
 

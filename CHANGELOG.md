@@ -2,6 +2,57 @@
 
 ---
 
+## Session 11 – 25.03.2026
+
+**Teilnehmer**: Alex + Claude
+**Fokus**: Parkstreifen, Gehweg-Bereinigung, Kontextmenü, Fahrstreifen-Begrenzungslinien, Palette-Aufräumen
+
+### Parkstreifen: Komplettimplementierung
+- **Drei Varianten**: Längsparken (`parallel`, 2.00m), Schrägparken (`angled`, 4.50m, 45°), Querparken (`perpendicular`, 5.00m).
+- **Kammmuster für Querparken**: Querlinien + vertikale Randlinie — visuell klar unterscheidbar vom Längsparken.
+- **Schrägparken spiegelt nach Straßenseite**: Diagonallinien werden je nach `facingSide` gespiegelt, damit Vorwärtseinparken immer zur Fahrtrichtung passt.
+- **Phase-Drag für Stellplatzmarkierungen**: Stellplätze per Grip-Handle verschiebbar (wie bei Leitlinien). Phase-Wrap mit Modulo, kein Clamp auf positive Werte.
+- **Grip-Indikator**: Drei dezente horizontale Linien in der Mitte des Strips — nur sichtbar bei selektiertem Strip.
+- **Doppelklick auf Properties weiterhin möglich**: Drag-Overlay blockiert nur Drag, nicht Klick/Doppelklick.
+- **Markierungsfarbe**: Rein weiß (`#ffffff`) ohne Opacity-Abschwächung, konsistent mit anderen Linien.
+- **Asphaltfarbe**: Identisch mit Fahrstreifen (`STRIP_COLORS.lane`).
+- **Normwerte in Rules**: `bayLength`, `bayWidth`, `angle`, `editorMinWidth` pro Variante in `stripRules.ts`.
+
+### Gehweg-Bereinigung
+- **`shared-bike`-Variante entfernt**: Gemeinsamer Geh-/Radweg (Z 240) ist physisch identisch mit Standard-Gehweg — alle Optionen (Belag, Begrenzungslinien, Breite) bereits im Standard verfügbar.
+- **Nur aus Palette entfernt**: Typ bleibt im Type-System für Abwärtskompatibilität; bestehende Straßen crashen nicht.
+- **Betonplatten vergrößert**: Pattern von 32×32 auf 64×64 Canvas (Scale 0.009 statt 0.018) — deutlich realistischere Plattenoptik.
+
+### Kontextmenü für SmartRoad-Editor
+- **Neue Komponente**: `EditorContextMenu.tsx` — visuell identisch mit dem Haupt-App-Kontextmenü.
+- **Strip-Menü**: Eigenschaften, Duplizieren, Nach oben/unten (Ebene), Löschen.
+- **Marking-Menü**: Eigenschaften, Löschen.
+- **Rechtsklick-Erkennung**: `rightClickTargetRef` in `RoadTopView` speichert das Ziel bei `onMouseDown` mit `button === 2`, wird beim DOM-`contextmenu`-Event ausgelesen.
+- **Drag-Handler abgesichert**: `startDragReorder` und `startOverlaySideDrag` prüfen jetzt `e.evt.button !== 0` — Rechtsklick startet keinen Drag mehr.
+- **Konva-DblClick-Bug behoben**: `onDblClick` prüft `e.evt.button === 0` — Linksklick + schneller Rechtsklick öffnet nicht mehr fälschlich das Properties-Panel.
+- **z-index 10003**: Über FloatingEditorProperties (10002) und Dialog (10001).
+
+### Fahrstreifen: Begrenzungslinien
+- **Optionale Außenlinie**: Fahrstreifen können jetzt mit einer äußeren Begrenzungslinie versehen werden.
+- **Übliche Optionen**: Modus (Keine/Gestrichelt/Durchgezogen), Seiten (Beide/Links/Rechts), Strichstärke, Dash-Pattern.
+- **RoadClass-abhängige Default-Strichstärke**: Innerorts 12cm (Schmalstrich), Außerorts/Autobahn 25cm (Breitstrich).
+
+### Palette aufgeräumt
+- **Mittelstreifen (Strip)** und **Busspur** aus der Palette entfernt.
+- Typen bleiben im Code für Abwärtskompatibilität.
+- Leitplanke und begrünter Mittelstreifen weiterhin unter „Bauliches" verfügbar.
+
+### SmartRoad Bounding-Box auf Hauptcanvas
+- **Bounds-Rect eingefügt**: `SmartRoadCanvasObject` rendert jetzt ein unsichtbares Rect mit exakten `totalWidth × length` Dimensionen als erstes Kind — erzwingt korrekte Bounding-Box unabhängig von Strip-Offsets.
+
+### CLAUDE.md aktualisiert
+- Session-Stand auf 11 (25.03.2026).
+- Neue Abschnitte: Gehwege, Parkstreifen.
+- Kontextmenü, Begrenzungslinien, entfernte Palette-Einträge dokumentiert.
+- Pitfalls: Konva-Rechtsklick, Drag-Guards, Bounds-Rect.
+
+---
+
 ## Session 10 – 24.03.2026
 
 **Teilnehmer**: Alex + Claude

@@ -28,7 +28,7 @@ interface Props {
 }
 
 const SURFACE_CONFIG: Record<SidewalkSurfaceType, { fill: string; pattern: () => HTMLCanvasElement; scale: number }> = {
-  slabs: { fill: '#c8c0b0', pattern: getSidewalkPattern, scale: 0.018 },
+  slabs: { fill: '#c8c0b0', pattern: getSidewalkPattern, scale: 0.009 },
   paving: { fill: '#3a3a3a', pattern: getPavingPattern, scale: 0.015 },
   'natural-stone': { fill: '#a09888', pattern: getNaturalStonePattern, scale: 0.016 },
   clinker: { fill: '#8a6050', pattern: getClinkerPattern, scale: 0.015 },
@@ -119,14 +119,6 @@ export function SidewalkStrip({
           perfectDrawEnabled={false}
           listening={false}
         />
-      )}
-
-      {/* Shared bike overlay */}
-      {variant === 'shared-bike' && (
-        <>
-          <Rect width={width} height={length} fill="#7aa0aa" opacity={0.12} listening={false} />
-          <Rect x={width * 0.15} width={width * 0.70} height={length} fill="#b8d8d0" opacity={0.10} listening={false} />
-        </>
       )}
 
       {/* Separated bike zone */}

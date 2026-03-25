@@ -55,6 +55,12 @@ export interface LaneStripProps {
   startOffset?: number
   endOffset?: number
   surfaceType?: LaneSurfaceType
+  boundaryLineMode?: CyclepathLineMode
+  boundaryLineSides?: CyclepathBoundaryLineSides
+  boundaryLineStrokeWidth?: number
+  boundaryLineDashLength?: number
+  boundaryLineGapLength?: number
+  boundaryLinePhase?: number
 }
 export type SidewalkSurfaceType = 'slabs' | 'paving' | 'natural-stone' | 'clinker' | 'asphalt' | 'gravel-bound'
 export interface SidewalkStripProps {
@@ -88,8 +94,12 @@ export interface CyclepathStripProps {
   centerLinePhase?: number
   boundaryLinePhase?: number
 }
+export type ParkingMarkingStyle = 'solid' | 'dashed' | 'none'
 export interface ParkingStripProps {
   bayLength?: number
+  bayOffset?: number
+  angle?: number
+  markingStyle?: ParkingMarkingStyle
 }
 export type GreenStripProps = Record<string, never>
 export type CurbKind = 'standard' | 'lowered' | 'driveway'
