@@ -8,7 +8,7 @@ const createDefaultDocument = (): DocumentMeta => ({
   id: crypto.randomUUID(),
   name: 'Verkehrsunfallskizze',
   caseNumber: '',
-  date: new Date().toISOString().split('T')[0],
+  date: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })(),
   officer: '',
   department: '',
   departmentAddress: '',
@@ -261,16 +261,16 @@ export const useAppStore = create<AppState>()(
       // Debounce: batch rapid set() calls into one undo entry.
       // flush() is exposed so useUndoRedo can force-save before undo.
       handleSet: (internalHandleSet) => {
-        return (pastState, replace, currentState, deltaState) => {
+        return (pastState) => {
           if (_undoDebounce.firstPastState === null) {
             _undoDebounce.firstPastState = pastState
           }
           if (_undoDebounce.timeout) clearTimeout(_undoDebounce.timeout)
 
-          // Save a flush function that captures latest args
+          // Save a flush function that captures the first past state
           const savedFirst = _undoDebounce.firstPastState
           _undoDebounce.flush = () => {
-            internalHandleSet(savedFirst as Parameters<typeof internalHandleSet>[0], replace, currentState, deltaState)
+            internalHandleSet(savedFirst as Parameters<typeof internalHandleSet>[0])
             _undoDebounce.firstPastState = null
             _undoDebounce.timeout = null
             _undoDebounce.flush = null

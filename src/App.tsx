@@ -86,9 +86,9 @@ export default function App() {
       targetId = roadEditor.roadId
     }
 
-    // Recalculate scale and center the affected road
+    // Recalculate scale; only center NEW roads — existing ones keep their position
     store.recalculateScale()
-    if (targetId) {
+    if (targetId && roadEditor?.roadId === '__new__') {
       const finalScale = useAppStore.getState().scale.currentScale
       const pgW = pixelsToMeters(PAGE_WIDTH_PX, finalScale)
       const pgH = pixelsToMeters(PAGE_HEIGHT_PX, finalScale)

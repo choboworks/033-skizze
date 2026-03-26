@@ -130,13 +130,15 @@ function sanitizeStrip(raw: unknown, roadLength: number, roadClass: RoadClass): 
     ? Math.min(raw.height, roadLength)
     : undefined
 
+  const sanitizedColor = type !== 'curb' ? sanitizeColor(raw.color) : undefined
+
   const strip: Strip = {
     id: sanitizeId(raw.id, `${type}-strip`),
     type,
     variant,
     width,
     ...(height != null ? { height } : {}),
-    ...(type !== 'curb' && sanitizeColor(raw.color) ? { color: sanitizeColor(raw.color) } : {}),
+    ...(sanitizedColor ? { color: sanitizedColor } : {}),
     ...(raw.direction === 'up' || raw.direction === 'down' ? { direction: raw.direction } : {}),
   }
 
@@ -167,6 +169,9 @@ function sanitizeMarking(raw: unknown, roadLength: number): Marking | null {
   const type = sanitizeMarkingType(raw.type)
   if (!type) return null
 
+  const dashPattern = sanitizeDashPattern(raw.dashPattern)
+  const markingColor = sanitizeColor(raw.color)
+
   const marking: Marking = {
     id: sanitizeId(raw.id, `${type}-marking`),
     type,
@@ -178,8 +183,8 @@ function sanitizeMarking(raw: unknown, roadLength: number): Marking | null {
     ...(typeof raw.offsetY === 'number' && Number.isFinite(raw.offsetY) ? { offsetY: Math.max(0, raw.offsetY) } : {}),
     ...(typeof raw.rotation === 'number' && Number.isFinite(raw.rotation) ? { rotation: raw.rotation } : {}),
     ...(typeof raw.strokeWidth === 'number' && Number.isFinite(raw.strokeWidth) ? { strokeWidth: Math.max(0.01, raw.strokeWidth) } : {}),
-    ...(sanitizeDashPattern(raw.dashPattern) ? { dashPattern: sanitizeDashPattern(raw.dashPattern) } : {}),
-    ...(sanitizeColor(raw.color) ? { color: sanitizeColor(raw.color) } : {}),
+    ...(dashPattern ? { dashPattern } : {}),
+    ...(markingColor ? { color: markingColor } : {}),
   }
 
   return marking

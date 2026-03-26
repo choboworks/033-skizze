@@ -57,9 +57,10 @@ export function CyclePathStrip({
   centerLinePhase,
   boundaryLinePhase,
 }: Props) {
-  const isProtected = variant === 'protected'
-  const boundaryMode = resolveCyclepathBoundaryLineMode(variant, boundaryLineMode)
-  const middleMode = resolveCyclepathCenterLineMode(variant, centerLineMode, pathType)
+  const safeVariant: StripVariant = variant ?? 'protected'
+  const isProtected = safeVariant === 'protected'
+  const boundaryMode = resolveCyclepathBoundaryLineMode(safeVariant, boundaryLineMode)
+  const middleMode = resolveCyclepathCenterLineMode(safeVariant, centerLineMode, pathType)
   const showMiddleLine = isProtected && middleMode !== 'none'
   const showBoundaryLines = boundaryMode !== 'none'
 
@@ -77,9 +78,9 @@ export function CyclePathStrip({
     overlaySide,
     safetyBufferWidth,
   })
-  const boundaryStroke = resolveCyclepathBoundaryStrokeWidth(variant, boundaryLineStrokeWidth)
+  const boundaryStroke = resolveCyclepathBoundaryStrokeWidth(safeVariant, boundaryLineStrokeWidth)
   const boundaryDash = boundaryMode === 'dashed'
-    ? resolveCyclepathBoundaryDashPattern(variant, boundaryLineDashLength, boundaryLineGapLength)
+    ? resolveCyclepathBoundaryDashPattern(safeVariant, boundaryLineDashLength, boundaryLineGapLength)
     : undefined
   const middleStroke = resolveCyclepathCenterStrokeWidth(centerLineStrokeWidth)
   const middleDash = middleMode === 'dashed'

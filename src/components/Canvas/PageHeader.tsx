@@ -165,7 +165,10 @@ export function SignatureBlock({ document: doc, stageRef }: Props & { stageRef?:
       if (!group) return
       // Click is on our group or transformer → ignore
       if (target === group || group.isAncestorOf(target)) return
-      if (tr && (target === tr || tr.isAncestorOf(target))) return
+      if (tr) {
+        const trNode = tr as unknown as Konva.Node
+        if (target === trNode || trNode.isAncestorOf(target)) return
+      }
       setSelected(false)
     }
     stage.on('click tap', handler)

@@ -73,7 +73,17 @@ export function RoadTopView({
   const stageRef = useRef<Konva.Stage>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const rightClickTargetRef = useRef<{ kind: 'strip' | 'marking'; id: string } | null>(null)
+  const dragCleanupRef = useRef<Set<() => void>>(new Set())
   const [containerSize, setContainerSize] = useState({ width: 800, height: 500 })
+
+  // Cleanup all active drag listeners on unmount
+  useEffect(() => {
+    const cleanups = dragCleanupRef.current
+    return () => {
+      for (const cleanup of cleanups) cleanup()
+      cleanups.clear()
+    }
+  }, [])
   const [isDraggingMarking, setIsDraggingMarking] = useState(false)
 
   const safeRoadLength = Math.max(0.5, Number.isFinite(length) ? length : 0.5)
@@ -169,7 +179,8 @@ export function RoadTopView({
     if (!selectedStripId && !selectedMarkingId) return
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if ((e.target as HTMLElement).tagName === 'INPUT') return
+        const tag = (e.target as HTMLElement).tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return
         e.preventDefault()
         if (selectedStripId) {
           const newStrips = strips.filter((s) => s.id !== selectedStripId)
@@ -236,14 +247,18 @@ export function RoadTopView({
       }
     }
 
-    const onUp = () => {
+    const cleanup = () => {
       resizeRef.current = null
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      dragCleanupRef.current.delete(cleanup)
     }
+
+    const onUp = () => cleanup()
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
+    dragCleanupRef.current.add(cleanup)
   }, [strips, displayScale, onStripsUpdate])
 
   // --- Drag to reorder ---
@@ -309,7 +324,7 @@ export function RoadTopView({
       setDragPreviewIndex(targetIdx)
     }
 
-    const onUp = () => {
+    const cleanup = () => {
       const ref = dragRef.current
       const target = dragTargetRef.current
       if (ref && target != null && moved) {
@@ -329,10 +344,14 @@ export function RoadTopView({
       setIsDragging(false)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      dragCleanupRef.current.delete(cleanup)
     }
+
+    const onUp = () => cleanup()
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
+    dragCleanupRef.current.add(cleanup)
   }, [strips, offsetX, displayScale, onStripsUpdate, selectedStripId])
 
   const startOverlaySideDrag = useCallback((strip: Strip, e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -379,7 +398,7 @@ export function RoadTopView({
       setOverlayGhostX(ghostX)
     }
 
-    const onUp = () => {
+    const cleanup = () => {
       const ref = overlayDragRef.current
       const targetSide = overlayTargetSideRef.current
 
@@ -408,10 +427,14 @@ export function RoadTopView({
       setIsDraggingOverlay(false)
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      dragCleanupRef.current.delete(cleanup)
     }
+
+    const onUp = () => cleanup()
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
+    dragCleanupRef.current.add(cleanup)
   }, [
     leftmostRoadwayPlacement,
     rightmostRoadwayPlacement,
@@ -444,15 +467,19 @@ export function RoadTopView({
       onLengthChange?.(Math.round(newLength * 10) / 10)
     }
 
-    const onUp = () => {
+    const cleanup = () => {
       setDraggingLength(false)
       lengthDragStart.current = null
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
+      dragCleanupRef.current.delete(cleanup)
     }
+
+    const onUp = () => cleanup()
 
     window.addEventListener('mousemove', onMove)
     window.addEventListener('mouseup', onUp)
+    dragCleanupRef.current.add(cleanup)
   }, [length, displayScale, onLengthChange])
 
   const cyclepathPhaseDragRef = useRef<Record<string, { phase: number; cycle: number }>>({})
@@ -681,8 +708,7 @@ export function RoadTopView({
         interactionNodes.push(
           <Rect
             key={`resize-r-${strip.id}`}
-            x={sx + strip.width - 0.2} y={stripY}
-            
+            x={sx + stripRenderWidth - 0.2} y={stripY}
             width={0.4} height={stripHeight}
             fill="rgba(0,0,0,0.001)"
             cursor="col-resize"

@@ -131,7 +131,7 @@ export function StripRenderer({ strip, x, y = 0, length, renderWidth, overlaySid
       )
     }
     case 'gutter':
-      return <CurbStrip x={x} y={y} width={safeWidth} length={safeLength} color={strip.color} facingSide={facingSide} />
+      return <GenericStrip x={x} y={y} width={safeWidth} length={safeLength} type="gutter" color={strip.color} />
     case 'path':
       return <PathStrip x={x} y={y} width={safeWidth} length={safeLength} variant={strip.variant} color={strip.color} />
     default:

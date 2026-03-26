@@ -2,6 +2,7 @@ import { Group, Line, Rect } from 'react-konva'
 import { getConcretePattern } from '../../shared/patterns'
 import { DEFAULT_CURB_LOWERED_SECTION_LENGTH } from '../../stripProps'
 import type { CurbKind } from '../../types'
+import type { FacingSide } from '../../layout'
 
 interface Props {
   x: number
@@ -9,7 +10,7 @@ interface Props {
   width: number
   length: number
   color?: string
-  facingSide?: 'left' | 'right'
+  facingSide?: FacingSide
   kind?: CurbKind
   loweredSectionLength?: number
   loweredSectionOffset?: number
@@ -21,11 +22,13 @@ export function CurbStrip({
   width,
   length,
   color,
-  facingSide = 'right',
+  facingSide: rawFacingSide = 'right',
   kind = 'standard',
   loweredSectionLength = DEFAULT_CURB_LOWERED_SECTION_LENGTH,
   loweredSectionOffset = 0,
 }: Props) {
+  // 'both' means the curb sits between two roadways — treat as 'right' for rendering
+  const facingSide: 'left' | 'right' = rawFacingSide === 'left' ? 'left' : 'right'
   const safeWidth = Math.max(0.08, width)
   const safeLength = Math.max(0.5, length)
   const bevelWidth = Math.max(0.02, Math.min(0.04, safeWidth * 0.26))

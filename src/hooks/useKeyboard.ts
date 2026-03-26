@@ -32,6 +32,9 @@ export function useKeyboard() {
         return
       }
 
+      // Suppress all canvas shortcuts while the SmartRoad editor overlay is open
+      if (useAppStore.getState().roadEditor) return
+
       const key = e.key.toLowerCase()
 
       // Tool shortcuts (single key, no modifiers)
@@ -108,6 +111,9 @@ export function useKeyboard() {
               id: crypto.randomUUID(),
               x: obj.x + 20,
               y: obj.y + 20,
+              // SmartRoads use xMeters/yMeters as position source — offset those too
+              ...(obj.xMeters != null ? { xMeters: obj.xMeters + 1 } : {}),
+              ...(obj.yMeters != null ? { yMeters: obj.yMeters + 1 } : {}),
               label: obj.label ? `${obj.label} (Kopie)` : '',
             }
             state.addObject(newObj)

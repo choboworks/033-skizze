@@ -517,6 +517,9 @@ export function SketchCanvas() {
         id: newId,
         x: obj.x + 20,
         y: obj.y + 20,
+        // SmartRoads use xMeters/yMeters as position source — offset those too
+        ...(obj.xMeters != null ? { xMeters: obj.xMeters + 1 } : {}),
+        ...(obj.yMeters != null ? { yMeters: obj.yMeters + 1 } : {}),
         label: obj.label,
       }
       store.addObject(clone)
@@ -778,7 +781,7 @@ export function SketchCanvas() {
       </Stage>
 
       {/* Empty canvas hint */}
-      {isEmpty && !isDrawing && (
+      {isEmpty && !isDrawing() && (
         <div
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{ zIndex: 10 }}

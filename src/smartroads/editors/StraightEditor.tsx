@@ -97,8 +97,13 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
     setStrips((prev) => {
       const updated = prev.map((s) => {
         if (s.id !== id) return s
-        const nextHeight = changes.height != null ? Math.min(changes.height, length) : changes.height
-        return { ...s, ...changes, ...(changes.height !== undefined ? { height: nextHeight } : {}) }
+        if ('height' in changes) {
+          const nextHeight = changes.height != null ? Math.min(changes.height, length) : undefined
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { height: _removed, ...rest } = changes
+          return { ...s, ...rest, ...(nextHeight != null ? { height: nextHeight } : {}) }
+        }
+        return { ...s, ...changes }
       })
       const constrained = applyCyclepathGeometryConstraints(updated)
       setMarkings((current) => {
