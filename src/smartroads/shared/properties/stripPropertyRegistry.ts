@@ -11,9 +11,11 @@ import { getShoulderPropertySections } from './stripDefinitions/shoulder'
 import { getSidewalkPropertySections } from './stripDefinitions/sidewalk'
 import { getTramPropertySections } from './stripDefinitions/tram'
 import { getPathPropertySections } from './stripDefinitions/path'
+import { getGuardrailPropertySections } from './stripDefinitions/guardrail'
 import type { StripPropertyContext, StripPropertySectionDefinition } from './stripDefinitions/types'
 
 export type {
+  StripActionFieldDefinition,
   StripChoiceFieldDefinition,
   StripChoiceOption,
   StripNumberFieldDefinition,
@@ -35,6 +37,7 @@ const STRIP_PROPERTY_BUILDERS: Record<StripType, (context: StripPropertyContext)
   gutter: getGutterPropertySections,
   shoulder: getShoulderPropertySections,
   path: getPathPropertySections,
+  guardrail: getGuardrailPropertySections,
 }
 
 export function getStripPropertySections(context: StripPropertyContext): StripPropertySectionDefinition[] {

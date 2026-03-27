@@ -52,6 +52,7 @@ export const STRIP_COLORS: Record<StripType, string> = {
   tram: '#555555',
   shoulder: '#999999',
   path: '#8B7355',
+  guardrail: '#b0b0b0',
 }
 
 export const DEFAULT_MARKING_COLOR = '#ffffff'
@@ -75,6 +76,11 @@ export function getStripSwatchColor(strip: Pick<Strip, 'type' | 'variant' | 'col
     return '#8B7355'
   }
 
+  if (strip.type === 'guardrail') {
+    if (strip.variant === 'betonwand') return '#8a8a85'
+    return '#b0b0b0'
+  }
+
   return STRIP_COLORS[strip.type] || '#666666'
 }
 
@@ -91,6 +97,7 @@ export const STRIP_LABELS: Record<StripType, string> = {
   tram: 'Gleiskörper',
   shoulder: 'Seitenstreifen',
   path: 'Weg',
+  guardrail: 'Leitplanke',
 }
 
 export const VARIANT_LABELS: Partial<Record<StripVariant, string>> = {
@@ -115,6 +122,9 @@ export const VARIANT_LABELS: Partial<Record<StripVariant, string>> = {
   dirt: 'Erdweg',
   gravel: 'Schotterweg',
   forest: 'Waldweg',
+  schutzplanke: 'Schutzplanke',
+  betonwand: 'Betonschutzwand',
+  doppel: 'Doppelschutzplanke',
 }
 
 export function getStripDisplayLabel(strip: Strip): string {
@@ -177,6 +187,13 @@ export function getStripDisplayLabel(strip: Strip): string {
     if (strip.variant === 'gravel') return 'Schotterweg'
     if (strip.variant === 'forest') return 'Waldweg'
     return 'Weg'
+  }
+
+  if (strip.type === 'guardrail') {
+    if (strip.variant === 'schutzplanke') return 'Schutzplanke'
+    if (strip.variant === 'betonwand') return 'Betonschutzwand'
+    if (strip.variant === 'doppel') return 'Doppelschutzplanke'
+    return 'Leitplanke'
   }
 
   return STRIP_LABELS[strip.type] || strip.type
@@ -311,6 +328,7 @@ export function createDefaultStraightRoad(): StraightRoadState {
     length: 10,
     strips,
     markings,
+    suppressedCenterlines: [],
     layerOrder: createLayerOrder(strips, markings),
   }
 }

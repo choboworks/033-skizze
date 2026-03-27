@@ -148,7 +148,7 @@ export function QuickSettings({ strips, markings, length, roadClass, onUpdateStr
   const [collapsed, setCollapsed] = useState(false)
   const laneCount = countLanes(strips)
   const crossSectionWidth = totalWidth(strips)
-  const issues = validateStraightRoadState({ strips, markings, roadClass })
+  const issues = validateStraightRoadState({ strips, markings, roadClass, length })
   const baseStrips = getCrossSectionStrips(strips)
   const roadwayWidth = sumWidths(baseStrips.filter(isRoadwayStrip))
   const overlayCyclepaths = strips.filter(isLaneOverlayCyclepath)

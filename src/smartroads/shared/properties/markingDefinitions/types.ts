@@ -2,6 +2,7 @@ import type { Marking } from '../../../types'
 
 export interface MarkingPropertyContext {
   marking: Marking
+  roadwayWidth?: number
 }
 
 export interface MarkingChoiceOption {
@@ -25,9 +26,23 @@ export interface MarkingReadOnlyFieldDefinition {
   getValue: (context: MarkingPropertyContext) => string
 }
 
+export interface MarkingNumberFieldDefinition {
+  kind: 'number'
+  id: string
+  label: string
+  getValue: (context: MarkingPropertyContext) => number
+  applyValue: (value: number, context: MarkingPropertyContext) => Partial<Marking>
+  min: (context: MarkingPropertyContext) => number
+  max?: (context: MarkingPropertyContext) => number
+  step?: number
+  displayUnit?: string
+  readOnly?: (context: MarkingPropertyContext) => boolean
+}
+
 export type MarkingPropertyFieldDefinition =
   | MarkingChoiceFieldDefinition
   | MarkingReadOnlyFieldDefinition
+  | MarkingNumberFieldDefinition
 
 export interface MarkingPropertySectionDefinition {
   id: string

@@ -28,6 +28,8 @@ interface ElementDef {
   sublabel?: string
   icon: LucideIcon
   action: () => void
+  disabled?: boolean
+  disabledReason?: string
 }
 
 const STRIP_SUBCATEGORIES: SubcategoryDef[] = [
@@ -41,6 +43,7 @@ const STRIP_SUBCATEGORIES: SubcategoryDef[] = [
 const STRUCTURAL_SUBCATEGORIES: SubcategoryDef[] = [
   { id: 'edge', label: 'Rand' },
   { id: 'separator', label: 'Trennung' },
+  { id: 'island', label: 'Verkehrsinsel' },
 ]
 
 const MARKING_SUBCATEGORIES: SubcategoryDef[] = [
@@ -78,18 +81,22 @@ const STRIP_ELEMENTS: Record<string, { variant: StripVariant; label: string; sub
   ],
 }
 
-const STRUCTURAL_ELEMENTS: Array<{
+type StructuralElementDef = {
   id: string
   category: string
-  type: StripType
-  variant: StripVariant
   label: string
   sublabel?: string
   icon: LucideIcon
-}> = [
+} & (
+  | { kind: 'strip'; type: StripType; variant: StripVariant }
+  | { kind: 'marking'; markingType: MarkingType; markingVariant: MarkingVariant }
+)
+
+const STRUCTURAL_ELEMENTS: StructuralElementDef[] = [
   {
     id: 'structural-curb',
     category: 'edge',
+    kind: 'strip',
     type: 'curb',
     variant: 'standard',
     label: 'Bordstein',
@@ -99,6 +106,7 @@ const STRUCTURAL_ELEMENTS: Array<{
   {
     id: 'structural-gutter',
     category: 'edge',
+    kind: 'strip',
     type: 'gutter',
     variant: 'standard',
     label: 'Rinne',
@@ -106,10 +114,11 @@ const STRUCTURAL_ELEMENTS: Array<{
     icon: SeparatorHorizontal,
   },
   {
-    id: 'structural-barrier',
+    id: 'structural-guardrail',
     category: 'separator',
-    type: 'median',
-    variant: 'barrier',
+    kind: 'strip',
+    type: 'guardrail',
+    variant: 'schutzplanke',
     label: 'Leitplanke',
     sublabel: 'Trennung',
     icon: Minus,
@@ -117,6 +126,7 @@ const STRUCTURAL_ELEMENTS: Array<{
   {
     id: 'structural-green-strip',
     category: 'separator',
+    kind: 'strip',
     type: 'green',
     variant: 'standard',
     label: 'Grünstreifen',
@@ -124,13 +134,14 @@ const STRUCTURAL_ELEMENTS: Array<{
     icon: TreePine,
   },
   {
-    id: 'structural-green-median',
-    category: 'separator',
-    type: 'median',
-    variant: 'green-median',
-    label: 'Begrünter Mittelstreifen',
+    id: 'structural-island',
+    category: 'island',
+    kind: 'marking',
+    markingType: 'traffic-island',
+    markingVariant: 'median-island',
+    label: 'Verkehrsinsel',
     sublabel: 'Trennung',
-    icon: TreePine,
+    icon: Minus,
   },
 ]
 
@@ -170,9 +181,10 @@ interface Props {
   onAddMarking: (type: MarkingType, variant: MarkingVariant) => void
   onLoadPreset: (state: StraightRoadState) => void
   presets: { id: string; label: string; create: () => StraightRoadState }[]
+  hasTrafficIsland?: boolean
 }
 
-export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets }: Props) {
+export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets, hasTrafficIsland = false }: Props) {
   const [activeCategory, setActiveCategory] = useState<TopCategory>('strips')
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null)
   const [searchInput, setSearchInput] = useState('')
@@ -202,6 +214,23 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
           : []
 
   const elements: ElementDef[] = (() => {
+    const getMarkingDisabledState = (type: MarkingType) => {
+      if (!hasTrafficIsland) return {}
+      if (type === 'centerline') {
+        return {
+          disabled: true,
+          disabledReason: 'Mit Verkehrsinsel sind Leitlinien in diesem Segment unterdrückt.',
+        }
+      }
+      if (type === 'traffic-island') {
+        return {
+          disabled: true,
+          disabledReason: 'Aktuell ist nur eine Verkehrsinsel pro Gerade vorgesehen.',
+        }
+      }
+      return {}
+    }
+
     const buildStrips = (types: string[]) =>
       types.flatMap((type) => {
         const items = STRIP_ELEMENTS[type] || []
@@ -224,6 +253,7 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
           sublabel: item.sublabel,
           icon: Pencil,
           action: () => onAddMarking(type as MarkingType, item.variant),
+          ...getMarkingDisabledState(type as MarkingType),
         }))
       })
 
@@ -235,7 +265,10 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
           label: item.label,
           sublabel: item.sublabel,
           icon: item.icon,
-          action: () => onAddStrip(item.type, item.variant, 'right'),
+          action: () => item.kind === 'marking'
+            ? onAddMarking(item.markingType, item.markingVariant)
+            : onAddStrip(item.type, item.variant, 'right'),
+          ...(item.kind === 'marking' ? getMarkingDisabledState(item.markingType) : {}),
         }))
 
     if (isSearchMode) {
@@ -387,14 +420,20 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
               return (
                 <button
                   key={element.id}
+                  disabled={element.disabled}
                   className="asset-card flex items-center w-full text-left"
                   style={{
                     minHeight: 60,
                     padding: '10px 12px',
                     borderRadius: 16,
                     gap: 10,
+                    opacity: element.disabled ? 0.45 : 1,
+                    cursor: element.disabled ? 'not-allowed' : 'pointer',
                   }}
-                  onClick={element.action}
+                  onClick={() => {
+                    if (!element.disabled) element.action()
+                  }}
+                  title={element.disabledReason}
                 >
                   <div
                     className="flex items-center justify-center shrink-0"

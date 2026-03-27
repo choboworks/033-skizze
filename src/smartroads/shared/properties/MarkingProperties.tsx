@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
+import { Minus, Plus } from 'lucide-react'
 import type { Marking } from '../../types'
 import { DEFAULT_MARKING_COLOR } from '../../constants'
 import { MARKING_TYPE_LABELS } from '@/constants/shared'
@@ -6,6 +8,7 @@ import { ElementColorField } from './ElementColorField'
 import {
   getMarkingPropertySections,
   type MarkingChoiceFieldDefinition,
+  type MarkingNumberFieldDefinition,
   type MarkingPropertyFieldDefinition,
   type MarkingReadOnlyFieldDefinition,
 } from './markingDefinitions/registry'
@@ -16,16 +19,15 @@ import {
 
 interface Props {
   marking: Marking
+  roadwayWidth?: number
   onUpdate: (changes: Partial<Marking>) => void
 }
 
 function renderChoiceField(
   field: MarkingChoiceFieldDefinition,
-  marking: Marking,
+  context: { marking: Marking; roadwayWidth?: number },
   onUpdate: (changes: Partial<Marking>) => void,
 ) {
-  const context = { marking }
-
   return (
     <div key={field.id} className="flex flex-col gap-2">
       <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>{field.label}</span>
@@ -64,18 +66,123 @@ function renderReadOnlyField(field: MarkingReadOnlyFieldDefinition, marking: Mar
   )
 }
 
-function renderField(
-  field: MarkingPropertyFieldDefinition,
-  marking: Marking,
-  onUpdate: (changes: Partial<Marking>) => void,
-) {
-  if (field.kind === 'choice') return renderChoiceField(field, marking, onUpdate)
-  return renderReadOnlyField(field, marking)
+function MarkingNumberStepper({
+  value,
+  onChange,
+  min,
+  max,
+  step = 0.25,
+  displayUnit = 'm',
+}: {
+  value: number
+  onChange: (v: number) => void
+  min: number
+  max?: number
+  step?: number
+  displayUnit?: string
+}) {
+  const [editing, setEditing] = useState(false)
+  const [editValue, setEditValue] = useState(String(Math.round(value * 100) / 100))
+
+  const clamp = (next: number) => {
+    const boundedMax = max != null ? Math.min(max, next) : next
+    return Math.max(min, Math.round(boundedMax * 100) / 100)
+  }
+
+  const formatDisplayValue = (v: number) => {
+    const scaled = Math.round(v * 100) / 100
+    return Number.isInteger(scaled) ? String(scaled) : scaled.toFixed(2).replace(/\.?0+$/, '')
+  }
+
+  const commit = () => {
+    const n = parseFloat(editValue)
+    if (!isNaN(n)) onChange(clamp(n))
+    setEditing(false)
+  }
+
+  return (
+    <div className="flex items-center" style={{ gap: 8 }}>
+      <button
+        className="toggle-btn w-8 h-8 rounded-lg flex items-center justify-center"
+        onClick={() => onChange(clamp(value - step))}
+      >
+        <Minus size={13} />
+      </button>
+      {editing ? (
+        <input
+          autoFocus
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
+          className="w-16 h-8 text-center text-[13px] font-mono rounded-lg"
+          style={{ background: 'var(--panel-control-bg)', border: '1px solid var(--accent)', color: 'var(--text)', outline: 'none' }}
+        />
+      ) : (
+        <button
+          className="toggle-btn w-16 h-8 text-center text-[13px] font-mono rounded-lg"
+          style={{ color: 'var(--text)' }}
+          onClick={() => { setEditValue(formatDisplayValue(value)); setEditing(true) }}
+        >
+          {formatDisplayValue(value)}{displayUnit}
+        </button>
+      )}
+      <button
+        className="toggle-btn w-8 h-8 rounded-lg flex items-center justify-center"
+        onClick={() => onChange(clamp(value + step))}
+      >
+        <Plus size={13} />
+      </button>
+    </div>
+  )
 }
 
-export function MarkingProperties({ marking, onUpdate }: Props) {
+function renderNumberField(
+  field: MarkingNumberFieldDefinition,
+  context: { marking: Marking; roadwayWidth?: number },
+  onUpdate: (changes: Partial<Marking>) => void,
+) {
+  const isReadOnly = field.readOnly?.(context) ?? false
+  const value = field.getValue(context)
+  const min = field.min(context)
+  const max = field.max?.(context)
+  const unit = field.displayUnit ?? 'm'
+
+  return (
+    <div key={field.id} className="flex items-center justify-between">
+      <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>{field.label}</span>
+      {isReadOnly ? (
+        <span className="text-[13px] font-mono" style={{ color: 'var(--text-muted)' }}>
+          {value.toFixed(2)} {unit}
+        </span>
+      ) : (
+        <MarkingNumberStepper
+          value={value}
+          onChange={(v) => onUpdate(field.applyValue(v, context))}
+          min={min}
+          max={max}
+          step={field.step ?? 0.25}
+          displayUnit={unit}
+        />
+      )}
+    </div>
+  )
+}
+
+function renderField(
+  field: MarkingPropertyFieldDefinition,
+  context: { marking: Marking; roadwayWidth?: number },
+  onUpdate: (changes: Partial<Marking>) => void,
+) {
+  if (field.kind === 'choice') return renderChoiceField(field, context, onUpdate)
+  if (field.kind === 'number') return renderNumberField(field, context, onUpdate)
+  return renderReadOnlyField(field, context.marking)
+}
+
+export function MarkingProperties({ marking, roadwayWidth, onUpdate }: Props) {
   const label = MARKING_TYPE_LABELS[marking.type] || marking.type
-  const sections = getMarkingPropertySections({ marking })
+  const context = { marking, roadwayWidth }
+  const sections = getMarkingPropertySections(context)
 
   return (
     <div className="flex flex-col" style={{ gap: 14 }}>
@@ -91,16 +198,18 @@ export function MarkingProperties({ marking, onUpdate }: Props) {
               {section.title}
             </span>
           )}
-          {section.fields.map((field) => renderField(field, marking, onUpdate))}
+          {section.fields.map((field) => renderField(field, context, onUpdate))}
         </div>
       ))}
 
-      <ElementColorField
-        value={marking.color || DEFAULT_MARKING_COLOR}
-        hasCustomColor={Boolean(marking.color)}
-        onChange={(color) => onUpdate({ color })}
-        onReset={() => onUpdate({ color: undefined })}
-      />
+      {marking.type !== 'traffic-island' && (
+        <ElementColorField
+          value={marking.color || DEFAULT_MARKING_COLOR}
+          hasCustomColor={Boolean(marking.color)}
+          onChange={(color) => onUpdate({ color })}
+          onReset={() => onUpdate({ color: undefined })}
+        />
+      )}
     </div>
   )
 }

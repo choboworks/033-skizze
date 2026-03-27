@@ -5,6 +5,7 @@ import type { RoadClass, Strip } from '../../types'
 import { getStripDisplayLabel, getStripSwatchColor } from '../../constants'
 import {
   getStripPropertySections,
+  type StripActionFieldDefinition,
   type StripChoiceFieldDefinition,
   type StripNumberFieldDefinition,
   type StripPropertyFieldDefinition,
@@ -94,6 +95,7 @@ interface Props {
   roadLength?: number
   roadClass?: RoadClass
   onUpdate: (changes: Partial<Strip>) => void
+  onAction?: (actionId: string) => void
 }
 
 function renderNumberField(
@@ -163,19 +165,58 @@ function renderChoiceField(
   )
 }
 
+function renderActionField(
+  field: StripActionFieldDefinition,
+  strip: Strip,
+  roadLength: number | undefined,
+  onAction?: (actionId: string) => void,
+) {
+  const context = { strip, roadLength }
+  const available = field.isAvailable?.(context) ?? true
+  if (!available) return null
+  const desc = field.description?.(context)
+
+  return (
+    <div key={field.id} className="flex flex-col" style={{ gap: 4 }}>
+      <button
+        className="toggle-btn flex items-center justify-center"
+        style={{
+          height: 28,
+          padding: '0 10px',
+          borderRadius: 9999,
+          fontSize: 10.5,
+          fontWeight: 600,
+        }}
+        onClick={() => onAction?.(field.id)}
+      >
+        {field.label}
+      </button>
+      {desc && (
+        <span className="text-[10px]" style={{ color: 'var(--text-muted)', lineHeight: 1.3 }}>
+          {desc}
+        </span>
+      )}
+    </div>
+  )
+}
+
 function renderField(
   field: StripPropertyFieldDefinition,
   strip: Strip,
   roadLength: number | undefined,
   onUpdate: (changes: Partial<Strip>) => void,
+  onAction?: (actionId: string) => void,
 ) {
   if (field.kind === 'number') {
     return renderNumberField(field, strip, roadLength, onUpdate)
   }
+  if (field.kind === 'action') {
+    return renderActionField(field, strip, roadLength, onAction)
+  }
   return renderChoiceField(field, strip, roadLength, onUpdate)
 }
 
-export function StripProperties({ strip, roadLength, roadClass, onUpdate }: Props) {
+export function StripProperties({ strip, roadLength, roadClass, onUpdate, onAction }: Props) {
   const label = getStripDisplayLabel(strip)
   const sections = getStripPropertySections({ strip, roadLength, roadClass })
   const resolvedColor = getStripSwatchColor(strip)
@@ -193,7 +234,7 @@ export function StripProperties({ strip, roadLength, roadClass, onUpdate }: Prop
               {section.title}
             </span>
           )}
-          {section.fields.map((field) => renderField(field, strip, roadLength, onUpdate))}
+          {section.fields.map((field) => renderField(field, strip, roadLength, onUpdate, onAction))}
         </div>
       ))}
 

@@ -1,4 +1,4 @@
-import { getCrossSectionStrips, getImmediateOuterStrip, getLaneOverlayOccupancyWidth, getLaneOverlaySafetyBufferWidth, isLaneOverlayCyclepath, normalizeLaneOverlayCyclepaths } from './layout'
+import { getCrossSectionStrips, getFacingRoadwaySide, getImmediateOuterStrip, getLaneOverlayOccupancyWidth, getLaneOverlaySafetyBufferWidth, getRoadwayBoundsFromPlacements, getStripPlacements, isLaneOverlayCyclepath, normalizeLaneOverlayCyclepaths } from './layout'
 import { getCyclepathOverlaySide, getCyclepathStripProps } from './stripProps'
 import { getProtectedCyclepathRule } from './rules/stripRules'
 import type { StraightRoadState, Strip } from './types'
@@ -143,7 +143,7 @@ export function applyCyclepathGeometryConstraints(strips: Strip[]): Strip[] {
   return nextStrips
 }
 
-export function validateStraightRoadState(state: Pick<StraightRoadState, 'strips' | 'markings' | 'roadClass'>): StraightRoadIssue[] {
+export function validateStraightRoadState(state: Pick<StraightRoadState, 'strips' | 'markings' | 'roadClass' | 'length'>): StraightRoadIssue[] {
   const issues: StraightRoadIssue[] = []
   const roadClass = state.roadClass ?? 'innerorts'
   const baseStrips = getCrossSectionStrips(state.strips)
@@ -243,6 +243,19 @@ export function validateStraightRoadState(state: Pick<StraightRoadState, 'strips
         pushIssue(issues, `${strip.id}-separated-width`, 'Getrennter Geh-/Radweg unter 4,50 m Gesamtbreite (2,00 m Radteil + 2,50 m Gehteil).', 'warning')
       }
     }
+
+    if (strip.type === 'guardrail' && strip.variant === 'schutzplanke') {
+      const facing = getFacingRoadwaySide(strip, baseStrips)
+      if (facing === 'both') {
+        pushIssue(
+          issues,
+          `${strip.id}-single-median`,
+          'Einfache Schutzplanke schützt nur eine Fahrtrichtung. Für den Mittelstreifen ist eine Doppelschutzplanke oder Betonschutzwand üblich.',
+          'info',
+        )
+      }
+    }
+
   }
 
   for (const overlayCyclepath of state.strips.filter(isLaneOverlayCyclepath)) {
@@ -253,6 +266,57 @@ export function validateStraightRoadState(state: Pick<StraightRoadState, 'strips
         issues,
         `${overlayCyclepath.id}-parking-gap`,
         `Neben ruhendem Verkehr fehlen beim ${overlayCyclepath.variant === 'advisory' ? 'Schutzstreifen' : 'Radfahrstreifen'} ${sideLabel} mindestens 0,75 m Sicherheitstrennstreifen.`,
+        'warning',
+      )
+    }
+  }
+
+  // Traffic island: check if road is long enough for island + approach markings
+  const roadLength = state.length ?? 20
+  const roadwayBounds = getRoadwayBoundsFromPlacements(getStripPlacements(state.strips, roadLength))
+  const trafficIslands = state.markings.filter((marking) => marking.type === 'traffic-island')
+  if (trafficIslands.length > 1) {
+    pushIssue(
+      issues,
+      'traffic-island-multiple',
+      'Aktuell ist pro Gerade nur eine Verkehrsinsel vorgesehen. Weitere Inseln entfernen.',
+      'warning',
+    )
+  }
+
+  for (const m of state.markings) {
+    if (m.type !== 'traffic-island') continue
+    const islandLen = m.length || 8.0
+    const showApproach = m.showApproachMarking !== false
+    const approachLen = showApproach ? (m.approachLength ?? 3.0) : 0
+    const islandY = m.y || 0
+    const totalNeeded = islandLen + approachLen * 2
+    if (totalNeeded > roadLength) {
+      pushIssue(
+        issues,
+        `${m.id}-road-too-short`,
+        showApproach
+          ? `Straßenlänge (${roadLength.toFixed(0)} m) zu kurz für Verkehrsinsel mit Zulaufmarkierungen (${totalNeeded.toFixed(1)} m benötigt).`
+          : `Straßenlänge (${roadLength.toFixed(0)} m) zu kurz für die Verkehrsinsel (${totalNeeded.toFixed(1)} m benötigt).`,
+        'warning',
+      )
+    }
+    if (islandY < approachLen || islandY + islandLen + approachLen > roadLength) {
+      pushIssue(
+        issues,
+        `${m.id}-approach-overflow`,
+        showApproach
+          ? 'Zulaufmarkierungen der Verkehrsinsel ragen über die Straße hinaus. Straße verlängern oder Insel verschieben.'
+          : 'Die Verkehrsinsel ragt über die Straßenlänge hinaus. Straße verlängern oder Insel verschieben.',
+        'info',
+      )
+    }
+
+    if (roadwayBounds && (m.width ?? 2.5) > roadwayBounds.width) {
+      pushIssue(
+        issues,
+        `${m.id}-width`,
+        `Die Verkehrsinsel ist breiter als die verfügbare Fahrbahn (${roadwayBounds.width.toFixed(2)} m).`,
         'warning',
       )
     }

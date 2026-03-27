@@ -17,4 +17,5 @@ export const MARKING_TYPE_LABELS: Record<string, string> = {
   'speed-limit': 'Tempo',
   'parking-marking': 'Parkfläche',
   'free-line': 'Freie Linie',
+  'traffic-island': 'Verkehrsinsel',
 }

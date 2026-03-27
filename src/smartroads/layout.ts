@@ -1,5 +1,5 @@
 import type { CyclepathSide, Strip } from './types'
-import { DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH, getCyclepathOverlaySide, getCyclepathStripProps, getStripRenderLength, getStripRenderY } from './stripProps'
+import { DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH, getCyclepathOverlaySide, getCyclepathStripProps, getGuardrailStripProps, getStripRenderLength, getStripRenderY } from './stripProps'
 
 export interface StripPlacement {
   strip: Strip
@@ -11,6 +11,12 @@ export interface StripPlacement {
   overlaySide?: CyclepathSide
   safetyBufferWidth?: number
   facingSide?: FacingSide
+}
+
+export interface RoadwayBounds {
+  minX: number
+  maxX: number
+  width: number
 }
 
 export function isLaneOverlayCyclepath(strip: Strip): boolean {
@@ -162,18 +168,29 @@ export function getStripPlacements(strips: Strip[], roadLength: number): StripPl
 
   let xOffset = 0
   for (const strip of baseStrips) {
+    const facing = getFacingRoadwaySide(strip, baseStrips)
+    let renderWidth = getSafeStripWidth(strip)
+
+    // Guardrails with context (shoulder/green) need extra width when between two roadways
+    if (strip.type === 'guardrail' && facing === 'both') {
+      const gProps = getGuardrailStripProps(strip)
+      const extraContext = (gProps.showShoulder ? gProps.shoulderWidth : 0) + (gProps.showGreen ? gProps.greenWidth : 0)
+      // strip.width already includes 1× context; add another 1× for the second side
+      renderWidth += extraContext
+    }
+
     const placement: StripPlacement = {
       strip,
       x: xOffset,
       y: getStripRenderY(strip),
       length: getStripRenderLength(strip, roadLength),
-      renderWidth: getSafeStripWidth(strip),
+      renderWidth,
       isLaneOverlay: false,
-      facingSide: getFacingRoadwaySide(strip, baseStrips),
+      facingSide: facing,
     }
     placements.push(placement)
     basePlacementById.set(strip.id, placement)
-    xOffset += getSafeStripWidth(strip)
+    xOffset += renderWidth
   }
 
   const leftmostRoadwayPlacement = placements.find((placement) => isRoadwayAnchorStrip(placement.strip)) ?? null
@@ -208,4 +225,19 @@ export function getStripPlacements(strips: Strip[], roadLength: number): StripPl
   return normalizedStrips
     .map((strip) => basePlacementById.get(strip.id))
     .filter((placement): placement is StripPlacement => Boolean(placement))
+}
+
+export function getRoadwayBoundsFromPlacements(placements: StripPlacement[]): RoadwayBounds | undefined {
+  const roadwayPlacements = placements.filter((placement) => !placement.isLaneOverlay && isRoadwayAnchorStrip(placement.strip))
+  const leftmost = roadwayPlacements[0] ?? null
+  const rightmost = roadwayPlacements[roadwayPlacements.length - 1] ?? null
+  if (!leftmost || !rightmost) return undefined
+
+  const minX = leftmost.x
+  const maxX = rightmost.x + rightmost.renderWidth
+  return {
+    minX,
+    maxX,
+    width: maxX - minX,
+  }
 }

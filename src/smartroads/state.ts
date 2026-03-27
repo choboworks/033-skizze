@@ -1,10 +1,10 @@
 import { createDefaultStraightRoad, normalizeLayerOrder } from './constants'
-import { getBusStripProps, getCurbStripProps, getCyclepathStripProps, getDefaultStripProps, getLaneStripProps, getParkingStripProps, getSidewalkStripProps } from './stripProps'
+import { getBusStripProps, getCurbStripProps, getCyclepathStripProps, getDefaultStripProps, getGuardrailStripProps, getLaneStripProps, getParkingStripProps, getSidewalkStripProps } from './stripProps'
 import { getStripDefaultWidth } from './rules/stripRules'
 import type { Marking, MarkingType, MarkingVariant, RoadClass, StraightRoadState, Strip, StripProps, StripType, StripVariant } from './types'
 
-const STRIP_TYPES: StripType[] = ['lane', 'sidewalk', 'cyclepath', 'parking', 'green', 'curb', 'gutter', 'median', 'bus', 'tram', 'shoulder', 'path']
-const MARKING_TYPES: MarkingType[] = ['centerline', 'laneboundary', 'stopline', 'crosswalk', 'arrow', 'blocked-area', 'yield-line', 'bike-crossing', 'bus-stop', 'speed-limit', 'parking-marking', 'free-line']
+const STRIP_TYPES: StripType[] = ['lane', 'sidewalk', 'cyclepath', 'parking', 'green', 'curb', 'gutter', 'median', 'bus', 'tram', 'shoulder', 'path', 'guardrail']
+const MARKING_TYPES: MarkingType[] = ['centerline', 'laneboundary', 'stopline', 'crosswalk', 'arrow', 'blocked-area', 'yield-line', 'bike-crossing', 'bus-stop', 'speed-limit', 'parking-marking', 'free-line', 'traffic-island']
 const ROAD_CLASSES: RoadClass[] = ['innerorts', 'ausserorts', 'autobahn']
 
 const STRIP_VARIANTS_BY_TYPE: Record<StripType, StripVariant[]> = {
@@ -20,6 +20,7 @@ const STRIP_VARIANTS_BY_TYPE: Record<StripType, StripVariant[]> = {
   tram: ['dedicated', 'flush'],
   shoulder: ['standard'],
   path: ['dirt', 'gravel', 'forest'],
+  guardrail: ['schutzplanke', 'betonwand', 'doppel'],
 }
 
 const MARKING_VARIANTS_BY_TYPE: Partial<Record<MarkingType, MarkingVariant[]>> = {
@@ -30,6 +31,7 @@ const MARKING_VARIANTS_BY_TYPE: Partial<Record<MarkingType, MarkingVariant[]>> =
   arrow: ['straight', 'left', 'right', 'straight-left', 'straight-right'],
   'speed-limit': ['tempo-30', 'tempo-50'],
   'free-line': ['custom'],
+  'traffic-island': ['median-island', 'raised-paved'],
 }
 
 const DEFAULT_VARIANT_BY_TYPE: Record<StripType, StripVariant> = {
@@ -45,6 +47,7 @@ const DEFAULT_VARIANT_BY_TYPE: Record<StripType, StripVariant> = {
   tram: 'dedicated',
   shoulder: 'standard',
   path: 'dirt',
+  guardrail: 'schutzplanke',
 }
 
 const DEFAULT_MARKING_VARIANT_BY_TYPE: Partial<Record<MarkingType, MarkingVariant>> = {
@@ -55,6 +58,7 @@ const DEFAULT_MARKING_VARIANT_BY_TYPE: Partial<Record<MarkingType, MarkingVarian
   arrow: 'straight',
   'speed-limit': 'tempo-50',
   'free-line': 'custom',
+  'traffic-island': 'median-island',
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -121,16 +125,23 @@ function sanitizeDashPattern(value: unknown): number[] | undefined {
 function sanitizeStrip(raw: unknown, roadLength: number, roadClass: RoadClass): Strip | null {
   if (!isRecord(raw)) return null
 
-  const type = sanitizeStripType(raw.type)
+  let type = sanitizeStripType(raw.type)
   if (!type) return null
 
-  const variant = sanitizeStripVariant(type, raw.variant)
+  // Legacy migration: median/barrier → guardrail/schutzplanke
+  let rawVariant = raw.variant
+  if (type === 'median' && rawVariant === 'barrier') {
+    type = 'guardrail'
+    rawVariant = 'schutzplanke'
+  }
+
+  const variant = sanitizeStripVariant(type, rawVariant)
   const width = toPositiveNumber(raw.width, getStripDefaultWidth(type, variant, roadClass), 0.1)
   const height = typeof raw.height === 'number' && Number.isFinite(raw.height) && raw.height > 0
     ? Math.min(raw.height, roadLength)
     : undefined
 
-  const sanitizedColor = type !== 'curb' ? sanitizeColor(raw.color) : undefined
+  const sanitizedColor = type !== 'curb' && type !== 'guardrail' ? sanitizeColor(raw.color) : undefined
 
   const strip: Strip = {
     id: sanitizeId(raw.id, `${type}-strip`),
@@ -158,6 +169,8 @@ function sanitizeStrip(raw: unknown, roadLength: number, roadClass: RoadClass): 
       return { ...strip, props: getCurbStripProps(candidate) }
     case 'sidewalk':
       return { ...strip, props: getSidewalkStripProps(candidate) }
+    case 'guardrail':
+      return { ...strip, props: getGuardrailStripProps(candidate) }
     default:
       return { ...strip, props: getDefaultStripProps(type) }
   }
@@ -185,6 +198,15 @@ function sanitizeMarking(raw: unknown, roadLength: number): Marking | null {
     ...(typeof raw.strokeWidth === 'number' && Number.isFinite(raw.strokeWidth) ? { strokeWidth: Math.max(0.01, raw.strokeWidth) } : {}),
     ...(dashPattern ? { dashPattern } : {}),
     ...(markingColor ? { color: markingColor } : {}),
+    // Traffic island specific fields
+    ...(type === 'traffic-island' ? {
+      ...(typeof raw.surfaceType === 'string' && ['green', 'paved', 'cobblestone'].includes(raw.surfaceType) ? { surfaceType: raw.surfaceType } : { surfaceType: 'green' }),
+      ...(typeof raw.endShape === 'string' && ['rounded', 'pointed', 'flat'].includes(raw.endShape) ? { endShape: raw.endShape } : { endShape: 'rounded' }),
+      ...(typeof raw.endTaperLength === 'number' && Number.isFinite(raw.endTaperLength) ? { endTaperLength: Math.max(0.2, raw.endTaperLength) } : { endTaperLength: 1.0 }),
+      showCurbBorder: raw.showCurbBorder !== false,
+      showApproachMarking: raw.showApproachMarking !== false,
+      ...(typeof raw.approachLength === 'number' && Number.isFinite(raw.approachLength) ? { approachLength: Math.max(1.0, Math.min(15.0, raw.approachLength)) } : { approachLength: 3.0 }),
+    } : {}),
   }
 
   return marking
@@ -201,6 +223,11 @@ export function normalizeStraightRoadState(raw: unknown, fallback: StraightRoadS
   const markings = Array.isArray(raw.markings)
     ? raw.markings.map((marking) => sanitizeMarking(marking, length)).filter((marking): marking is Marking => Boolean(marking))
     : fallback.markings
+  const suppressedCenterlines = Array.isArray(raw.suppressedCenterlines)
+    ? raw.suppressedCenterlines
+      .map((marking) => sanitizeMarking(marking, length))
+      .filter((marking): marking is Marking => marking != null && marking.type === 'centerline')
+    : fallback.suppressedCenterlines ?? []
 
   const rawLayerOrder = Array.isArray(raw.layerOrder)
     ? raw.layerOrder.filter((entry): entry is string => typeof entry === 'string')
@@ -209,6 +236,7 @@ export function normalizeStraightRoadState(raw: unknown, fallback: StraightRoadS
   return {
     strips,
     markings,
+    suppressedCenterlines,
     length,
     roadClass,
     layerOrder: normalizeLayerOrder(rawLayerOrder, strips, markings),

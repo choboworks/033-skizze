@@ -34,7 +34,7 @@ export function CurbStrip({
   const bevelWidth = Math.max(0.02, Math.min(0.04, safeWidth * 0.26))
   const topBandWidth = Math.max(0.015, Math.min(0.028, safeWidth * 0.14))
   const crownBandWidth = Math.max(0.016, Math.min(0.034, safeWidth * 0.18))
-  const seamSpacing = 1.25
+  const seamSpacing = 1.00 // DIN 483: Standardlänge 1.000 mm
   const seamCount = Math.max(0, Math.floor(safeLength / seamSpacing))
   const highlightX = facingSide === 'left' ? safeWidth - topBandWidth : 0
   const bevelX = facingSide === 'left' ? 0 : safeWidth - bevelWidth

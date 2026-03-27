@@ -9,7 +9,7 @@ import { shapeRefs } from '@/components/Canvas/shapeRefs'
 import { useAppStore } from '@/store'
 import type Konva from 'konva'
 import { orderMarkingsByLayer, totalWidth } from '../constants'
-import { getStripPlacements } from '../layout'
+import { getRoadwayBoundsFromPlacements, getStripPlacements } from '../layout'
 import { normalizeStraightRoadState } from '../state'
 
 // ============================================================
@@ -96,6 +96,9 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
   if (!state || !state.strips || state.strips.length === 0) return null
   const orderedMarkings = orderMarkingsByLayer(state.markings, state.layerOrder)
   const stripPlacements = getStripPlacements(state.strips, state.length)
+  const roadwayBounds = getRoadwayBoundsFromPlacements(stripPlacements)
+  const tw = totalWidth(state.strips)
+  const roadLen = state.length
 
   // Build strip nodes
   const stripNodes: React.ReactNode[] = []
@@ -115,6 +118,10 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
     )
   }
 
+  // Clip function for road bounds (works correctly with scale/rotation)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const clipRoadBounds = (ctx: any) => { ctx.rect(0, 0, tw, roadLen) }
+
   return (
     <Group
       ref={groupRef}
@@ -126,6 +133,7 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
       scaleY={scaleFactor}
       opacity={obj.opacity}
       visible={obj.visible}
+      clipFunc={clipRoadBounds}
       draggable={!obj.locked && (activeTool === 'select' || (activeTool === 'print-area' && hasViewportOverride))}
       onMouseDown={(e) => onSelect?.(obj.id, e)}
       onClick={(e) => onSelect?.(obj.id, e)}
@@ -137,10 +145,16 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
       onTransformEnd={handleTransformEnd}
     >
       {/* Bounds rect — forces Konva's getClientRect() to match exact road dimensions */}
-      <Rect x={0} y={0} width={totalWidth(state.strips)} height={state.length} listening={false} />
+      <Rect x={0} y={0} width={tw} height={roadLen} listening={false} />
       {stripNodes}
       {orderedMarkings.map((m) => (
-        <MarkingRenderer key={m.id} marking={m} roadLength={state.length} />
+        <MarkingRenderer
+          key={m.id}
+          marking={m}
+          roadLength={roadLen}
+          roadClass={state.roadClass}
+          roadwayBounds={m.type === 'traffic-island' ? roadwayBounds : undefined}
+        />
       ))}
     </Group>
   )

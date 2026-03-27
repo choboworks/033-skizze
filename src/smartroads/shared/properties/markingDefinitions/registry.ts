@@ -4,6 +4,7 @@ import { getCenterlinePropertySections } from './centerline'
 import { getCrosswalkPropertySections } from './crosswalk'
 import { getDefaultMarkingPropertySections } from './default'
 import { getLaneBoundaryPropertySections } from './laneboundary'
+import { getIslandMarkingPropertySections } from './island'
 import { getStoplinePropertySections } from './stopline'
 import type { MarkingPropertyContext, MarkingPropertySectionDefinition } from './types'
 
@@ -13,11 +14,13 @@ const MARKING_PROPERTY_BUILDERS: Partial<Record<MarkingType, (context: MarkingPr
   arrow: getArrowPropertySections,
   crosswalk: getCrosswalkPropertySections,
   stopline: getStoplinePropertySections,
+  'traffic-island': getIslandMarkingPropertySections,
 }
 
 export type {
   MarkingChoiceFieldDefinition,
   MarkingChoiceOption,
+  MarkingNumberFieldDefinition,
   MarkingPropertyContext,
   MarkingPropertyFieldDefinition,
   MarkingPropertySectionDefinition,

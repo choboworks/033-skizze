@@ -36,9 +36,18 @@ export interface StripChoiceFieldDefinition {
   options: (context: StripPropertyContext) => StripChoiceOption[]
 }
 
+export interface StripActionFieldDefinition {
+  kind: 'action'
+  id: string
+  label: string
+  description?: (context: StripPropertyContext) => string
+  isAvailable?: (context: StripPropertyContext) => boolean
+}
+
 export type StripPropertyFieldDefinition =
   | StripNumberFieldDefinition
   | StripChoiceFieldDefinition
+  | StripActionFieldDefinition
 
 export interface StripPropertySectionDefinition {
   id: string

@@ -97,8 +97,9 @@ export const STRIP_BASE_RULES: Record<StripType, StripDimensionRule> = {
     defaultWidth: 0.15,
     editorMinWidth: 0.15,
     source: [
-      reference('6.2 Bordsteinarten im Ueberblick', 'Hochbord (HB) Breite 15-18 cm'),
+      reference('DIN 483:2005-10, Form A', 'Hochbordstein HB 15×25 / HB 15×30, Breite unten 150 mm'),
     ],
+    note: 'Standardprofil HB 15×25 (86 kg/m) bzw. HB 15×30 (100 kg/m). Ansichtshöhe im Einbau 10–15 cm. Steinlänge 1.000 mm.',
   },
   gutter: {
     defaultWidth: 0.30,
@@ -143,6 +144,14 @@ export const STRIP_BASE_RULES: Record<StripType, StripDimensionRule> = {
       editorDefault('Feldweg / Wirtschaftsweg default; no dedicated normative source in the root rulebook.'),
     ],
     note: 'Typical rural path width. Variants override for narrower forest paths or wider gravel roads.',
+  },
+  guardrail: {
+    defaultWidth: 0.50,
+    editorMinWidth: 0.18,
+    source: [
+      reference('DIN EN 1317 / RPS 2009', 'EDSP 2.0 Systembreite 0,50 m; ESP Systembreite 0,18 m'),
+    ],
+    note: 'Base default maps to EDSP (Einfache Distanzschutzplanke). ESP (0,18 m) is the editor minimum.',
   },
 }
 
@@ -253,6 +262,28 @@ export const STRIP_VARIANT_RULES: Partial<Record<StripVariant, StripVariantDimen
     source: [
       editorDefault('Waldweg / schmaler Forstweg typical width.'),
     ],
+  },
+  schutzplanke: {
+    width: 0.50,
+    editorMinWidth: 0.18,
+    source: [
+      reference('DIN EN 1317 / RPS 2009 / RAL-RG 620', 'EDSP 2.0 Systembreite 0,50 m, Systemhöhe 0,75 m, Pfostenabstand 2,00 m'),
+    ],
+    note: 'Einfache Distanzschutzplanke (EDSP). ESP Plus hat nur 0,18 m Systembreite. Aufhaltestufe N2/W4–W5.',
+  },
+  betonwand: {
+    width: 0.61,
+    source: [
+      reference('DIN EN 1317 / TL BSWF 96', 'New-Jersey-Profil NJ 81: Höhe 81 cm, Fußbreite 30 cm, Kopfbreite 7,5 cm, Segmentlänge 3,50 m'),
+    ],
+    note: 'Betonschutzwand NJ 81. Erhöhtes Profil NJ 111 (111 cm) für LKW-Durchbruchschutz. Breite 61 cm inkl. Profil.',
+  },
+  doppel: {
+    width: 0.60,
+    source: [
+      reference('DIN EN 1317 / RPS 2009', 'DDSP (Doppelte Distanzschutzplanke) für schmale Mittelstreifen, beidseitig wirkend'),
+    ],
+    note: 'Doppelschutzplanke für Mittelstreifen. Zwei Holme rücken an rücken. DDSP/4.0 seit 1996 BASt-eingeschränkt.',
   },
 }
 

@@ -21,7 +21,7 @@ import {
   resolveCyclepathCenterLineMode,
   resolveCyclepathCenterStrokeWidth,
 } from '../stripProps'
-import { getCrossSectionStrips, getCyclepathRenderMetrics, getLaneOverlayOccupancyWidth, getStripPlacements, isLaneOverlayCyclepath } from '../layout'
+import { getCrossSectionStrips, getCyclepathRenderMetrics, getLaneOverlayOccupancyWidth, getRoadwayBoundsFromPlacements, getStripPlacements, isLaneOverlayCyclepath } from '../layout'
 
 // ============================================================
 // RoadTopView – Interactive top-down view
@@ -40,6 +40,7 @@ interface Props {
   markings: Marking[]
   layerOrder?: string[]
   length: number
+  roadClass?: import('../types').RoadClass
   selectedStripId: string | null
   selectedMarkingId: string | null
   onSelectStrip: (id: string | null) => void
@@ -59,6 +60,7 @@ export function RoadTopView({
   markings,
   layerOrder,
   length,
+  roadClass,
   selectedStripId,
   selectedMarkingId,
   onSelectStrip,
@@ -97,6 +99,7 @@ export function RoadTopView({
   )
   const leftmostRoadwayPlacement = roadwayPlacements[0] ?? null
   const rightmostRoadwayPlacement = roadwayPlacements[roadwayPlacements.length - 1] ?? null
+  const roadwayBounds = useMemo(() => getRoadwayBoundsFromPlacements(stripPlacements), [stripPlacements])
   const orderedMarkings = useMemo(
     () => orderMarkingsByLayer(markings, layerOrder),
     [markings, layerOrder]
@@ -1191,8 +1194,10 @@ export function RoadTopView({
           </Layer>
         )}
 
-        {/* Markings (draggable, selectable, snappable) */}
-        <Layer x={offsetX} y={offsetY} scaleX={displayScale} scaleY={displayScale}>
+        {/* Markings (draggable, selectable, snappable) — clipped to road bounds */}
+        <Layer x={offsetX} y={offsetY} scaleX={displayScale} scaleY={displayScale}
+          clipX={0} clipY={0} clipWidth={tw} clipHeight={safeRoadLength}
+        >
           {orderedMarkings.map((m) => {
             // For centerlines: pass peer phases for vertical alignment snap
             const peerPhases = m.type === 'centerline'
@@ -1207,6 +1212,8 @@ export function RoadTopView({
                 selected={selectedMarkingId === m.id}
                 snapPositions={stripEdges}
                 peerPhases={peerPhases}
+                roadwayBounds={m.type === 'traffic-island' ? roadwayBounds : undefined}
+                roadClass={m.type === 'traffic-island' ? roadClass : undefined}
                 onDragEnd={onMarkingMove}
                 onClick={(id) => { onSelectMarking(id); onSelectStrip(null) }}
                 onDoubleClick={(id) => onDoubleClickElement?.('marking', id)}

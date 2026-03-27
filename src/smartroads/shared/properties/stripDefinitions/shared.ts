@@ -17,7 +17,6 @@ const VARIANT_OPTIONS: Partial<Record<StripType, StripChoiceOption[]>> = {
   median: [
     { value: 'marking-only', label: 'Markierung' },
     { value: 'green-median', label: 'Grün' },
-    { value: 'barrier', label: 'Leitplanke' },
   ],
   green: [
     { value: 'standard', label: 'Standard' },
@@ -31,6 +30,11 @@ const VARIANT_OPTIONS: Partial<Record<StripType, StripChoiceOption[]>> = {
     { value: 'dirt', label: 'Erdweg' },
     { value: 'gravel', label: 'Schotter' },
     { value: 'forest', label: 'Waldweg' },
+  ],
+  guardrail: [
+    { value: 'schutzplanke', label: 'Schutzplanke' },
+    { value: 'betonwand', label: 'Betonwand' },
+    { value: 'doppel', label: 'Doppel' },
   ],
 }
 

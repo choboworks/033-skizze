@@ -16,6 +16,7 @@ export type StripType =
   | 'tram'          // Gleiskörper
   | 'shoulder'      // Seitenstreifen / Bankett
   | 'path'          // Weg (Feldweg, Schotterweg, Waldweg)
+  | 'guardrail'     // Leitplanke / Fahrzeug-Rückhaltesystem
 
 // --- Strip Variants ---
 export type StripVariant =
@@ -48,6 +49,10 @@ export type StripVariant =
   | 'dirt'            // Erdweg / Feldweg
   | 'gravel'          // Schotterweg
   | 'forest'          // Waldweg
+  // Guardrail
+  | 'schutzplanke'    // Stahlschutzplanke (ESP/EDSP)
+  | 'betonwand'       // Betonschutzwand (New Jersey)
+  | 'doppel'          // Doppelschutzplanke (DDSP)
 
 // --- Strip (a single cross-section element) ---
 export type LaneSurfaceType = 'asphalt' | 'concrete' | 'cobblestone' | 'paving'
@@ -117,7 +122,13 @@ export interface BusStripProps {
 export type TramStripProps = Record<string, never>
 export type ShoulderStripProps = Record<string, never>
 export type PathStripProps = Record<string, never>
-
+export interface GuardrailStripProps {
+  postSpacing?: number    // Pfostenabstand in Metern (2.0 Standard, 1.33 Super-Rail)
+  showShoulder?: boolean  // Randstreifen (asphaltiert) anzeigen
+  shoulderWidth?: number  // Breite Randstreifen in Metern
+  showGreen?: boolean     // Grünstreifen anzeigen
+  greenWidth?: number     // Breite Grünstreifen in Metern
+}
 export interface StripPropsByType {
   lane: LaneStripProps
   sidewalk: SidewalkStripProps
@@ -131,6 +142,7 @@ export interface StripPropsByType {
   tram: TramStripProps
   shoulder: ShoulderStripProps
   path: PathStripProps
+  guardrail: GuardrailStripProps
 }
 
 export type StripProps = StripPropsByType[StripType]
@@ -159,6 +171,7 @@ export type MarkingType =
   | 'speed-limit'       // Tempo-Piktogramm
   | 'parking-marking'   // Parkflächenmarkierung
   | 'free-line'         // Freie Linie
+  | 'traffic-island'    // Verkehrsinsel / Mittelinsel
 
 // --- Marking Variants ---
 export type MarkingVariant =
@@ -184,6 +197,9 @@ export type MarkingVariant =
   | 'tempo-50'
   // Free line
   | 'custom'
+  // Traffic island
+  | 'median-island'     // Begrünt
+  | 'raised-paved'      // Gepflastert
   // Default
   | 'default'
 
@@ -204,6 +220,13 @@ export interface Marking {
   strokeWidth?: number
   dashPattern?: number[]
   color?: string
+  // Traffic island specific
+  surfaceType?: string      // 'green' | 'paved' | 'cobblestone'
+  endShape?: string         // 'rounded' | 'pointed' | 'flat'
+  endTaperLength?: number
+  showCurbBorder?: boolean
+  showApproachMarking?: boolean
+  approachLength?: number   // Length of the hatched approach zone in meters
 }
 
 // --- Road Class (determines marking dimensions) ---
@@ -214,6 +237,7 @@ export type RoadClass = 'innerorts' | 'ausserorts' | 'autobahn'
 export interface StraightRoadState {
   strips: Strip[]
   markings: Marking[]
+  suppressedCenterlines?: Marking[] // hidden while a traffic island suppresses centerlines
   layerOrder?: string[]      // z-order: first = bottom, last = top
   length: number           // Meter
   roadClass?: RoadClass    // defaults to 'innerorts' if absent

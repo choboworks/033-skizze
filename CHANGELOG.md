@@ -2,6 +2,67 @@
 
 ---
 
+## Session 12 – 27.03.2026
+
+**Teilnehmer**: Alex + Claude
+**Fokus**: Leitplanke (Composite-Strip), Verkehrsinsel (Marking-Umbau), Bauliches-Bereinigung
+
+### Leitplanke: Composite-Strip mit Kontext-Elementen
+
+- **Neuer StripType `guardrail`** mit 3 Varianten: Schutzplanke, Betonschutzwand, Doppelplanke (DIN EN 1317).
+- **Composite-Rendering**: Leitplanke rendert optional Randstreifen (Asphalt) + Grünstreifen (Gras-Pattern) als integrale Bestandteile — keine separaten Strips.
+- **An/Aus-Toggles** für Randstreifen (default 0.75m) und Grünstreifen (default 0.30m) in den Properties.
+- **Korrekte Reihenfolge**: Fahrbahn → Randstreifen → Grün → Planke (von Fahrbahn nach außen).
+- **Beidseitige Darstellung**: Bei `facingSide === 'both'` symmetrisch mit Extra-Renderbreite in `layout.ts`.
+- **Validierungswarnung**: Info wenn Einzelplanke manuell mittig platziert wird.
+- **Pfostenabstand** editierbar, bei Betonwand readonly.
+- **Breiten in cm** mit `displayUnit: 'cm'`, `displayFactor: 100`.
+- **Single Palette-Eintrag**: Nur "Leitplanke" in der Palette, Variante im Properties-Panel wählbar.
+- **Pipeline komplett**: types.ts → stripRules.ts → constants.ts → stripProps.ts → state.ts → GuardrailStrip.tsx → stripDefinitions/guardrail.ts.
+
+### Verkehrsinsel: Umbau von Strip zu Marking
+
+- **Architektur-Entscheidung**: Verkehrsinsel verdrängt keine Fahrstreifen, sondern liegt AUF der Fahrbahn → Marking statt Strip.
+- **Strip-Code komplett entfernt**: `IslandStrip.tsx`, `stripDefinitions/island.ts` gelöscht; alle island-Einträge aus types, rules, constants, stripProps, state, validation bereinigt.
+- **Neuer MarkingType `traffic-island`** mit Varianten `median-island` (Begrünt) und `raised-paved` (Gepflastert).
+- **Marking-Interface erweitert**: Optionale Felder `surfaceType`, `endShape`, `endTaperLength`, `showCurbBorder`, `showApproachMarking`, `approachLength`.
+- **Marking-Property-System erweitert**: `MarkingNumberFieldDefinition` hinzugefügt für editierbare Zahlenfelder (analog zu Strip-Properties).
+- **TrafficIsland.tsx**: Konva-Renderer mit Inselkörper (Endformen: abgerundet/spitz/flach), Oberflächen-Pattern, Bordstein-Rendering (Schatten/Body/Highlight).
+- **Zulaufmarkierung (Z 298)**: Optionale Sperrflächen-Dreiecke an beiden Enden mit Asphalt-Hintergrund (deckt Leitlinie ab), diagonaler Schraffur und Borderlinien.
+- **Schraffur-Regeln**: `SPERRFLAECHE_RULES` in `markingRules.ts` mit roadClass-abhängigen Abständen (innerorts 0.40m, außerorts 0.50m, autobahn 0.60m).
+- **RoadwayBounds**: Neuer Typ in `layout.ts` — berechnet Fahrbahnbereich (minX, maxX, width) für X-Clamping und Breiten-Constraints.
+- **Drag-Snapping**: X-Achse snappt auf Fahrbahnmitte + Streifenkanten (nur innerhalb Fahrbahn), Y-Achse frei mit Center-Snap.
+- **constrainTrafficIslandMarkings()**: Automatisches Clamping von Breite und X-Position bei jeder Änderung.
+- **Clipping**: `clipFunc` auf SmartRoadCanvasObject (statt `clipX/Y/Width/Height` — funktioniert zuverlässig mit `scaleX/scaleY`), Marking-Layer-Clip im Editor.
+- **Varianten-Switch**: Wechsel Begrünt ↔ Gepflastert ändert automatisch Oberfläche, Bordstein und Form.
+- **Keine Farbauswahl**: Farbe kommt aus Oberfläche/Pattern, nicht aus manuellem Color-Picker.
+
+### Bauliches-Bereinigung
+
+- **"Begrünter Mittelstreifen"** aus der Palette entfernt (redundant mit normalem Grünstreifen).
+- Typ bleibt im Code für Abwärtskompatibilität.
+
+### Bugfixes (aus vorheriger Session übernommen)
+
+- **P0: `handleSet` zundo type mismatch** — `internalHandleSet` auf 1 Parameter reduziert.
+- **P0: `CyclePathStrip` variant undefined** — `?? 'protected'` Default.
+- **P0: `PageHeader` transformer comparison** — `as unknown as Konva.Node` Cast.
+- **P1: `isDrawing` Funktionsaufruf** — `!isDrawing` → `!isDrawing()`.
+- **P1: SmartRoad Position-Reset** — nur neue Straßen (`roadId === '__new__'`) zentrieren.
+- **P2: Keyboard-Shortcuts im Editor** — Guard: `if (useAppStore.getState().roadEditor) return`.
+- **P2: Drag-Cleanup bei Unmount** — `dragCleanupRef` für alle 4 Drag-Handler.
+- **P3: UTC → lokales Datum** — `getFullYear/getMonth/getDate` statt UTC-Methoden.
+- **Bordstein-Fugenabstand**: Von 1.25m auf 1.00m korrigiert (DIN 483).
+
+### CLAUDE.md + Changelog aktualisiert
+
+- Session-Stand auf 12 (27.03.2026).
+- Neue Abschnitte: Leitplanke, Verkehrsinsel.
+- Architektur-Entscheidung 14: Verkehrsinseln sind Markings, keine Strips.
+- Pitfalls: `clipFunc` statt `clipX/Y`, RoadwayBounds, Approach-Clipping, GuardrailStrip-Reihenfolge.
+
+---
+
 ## Session 11 – 25.03.2026
 
 **Teilnehmer**: Alex + Claude

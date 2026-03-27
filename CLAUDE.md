@@ -25,7 +25,7 @@ npm run lint
 
 ---
 
-## Aktueller Stand (Session 11, 25.03.2026)
+## Aktueller Stand (Session 12, 27.03.2026)
 
 ### Fertig / tragfähig
 
@@ -84,25 +84,49 @@ npm run lint
 ### Bauliches aktuell
 
 - Eigene Palette-Kategorie: `Bauliches`
-- Darunter aktuell u. a.:
-  - `Bordstein`
+- Darunter aktuell:
+  - `Bordstein` (Standard, Abgeflacht, Ein-/Ausfahrt)
   - `Rinne`
-  - `Leitplanke`
+  - `Leitplanke` (Schutzplanke, Betonschutzwand, Doppelplanke)
   - `Grünstreifen`
-  - `Begrünter Mittelstreifen`
-- Bordstein besitzt aktuell die Arten:
-  - `Standard`
-  - `Abgeflacht`
-  - `Ein- oder Ausfahrt`
-- `Ein- oder Ausfahrt` ist ein lokaler abgesenkter Abschnitt
-- Default-Länge für `Ein- oder Ausfahrt` ist `3.00 m`
-- Der Ein-/Ausfahrtsbereich ist im Preview vertikal verschiebbar
+- `Ein- oder Ausfahrt` ist ein lokaler abgesenkter Abschnitt, Default-Länge `3.00 m`
+- `Begrünter Mittelstreifen` wurde aus der Palette entfernt (redundant mit Grünstreifen)
+
+### Leitplanke aktuell
+
+- **Composite-Strip**: Leitplanke rendert optional Randstreifen + Grünstreifen als Teil der eigenen Komponente
+- 3 Varianten: `schutzplanke`, `betonwand`, `doppel` (DIN EN 1317)
+- Randstreifen (Asphalt, default 0.75m) und Grünstreifen (Gras-Pattern, default 0.30m) per An/Aus-Toggle
+- **Reihenfolge**: Fahrbahn → Randstreifen → Grün → Planke (von der Fahrbahn nach außen)
+- **Beidseitig**: Bei `facingSide === 'both'` symmetrische Darstellung mit Extra-Renderbreite in `layout.ts`
+- Validierungswarnung wenn Einzelplanke manuell in der Mitte platziert wird
+- Pfostenabstand und Kontext-Breiten editierbar in cm
+- Width-Felder mit `displayUnit: 'cm'`, `displayFactor: 100`
+
+### Verkehrsinsel aktuell
+
+- **Marking-basiert**, nicht Strip-basiert — Insel liegt AUF der Fahrbahn, verdrängt keine Streifen
+- MarkingType `'traffic-island'` mit Varianten `'median-island'` (Begrünt) und `'raised-paved'` (Gepflastert)
+- Frei positionierbar per Drag innerhalb der Fahrbahn (X-Clamping auf `RoadwayBounds`)
+- Snap auf Fahrbahnmitte + Streifenkanten, Y-Achse frei mit Center-Snap
+- **Oberflächen**: Begrünt (Gras-Pattern), Gepflastert (Beton-Pattern), Kopfstein
+- **Inselformen**: Abgerundet, Spitz, Flach — mit editierbarer Zulauflänge
+- **Bordstein**: An/Aus-Toggle mit mehrstufigem Bordstein-Rendering (Schatten, Body, Highlight)
+- **Zulaufmarkierung (Z 298)**: Optionale Sperrflächen-Dreiecke an beiden Enden
+  - Asphalt-Hintergrund deckt darunterliegende Leitlinie ab
+  - Diagonale Schraffur mit `roadClass`-abhängigen Abständen (SPERRFLAECHE_RULES)
+  - Borderlinie verbindet optisch mit Fahrstreifenbegrenzung
+- **RoadwayBounds**: `layout.ts` berechnet Fahrbahnbereich (minX, maxX, width) für Clamping
+- **Breiten-Constraint**: `constrainTrafficIslandMarkings()` in StraightEditor begrenzt automatisch
+- **Clipping**: `clipFunc` auf SmartRoadCanvasObject + Marking-Layer-Clip im Editor
+- **Marking-Property-System**: Um `MarkingNumberFieldDefinition` erweitert für editierbare Zahlenfelder
+- **Keine Farbauswahl** im Properties-Panel (Farbe kommt aus Oberfläche/Pattern)
 
 ### Offen
 
 - SmartRoads: Kurven, Kreuzungen, Kreisverkehre
 - Getrennter Geh-/Radweg (Z 241): editierbares Rad-/Gehteil-Verhältnis, Oberflächenwahl
-- Mehr bauliche Elemente mit echter Fachlogik
+- Y-Achsen-Snap zwischen Markings (Zebrastreifen an Insel-Position ausrichten)
 - Fahrzeuge und weitere Library-Objekte
 - Export / Save-Load fertigziehen
 - Weitere Norm-Validierungen und mehr Presets, sobald der Editor stabil finalisiert ist
@@ -120,7 +144,7 @@ stripPropertyRegistry.ts → stripDefinitions/*.ts
 
 RoadTopView.tsx → StripRenderer.tsx → strips/*.tsx
                 → MarkingRenderer.tsx → markings/*.tsx
-                → layout.ts (Querschnittslogik, Overlay-Platzierung)
+                → layout.ts (Querschnittslogik, Overlay-Platzierung, RoadwayBounds)
 
 StraightEditor.tsx → EditorContextMenu.tsx (Rechtsklick-Menü)
                    → FloatingEditorProperties.tsx
@@ -139,7 +163,7 @@ StraightEditor.tsx → EditorContextMenu.tsx (Rechtsklick-Menü)
 - `shared.ts`: `RuleSourceRef`-Interface mit Normquelle (Dokument, Abschnitt, Detail)
 - `profileRules.ts`: Fahrstreifenbreiten und Mittellinie pro `roadClass`
 - `stripRules.ts`: Default-Breiten, Varianten, Radweg-Dimensionen (größte Datei)
-- `markingRules.ts`: Dash-Patterns (3m/6m, 4m/8m usw.), Strichbreiten
+- `markingRules.ts`: Dash-Patterns (3m/6m, 4m/8m usw.), Strichbreiten, Sperrflächen-Schraffur
 - **Prinzip**: Neue Normwerte gehören in `rules/`, nicht hart in Renderer oder Properties
 
 ---
@@ -196,6 +220,11 @@ Diese Entscheidungen gelten, bis sie bewusst gemeinsam geändert werden.
     - Nutzer dürfen bewusst abweichen
     - Validierungen dürfen warnen, aber nicht alles hart blockieren
 
+14. **Verkehrsinseln sind Markings, keine Strips**
+    Eine Verkehrsinsel verdrängt keine Fahrstreifen, sondern liegt auf der Fahrbahn.
+    Modellierung als Marking (frei positioniert), nicht als Strip (Querschnittselement).
+    X-Clamping auf `RoadwayBounds`, Breiten-Constraint auf Fahrbahnbreite.
+
 ---
 
 ## Konventionen
@@ -247,3 +276,7 @@ Diese Entscheidungen gelten, bis sie bewusst gemeinsam geändert werden.
 - **Konva-Rechtsklick**: Konva zählt Linksklick + schnellen Rechtsklick als Doppelklick; `onDblClick` muss `e.evt.button === 0` prüfen
 - **Drag-Handler und Rechtsklick**: Alle Drag-Handler (Reorder, Overlay-Swap) müssen `e.evt.button !== 0` abfangen, sonst startet Rechtsklick einen Drag
 - **SmartRoad Bounding-Box**: `SmartRoadCanvasObject` hat ein unsichtbares Bounds-Rect, damit Konvas `getClientRect()` immer die exakte Straßengröße zurückgibt
+- **SmartRoad `clipFunc`**: Hauptcanvas nutzt `clipFunc` statt `clipX/Y/Width/Height` — letzteres funktioniert nicht zuverlässig mit `scaleX/scaleY`
+- **Verkehrsinsel-Approach**: Zulaufdreiecke rendern bei voller Größe (kein Stauchen); Clipping auf Straßengrenzen über Layer-Clip und `clipFunc`
+- **`layout.ts` RoadwayBounds**: Berechnet den Fahrbahnbereich für Insel-Clamping; nur echte Fahrstreifen zählen (keine Overlays)
+- **GuardrailStrip Reihenfolge**: Von Fahrbahn nach außen: Randstreifen → Grün → Planke; `facingSide` bestimmt die Seite

@@ -1,5 +1,5 @@
 import { MARKING_RULES } from './rules/markingRules'
-import type { BusStripProps, CurbKind, CurbStripProps, CyclepathLineMode, CyclepathPathType, CyclepathProtectedPlacement, CyclepathSide, CyclepathStripProps, LaneStripProps, LaneSurfaceType, ParkingStripProps, SidewalkStripProps, SidewalkSurfaceType, Strip, StripPropsByType, StripType, StripVariant } from './types'
+import type { BusStripProps, CurbKind, CurbStripProps, CyclepathLineMode, CyclepathPathType, CyclepathProtectedPlacement, CyclepathSide, CyclepathStripProps, GuardrailStripProps, LaneStripProps, LaneSurfaceType, ParkingStripProps, SidewalkStripProps, SidewalkSurfaceType, Strip, StripPropsByType, StripType, StripVariant } from './types'
 
 export const DEFAULT_PARKING_BAY_LENGTH = 5.7
 export const DEFAULT_PARKING_ANGLE = 45
@@ -10,6 +10,14 @@ export const PARKING_BAY_DEFAULTS: Record<string, number> = {
 }
 export const DEFAULT_CYCLEPATH_SAFETY_BUFFER_WIDTH = 0.75
 export const DEFAULT_CURB_LOWERED_SECTION_LENGTH = 3.0
+export const DEFAULT_GUARDRAIL_POST_SPACING = 2.0
+export const DEFAULT_GUARDRAIL_SHOULDER_WIDTH = 0.75
+export const DEFAULT_GUARDRAIL_GREEN_WIDTH = 0.30
+export const GUARDRAIL_POST_SPACING_DEFAULTS: Record<string, number> = {
+  schutzplanke: 2.0,
+  doppel: 2.0,
+  betonwand: 0, // Betonwand hat keine Pfosten
+}
 
 const DEFAULT_STRIP_PROPS: { [K in StripType]: StripPropsByType[K] } = {
   lane: { startOffset: 0, endOffset: 0 },
@@ -33,6 +41,7 @@ const DEFAULT_STRIP_PROPS: { [K in StripType]: StripPropsByType[K] } = {
   tram: {},
   shoulder: {},
   path: {},
+  guardrail: { postSpacing: DEFAULT_GUARDRAIL_POST_SPACING, showShoulder: false, showGreen: false },
 }
 
 export function getDefaultStripProps<T extends StripType>(type: T, variant?: StripVariant): StripPropsByType[T] {
@@ -243,6 +252,29 @@ export function getCurbStripProps(strip: Strip): CurbStripProps {
     ),
     loweredSectionOffset: clampNonNegative(raw.loweredSectionOffset, 0),
   }
+}
+
+export function getGuardrailStripProps(strip: Strip): Required<GuardrailStripProps> {
+  if (strip.type !== 'guardrail') return { postSpacing: DEFAULT_GUARDRAIL_POST_SPACING, showShoulder: false, shoulderWidth: DEFAULT_GUARDRAIL_SHOULDER_WIDTH, showGreen: false, greenWidth: DEFAULT_GUARDRAIL_GREEN_WIDTH }
+  const raw = (strip.props as Record<string, unknown> | undefined) ?? {}
+  const defaultSpacing = GUARDRAIL_POST_SPACING_DEFAULTS[strip.variant] ?? DEFAULT_GUARDRAIL_POST_SPACING
+  return {
+    postSpacing: isFiniteNumber(raw.postSpacing) ? Math.max(0, raw.postSpacing as number) : defaultSpacing,
+    showShoulder: raw.showShoulder === true,
+    shoulderWidth: isFiniteNumber(raw.shoulderWidth) ? Math.max(0.25, raw.shoulderWidth as number) : DEFAULT_GUARDRAIL_SHOULDER_WIDTH,
+    showGreen: raw.showGreen === true,
+    greenWidth: isFiniteNumber(raw.greenWidth) ? Math.max(0.5, raw.greenWidth as number) : DEFAULT_GUARDRAIL_GREEN_WIDTH,
+  }
+}
+
+/** Total rendered width of guardrail including optional shoulder + green */
+export function getGuardrailTotalWidth(strip: Strip, isBoth = false): number {
+  const props = getGuardrailStripProps(strip)
+  const multiplier = isBoth ? 2 : 1
+  let total = Math.max(0.1, Number.isFinite(strip.width) ? strip.width : 0.5)
+  if (props.showShoulder) total += props.shoulderWidth * multiplier
+  if (props.showGreen) total += props.greenWidth * multiplier
+  return total
 }
 
 export function getCyclepathStripProps(strip: Strip): CyclepathStripProps {

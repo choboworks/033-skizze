@@ -8,7 +8,7 @@ import { FloatingEditorProperties } from '../shared/FloatingEditorProperties'
 import { EditorContextMenu } from '../shared/EditorContextMenu'
 import { RoadTopView } from '../rendering/RoadTopView'
 import { createDefaultStraightRoad, createStrip, totalWidth, ROAD_CLASS_CONFIG, generateLaneMarkings, normalizeLayerOrder } from '../constants'
-import { isLaneOverlayCyclepath } from '../layout'
+import { getRoadwayBoundsFromPlacements, getStripPlacements, isLaneOverlayCyclepath } from '../layout'
 import { MARKING_RULES } from '../rules/markingRules'
 import { applyRoadClassWidthToStrips } from '../rules/stripRules'
 import { getCyclepathOverlaySide } from '../stripProps'
@@ -33,24 +33,113 @@ interface Props {
   onCancel: () => void
 }
 
+function isCenterlineMarking(marking: Marking): boolean {
+  return marking.type === 'centerline'
+}
+
+function roundMeters(value: number): number {
+  return Math.round(value * 100) / 100
+}
+
+function constrainTrafficIslandMarkings(markings: Marking[], strips: Strip[], roadLength: number): Marking[] {
+  const roadwayBounds = getRoadwayBoundsFromPlacements(getStripPlacements(strips, roadLength))
+  if (!roadwayBounds) return markings
+
+  return markings.map((marking) => {
+    if (marking.type !== 'traffic-island') return marking
+
+    const width = Math.max(0.1, Math.min(marking.width ?? 2.5, roadwayBounds.width))
+    const clampedX = Math.max(roadwayBounds.minX, Math.min(marking.x, roadwayBounds.maxX - width))
+
+    return {
+      ...marking,
+      width: roundMeters(width),
+      x: roundMeters(clampedX),
+    }
+  })
+}
+
+function restoreCenterlines(generatedCenterlines: Marking[], preservedCenterlines: Marking[]): Marking[] {
+  return generatedCenterlines.map((generated, index) => {
+    const preserved = preservedCenterlines[index]
+    if (!preserved) return generated
+
+    return {
+      ...generated,
+      id: preserved.id,
+      y: preserved.y,
+      variant: preserved.variant,
+      ...(preserved.strokeWidth != null ? { strokeWidth: preserved.strokeWidth } : {}),
+      ...(preserved.color ? { color: preserved.color } : {}),
+    }
+  })
+}
+
+function reconcileCenterlineState(
+  nextStrips: Strip[],
+  visibleMarkings: Marking[],
+  suppressedCenterlines: Marking[],
+  nextRoadClass: RoadClass,
+  nextLength: number,
+) {
+  const activeCenterlines = visibleMarkings.filter(isCenterlineMarking)
+  const nonCenterlines = visibleMarkings.filter((marking) => !isCenterlineMarking(marking))
+  const preservedCenterlines = [...activeCenterlines, ...suppressedCenterlines.filter(isCenterlineMarking)]
+  const hasTrafficIsland = nonCenterlines.some((marking) => marking.type === 'traffic-island')
+
+  if (hasTrafficIsland) {
+    return {
+      markings: nonCenterlines,
+      suppressedCenterlines: preservedCenterlines,
+    }
+  }
+
+  const config = ROAD_CLASS_CONFIG[nextRoadClass]
+  const generatedCenterlines = generateLaneMarkings(nextStrips, config.centerlineVariant, config.strokeWidth, nextLength)
+  return {
+    markings: [...nonCenterlines, ...restoreCenterlines(generatedCenterlines, preservedCenterlines)],
+    suppressedCenterlines: [] as Marking[],
+  }
+}
+
 export function StraightEditor({ open, initialState, onFinish, onCancel }: Props) {
   const normalizedInitialState = useMemo(
     () => normalizeStraightRoadState(initialState, createDefaultStraightRoad()),
     [initialState]
   )
+  const initialMarkingState = useMemo(() => {
+    const constrainedMarkings = constrainTrafficIslandMarkings(
+      normalizedInitialState.markings,
+      normalizedInitialState.strips,
+      normalizedInitialState.length,
+    )
+    return reconcileCenterlineState(
+      normalizedInitialState.strips,
+      constrainedMarkings,
+      normalizedInitialState.suppressedCenterlines ?? [],
+      normalizedInitialState.roadClass ?? 'innerorts',
+      normalizedInitialState.length,
+    )
+  }, [normalizedInitialState])
 
   const [strips, setStrips] = useState<Strip[]>(normalizedInitialState.strips)
-  const [markings, setMarkings] = useState<Marking[]>(normalizedInitialState.markings)
+  const [markings, setMarkings] = useState<Marking[]>(initialMarkingState.markings)
+  const [suppressedCenterlines, setSuppressedCenterlines] = useState<Marking[]>(initialMarkingState.suppressedCenterlines)
   const [layerOrder, setLayerOrder] = useState<string[]>(
-    () => normalizeLayerOrder(normalizedInitialState.layerOrder, normalizedInitialState.strips, normalizedInitialState.markings)
+    () => normalizeLayerOrder(normalizedInitialState.layerOrder, normalizedInitialState.strips, initialMarkingState.markings)
   )
   const [length, setLength] = useState(normalizedInitialState.length)
   const [roadClass, setRoadClass] = useState<RoadClass>(normalizedInitialState.roadClass ?? 'innerorts')
   const layerOrderRef = useRef(layerOrder)
+  const suppressedCenterlinesRef = useRef(suppressedCenterlines)
 
   useEffect(() => {
     layerOrderRef.current = layerOrder
   }, [layerOrder])
+
+  useEffect(() => {
+    suppressedCenterlinesRef.current = suppressedCenterlines
+  }, [suppressedCenterlines])
 
   // Selection state (shared between canvas + layer manager + floating properties)
   const [selectedStripId, setSelectedStripId] = useState<string | null>(null)
@@ -64,11 +153,15 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
     x: number; y: number; kind: 'strip' | 'marking'; id: string
   } | null>(null)
 
-  const rebuildMarkingsForStrips = useCallback((nextStrips: Strip[], prevMarkings: Marking[], nextRoadClass: RoadClass = roadClass, nextLength: number = length) => {
-    const config = ROAD_CLASS_CONFIG[nextRoadClass]
-    const nonCenterlines = prevMarkings.filter((m) => m.type !== 'centerline')
-    const centerlines = generateLaneMarkings(nextStrips, config.centerlineVariant, config.strokeWidth, nextLength)
-    return [...nonCenterlines, ...centerlines]
+  const rebuildMarkingsForStrips = useCallback((
+    nextStrips: Strip[],
+    prevMarkings: Marking[],
+    prevSuppressedCenterlines: Marking[] = suppressedCenterlinesRef.current,
+    nextRoadClass: RoadClass = roadClass,
+    nextLength: number = length,
+  ) => {
+    const constrainedMarkings = constrainTrafficIslandMarkings(prevMarkings, nextStrips, nextLength)
+    return reconcileCenterlineState(nextStrips, constrainedMarkings, prevSuppressedCenterlines, nextRoadClass, nextLength)
   }, [roadClass, length])
 
   const buildStripAnchoredLayerOrder = useCallback((nextStrips: Strip[], nextMarkings: Marking[]) => {
@@ -87,9 +180,10 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
     const constrainedStrips = applyCyclepathGeometryConstraints(newStrips)
     setStrips(constrainedStrips)
     setMarkings((prev) => {
-      const nextMarkings = rebuildMarkingsForStrips(constrainedStrips, prev)
-      setLayerOrder(buildStripAnchoredLayerOrder(constrainedStrips, nextMarkings))
-      return nextMarkings
+      const nextState = rebuildMarkingsForStrips(constrainedStrips, prev)
+      setSuppressedCenterlines(nextState.suppressedCenterlines)
+      setLayerOrder(buildStripAnchoredLayerOrder(constrainedStrips, nextState.markings))
+      return nextState.markings
     })
   }, [buildStripAnchoredLayerOrder, rebuildMarkingsForStrips])
 
@@ -107,9 +201,10 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       })
       const constrained = applyCyclepathGeometryConstraints(updated)
       setMarkings((current) => {
-        const nextMarkings = rebuildMarkingsForStrips(constrained, current, roadClass, length)
-        setLayerOrder(buildStripAnchoredLayerOrder(constrained, nextMarkings))
-        return nextMarkings
+        const nextState = rebuildMarkingsForStrips(constrained, current, suppressedCenterlinesRef.current, roadClass, length)
+        setSuppressedCenterlines(nextState.suppressedCenterlines)
+        setLayerOrder(buildStripAnchoredLayerOrder(constrained, nextState.markings))
+        return nextState.markings
       })
       return constrained
     })
@@ -119,9 +214,10 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
     setStrips((prev) => {
       const updated = prev.filter((s) => s.id !== id)
       setMarkings((current) => {
-        const nextMarkings = rebuildMarkingsForStrips(updated, current)
-        setLayerOrder(buildStripAnchoredLayerOrder(updated, nextMarkings))
-        return nextMarkings
+        const nextState = rebuildMarkingsForStrips(updated, current)
+        setSuppressedCenterlines(nextState.suppressedCenterlines)
+        setLayerOrder(buildStripAnchoredLayerOrder(updated, nextState.markings))
+        return nextState.markings
       })
       return updated
     })
@@ -153,16 +249,26 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       })()
       const constrained = applyCyclepathGeometryConstraints(updated)
       setMarkings((current) => {
-        const nextMarkings = rebuildMarkingsForStrips(constrained, current)
-        setLayerOrder(buildStripAnchoredLayerOrder(constrained, nextMarkings))
-        return nextMarkings
+        const nextState = rebuildMarkingsForStrips(constrained, current)
+        setSuppressedCenterlines(nextState.suppressedCenterlines)
+        setLayerOrder(buildStripAnchoredLayerOrder(constrained, nextState.markings))
+        return nextState.markings
       })
       return constrained
     })
   }, [buildStripAnchoredLayerOrder, rebuildMarkingsForStrips, roadClass])
 
+  const roadwayBounds = useMemo(
+    () => getRoadwayBoundsFromPlacements(getStripPlacements(strips, length)),
+    [strips, length],
+  )
+  const roadwayWidth = roadwayBounds?.width
+  const hasTrafficIsland = markings.some((marking) => marking.type === 'traffic-island')
+
   // --- Marking operations ---
   const handleAddMarking = useCallback((type: MarkingType, variant: MarkingVariant) => {
+    if (hasTrafficIsland && (type === 'traffic-island' || type === 'centerline')) return
+
     const tw = totalWidth(strips)
     const strokeWidth = (() => {
       if (type === 'centerline') {
@@ -174,21 +280,37 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       if (type === 'stopline') return MARKING_RULES.stopline.strokeWidth
       return undefined
     })()
+    const isIsland = type === 'traffic-island'
+    const defaultIslandWidth = roadwayBounds ? Math.min(2.50, roadwayBounds.width) : 2.50
+
+    // For traffic islands, spawn centered within the roadway (lane/bus area)
+    const islandX = roadwayBounds
+      ? roadwayBounds.minX + Math.max(0, roadwayBounds.width - defaultIslandWidth) / 2
+      : (tw - defaultIslandWidth) / 2
+
     const newMarking: Marking = {
       id: crypto.randomUUID(),
       type,
       variant,
-      x: tw / 2,
-      y: length / 2,
-      width: tw,
+      x: isIsland ? islandX : tw / 2,
+      y: isIsland ? Math.max(0, (length - 8.0) / 2) : length / 2,
+      width: isIsland ? defaultIslandWidth : tw,
+      ...(isIsland ? { length: 8.0, surfaceType: 'green', endShape: 'rounded', endTaperLength: 1.0, showCurbBorder: true, showApproachMarking: true, approachLength: 3.0 } : {}),
       ...(strokeWidth ? { strokeWidth } : {}),
     }
     setMarkings((prev) => {
-      const nextMarkings = [...prev, newMarking]
-      setLayerOrder(normalizeLayerOrder([...layerOrderRef.current, newMarking.id], strips, nextMarkings))
-      return nextMarkings
+      if (!isIsland) {
+        const nextMarkings = [...prev, newMarking]
+        setLayerOrder(normalizeLayerOrder([...layerOrderRef.current, newMarking.id], strips, nextMarkings))
+        return nextMarkings
+      }
+
+      const nextState = rebuildMarkingsForStrips(strips, [...prev, newMarking])
+      setSuppressedCenterlines(nextState.suppressedCenterlines)
+      setLayerOrder(normalizeLayerOrder([...layerOrderRef.current, newMarking.id], strips, nextState.markings))
+      return nextState.markings
     })
-  }, [strips, length])
+  }, [hasTrafficIsland, length, rebuildMarkingsForStrips, roadwayBounds, strips])
 
   const handleMarkingMove = useCallback((id: string, x: number, y: number) => {
     setMarkings(prev => prev.map(m => m.id === id ? { ...m, x, y } : m))
@@ -196,7 +318,20 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
 
   const handleDeleteMarking = useCallback((id: string) => {
     setMarkings((prev) => {
+      const deleted = prev.find((m) => m.id === id)
       const nextMarkings = prev.filter((marking) => marking.id !== id)
+
+      if (deleted?.type === 'traffic-island') {
+        const nextState = rebuildMarkingsForStrips(strips, nextMarkings)
+        setSuppressedCenterlines(nextState.suppressedCenterlines)
+        setLayerOrder(normalizeLayerOrder(
+          layerOrderRef.current.filter((layerId) => layerId !== id),
+          strips,
+          nextState.markings,
+        ))
+        return nextState.markings
+      }
+
       setLayerOrder(normalizeLayerOrder(
         layerOrderRef.current.filter((layerId) => layerId !== id),
         strips,
@@ -205,11 +340,15 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       return nextMarkings
     })
     if (selectedMarkingId === id) { setSelectedMarkingId(null); setPropertiesOpen(false) }
-  }, [selectedMarkingId, strips])
+  }, [selectedMarkingId, strips, rebuildMarkingsForStrips])
 
   const handleUpdateMarking = useCallback((id: string, changes: Partial<Marking>) => {
-    setMarkings(prev => prev.map(m => m.id === id ? { ...m, ...changes } : m))
-  }, [])
+    setMarkings((prev) => constrainTrafficIslandMarkings(
+      prev.map((marking) => (marking.id === id ? { ...marking, ...changes } : marking)),
+      strips,
+      length,
+    ))
+  }, [length, strips])
 
   // --- Context menu ---
   const handleContextMenu = useCallback((e: React.MouseEvent, kind: 'strip' | 'marking', id: string) => {
@@ -229,9 +368,10 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       updated.splice(idx + 1, 0, clone)
       const constrained = applyCyclepathGeometryConstraints(updated)
       setMarkings((current) => {
-        const nextMarkings = rebuildMarkingsForStrips(constrained, current)
-        setLayerOrder(buildStripAnchoredLayerOrder(constrained, nextMarkings))
-        return nextMarkings
+        const nextState = rebuildMarkingsForStrips(constrained, current)
+        setSuppressedCenterlines(nextState.suppressedCenterlines)
+        setLayerOrder(buildStripAnchoredLayerOrder(constrained, nextState.markings))
+        return nextState.markings
       })
       return constrained
     })
@@ -272,9 +412,10 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
           : strip
       ))
       setMarkings((current) => {
-        const nextMarkings = rebuildMarkingsForStrips(updated, current, roadClass, newLength)
-        setLayerOrder(buildStripAnchoredLayerOrder(updated, nextMarkings))
-        return nextMarkings
+        const nextState = rebuildMarkingsForStrips(updated, current, suppressedCenterlinesRef.current, roadClass, newLength)
+        setSuppressedCenterlines(nextState.suppressedCenterlines)
+        setLayerOrder(buildStripAnchoredLayerOrder(updated, nextState.markings))
+        return nextState.markings
       })
       return updated
     })
@@ -286,9 +427,10 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
     setStrips((prev) => {
       const updated = applyCyclepathGeometryConstraints(applyRoadClassWidthToStrips(prev, nextRoadClass))
       setMarkings((current) => {
-        const nextMarkings = rebuildMarkingsForStrips(updated, current, nextRoadClass, length)
-        setLayerOrder(buildStripAnchoredLayerOrder(updated, nextMarkings))
-        return nextMarkings
+        const nextState = rebuildMarkingsForStrips(updated, current, suppressedCenterlinesRef.current, nextRoadClass, length)
+        setSuppressedCenterlines(nextState.suppressedCenterlines)
+        setLayerOrder(buildStripAnchoredLayerOrder(updated, nextState.markings))
+        return nextState.markings
       })
       return updated
     })
@@ -297,9 +439,18 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
   // --- Presets ---
   const handleLoadPreset = useCallback((state: StraightRoadState) => {
     const normalized = normalizeStraightRoadState(state, createDefaultStraightRoad())
+    const constrainedMarkings = constrainTrafficIslandMarkings(normalized.markings, normalized.strips, normalized.length)
+    const nextMarkingState = reconcileCenterlineState(
+      normalized.strips,
+      constrainedMarkings,
+      normalized.suppressedCenterlines ?? [],
+      normalized.roadClass ?? 'innerorts',
+      normalized.length,
+    )
     setStrips(normalized.strips)
-    setMarkings(normalized.markings)
-    setLayerOrder(normalizeLayerOrder(normalized.layerOrder, normalized.strips, normalized.markings))
+    setMarkings(nextMarkingState.markings)
+    setSuppressedCenterlines(nextMarkingState.suppressedCenterlines)
+    setLayerOrder(normalizeLayerOrder(normalized.layerOrder, normalized.strips, nextMarkingState.markings))
     setLength(normalized.length)
     setRoadClass(normalized.roadClass ?? 'innerorts')
     setSelectedStripId(null)
@@ -313,9 +464,17 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
 
   const handleReset = useCallback(() => {
     const defaultState = normalizeStraightRoadState(createDefaultStraightRoad(), createDefaultStraightRoad())
+    const nextMarkingState = reconcileCenterlineState(
+      defaultState.strips,
+      defaultState.markings,
+      defaultState.suppressedCenterlines ?? [],
+      defaultState.roadClass ?? 'innerorts',
+      defaultState.length,
+    )
     setStrips(defaultState.strips)
-    setMarkings(defaultState.markings)
-    setLayerOrder(normalizeLayerOrder(defaultState.layerOrder, defaultState.strips, defaultState.markings))
+    setMarkings(nextMarkingState.markings)
+    setSuppressedCenterlines(nextMarkingState.suppressedCenterlines)
+    setLayerOrder(normalizeLayerOrder(defaultState.layerOrder, defaultState.strips, nextMarkingState.markings))
     setLength(defaultState.length)
     setRoadClass(defaultState.roadClass ?? 'innerorts')
     setSelectedStripId(null)
@@ -325,7 +484,7 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
 
   // --- Finish ---
   const handleFinish = () => {
-    onFinish(normalizeStraightRoadState({ strips, markings, layerOrder, length, roadClass }, createDefaultStraightRoad()))
+    onFinish(normalizeStraightRoadState({ strips, markings, suppressedCenterlines, layerOrder, length, roadClass }, createDefaultStraightRoad()))
   }
 
   // --- Resolve selected objects for floating properties ---
@@ -339,6 +498,7 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       onAddMarking={handleAddMarking}
       onLoadPreset={handleLoadPreset}
       presets={STRAIGHT_PRESETS}
+      hasTrafficIsland={hasTrafficIsland}
     />
   )
 
@@ -367,6 +527,7 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
           markings={markings}
           layerOrder={layerOrder}
           length={length}
+          roadClass={roadClass}
           selectedStripId={selectedStripId}
           selectedMarkingId={selectedMarkingId}
           onSelectStrip={setSelectedStripId}
@@ -388,6 +549,7 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
           marking={selectedMarking}
           roadLength={length}
           roadClass={roadClass}
+          roadwayWidth={roadwayWidth}
           onUpdateStrip={selectedStripId ? (changes) => handleUpdateStrip(selectedStripId, changes) : undefined}
           onUpdateMarking={selectedMarkingId ? (changes) => handleUpdateMarking(selectedMarkingId, changes) : undefined}
           onClose={() => setPropertiesOpen(false)}

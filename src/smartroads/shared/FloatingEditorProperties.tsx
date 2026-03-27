@@ -17,12 +17,14 @@ interface Props {
   marking: Marking | null
   roadLength?: number
   roadClass?: RoadClass
+  roadwayWidth?: number
   onUpdateStrip?: (changes: Partial<Strip>) => void
   onUpdateMarking?: (changes: Partial<Marking>) => void
+  onAction?: (actionId: string) => void
   onClose: () => void
 }
 
-export function FloatingEditorProperties({ strip, marking, roadLength, roadClass, onUpdateStrip, onUpdateMarking, onClose }: Props) {
+export function FloatingEditorProperties({ strip, marking, roadLength, roadClass, roadwayWidth, onUpdateStrip, onUpdateMarking, onAction, onClose }: Props) {
   const PANEL_W = 320
 
   const [pos, setPos] = useState(() => ({
@@ -84,10 +86,10 @@ export function FloatingEditorProperties({ strip, marking, roadLength, roadClass
       {/* Properties content */}
       <div className="panel-section" style={{ maxHeight: '60vh', overflowY: 'auto', borderBottom: 'none' }}>
         {strip && onUpdateStrip && (
-          <StripProperties strip={strip} roadLength={roadLength} roadClass={roadClass} onUpdate={onUpdateStrip} />
+          <StripProperties strip={strip} roadLength={roadLength} roadClass={roadClass} onUpdate={onUpdateStrip} onAction={onAction} />
         )}
         {marking && onUpdateMarking && (
-          <MarkingProperties marking={marking} onUpdate={onUpdateMarking} />
+          <MarkingProperties marking={marking} roadwayWidth={roadwayWidth} onUpdate={onUpdateMarking} />
         )}
       </div>
     </div>

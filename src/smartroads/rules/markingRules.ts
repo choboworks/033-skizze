@@ -78,6 +78,28 @@ export const MARKING_RULES = {
   },
 } as const
 
+// Sperrfläche Z 298 — diagonal hatching by road class (RMS-1)
+export const SPERRFLAECHE_RULES = {
+  innerorts: {
+    spacing: 0.30,       // 30 cm Abstand zwischen Diagonalstrichen
+    lineWidth: 0.05,     // 5 cm Strichbreite (Schmalstrich)
+    borderWidth: 0.04,   // 4 cm Randlinie
+    source: [reference('1.5 Flaechenmarkierungen', 'Sperrfläche Z 298 innerorts: schmalere Striche, geringerer Abstand (RMS-1)')],
+  },
+  ausserorts: {
+    spacing: 0.50,       // 50 cm Abstand
+    lineWidth: 0.08,     // 8 cm Strichbreite
+    borderWidth: 0.06,   // 6 cm Randlinie
+    source: [reference('1.5 Flaechenmarkierungen', 'Sperrfläche Z 298 außerorts: breite Schrägstriche (RMS-1)')],
+  },
+  autobahn: {
+    spacing: 0.60,       // 60 cm Abstand
+    lineWidth: 0.10,     // 10 cm Strichbreite (Breitstrich)
+    borderWidth: 0.08,   // 8 cm Randlinie
+    source: [reference('1.5 Flaechenmarkierungen', 'Sperrfläche Z 298 Autobahn: Breitstrich (RMS Teil A)')],
+  },
+} as const
+
 export function getCenterlineDashPattern(variant: MarkingVariant): [number, number] {
   return CENTERLINE_VARIANT_RULES[variant]?.dashPattern ?? CENTERLINE_VARIANT_RULES['standard-dash']!.dashPattern
 }

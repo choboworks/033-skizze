@@ -4,6 +4,8 @@ import { LaneBoundary } from './markings/LaneBoundary'
 import { Crosswalk } from './markings/Crosswalk'
 import { DirectionArrow } from './markings/DirectionArrow'
 import { StopLine } from './markings/StopLine'
+import { TrafficIsland } from './markings/TrafficIsland'
+import type { RoadwayBounds } from '../layout'
 
 // ============================================================
 // MarkingRenderer – Dispatches to the correct Konva component
@@ -15,6 +17,8 @@ export interface MarkingCommonProps {
   selected?: boolean
   snapPositions?: number[]
   peerPhases?: number[]
+  roadwayBounds?: RoadwayBounds
+  roadClass?: string
   onDragEnd?: (id: string, x: number, y: number) => void
   onClick?: (id: string) => void
   onDoubleClick?: (id: string) => void
@@ -38,6 +42,8 @@ export function MarkingRenderer({ roadLength, ...common }: Props) {
       return <DirectionArrow {...common} />
     case 'stopline':
       return <StopLine {...common} />
+    case 'traffic-island':
+      return <TrafficIsland {...common} roadLength={roadLength} />
     default:
       return null
   }
