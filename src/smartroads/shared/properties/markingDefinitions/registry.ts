@@ -1,5 +1,6 @@
 import type { MarkingType } from '../../../types'
 import { getArrowPropertySections } from './arrow'
+import { getBikeCrossingPropertySections } from './bikeCrossing'
 import { getCenterlinePropertySections } from './centerline'
 import { getCrosswalkPropertySections } from './crosswalk'
 import { getDefaultMarkingPropertySections } from './default'
@@ -13,6 +14,7 @@ const MARKING_PROPERTY_BUILDERS: Partial<Record<MarkingType, (context: MarkingPr
   laneboundary: getLaneBoundaryPropertySections,
   arrow: getArrowPropertySections,
   crosswalk: getCrosswalkPropertySections,
+  'bike-crossing': getBikeCrossingPropertySections,
   stopline: getStoplinePropertySections,
   'traffic-island': getIslandMarkingPropertySections,
 }

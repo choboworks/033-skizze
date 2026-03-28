@@ -95,6 +95,16 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
 
   if (!state || !state.strips || state.strips.length === 0) return null
   const orderedMarkings = orderMarkingsByLayer(state.markings, state.layerOrder)
+  const markingById = new Map(state.markings.map((marking) => [marking.id, marking]))
+  const linkedCrossingByIslandId = new Map(
+    state.markings
+      .filter((marking) => (
+        (marking.type === 'crosswalk' || marking.type === 'bike-crossing') &&
+        typeof marking.linkedIslandId === 'string' &&
+        marking.linkedIslandId.trim().length > 0
+      ))
+      .map((marking) => [marking.linkedIslandId!, marking]),
+  )
   const stripPlacements = getStripPlacements(state.strips, state.length)
   const roadwayBounds = getRoadwayBoundsFromPlacements(stripPlacements)
   const tw = totalWidth(state.strips)
@@ -153,9 +163,12 @@ export function SmartRoadCanvasObject({ obj, scale, offsetXMeters = 0, offsetYMe
           marking={m}
           roadLength={roadLen}
           roadClass={state.roadClass}
-          roadwayBounds={m.type === 'traffic-island' ? roadwayBounds : undefined}
+          roadwayBounds={m.type === 'traffic-island' || m.type === 'crosswalk' || m.type === 'bike-crossing' ? roadwayBounds : undefined}
+          linkedIsland={(m.type === 'crosswalk' || m.type === 'bike-crossing') && m.linkedIslandId ? markingById.get(m.linkedIslandId) : undefined}
+          linkedCrossing={m.type === 'traffic-island' ? linkedCrossingByIslandId.get(m.id) : undefined}
         />
       ))}
     </Group>
   )
 }
+

@@ -104,6 +104,22 @@ export function RoadTopView({
     () => orderMarkingsByLayer(markings, layerOrder),
     [markings, layerOrder]
   )
+  const markingById = useMemo(
+    () => new Map(markings.map((marking) => [marking.id, marking])),
+    [markings],
+  )
+  const linkedCrossingByIslandId = useMemo(
+    () => new Map(
+      markings
+        .filter((marking) => (
+          (marking.type === 'crosswalk' || marking.type === 'bike-crossing') &&
+          typeof marking.linkedIslandId === 'string' &&
+          marking.linkedIslandId.trim().length > 0
+        ))
+        .map((marking) => [marking.linkedIslandId!, marking]),
+    ),
+    [markings],
+  )
 
   // Strip render order: follow layerOrder so the layer manager controls z-order.
   // Falls back to array order for strips not in layerOrder.
@@ -1212,8 +1228,10 @@ export function RoadTopView({
                 selected={selectedMarkingId === m.id}
                 snapPositions={stripEdges}
                 peerPhases={peerPhases}
-                roadwayBounds={m.type === 'traffic-island' ? roadwayBounds : undefined}
+                roadwayBounds={m.type === 'traffic-island' || m.type === 'crosswalk' || m.type === 'bike-crossing' ? roadwayBounds : undefined}
                 roadClass={m.type === 'traffic-island' ? roadClass : undefined}
+                linkedIsland={(m.type === 'crosswalk' || m.type === 'bike-crossing') && m.linkedIslandId ? markingById.get(m.linkedIslandId) : undefined}
+                linkedCrossing={m.type === 'traffic-island' ? linkedCrossingByIslandId.get(m.id) : undefined}
                 onDragEnd={onMarkingMove}
                 onClick={(id) => { onSelectMarking(id); onSelectStrip(null) }}
                 onDoubleClick={(id) => onDoubleClickElement?.('marking', id)}
@@ -1249,3 +1267,4 @@ export function RoadTopView({
     </div>
   )
 }
+

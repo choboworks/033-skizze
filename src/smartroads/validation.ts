@@ -1,5 +1,6 @@
 import { getCrossSectionStrips, getFacingRoadwaySide, getImmediateOuterStrip, getLaneOverlayOccupancyWidth, getLaneOverlaySafetyBufferWidth, getRoadwayBoundsFromPlacements, getStripPlacements, isLaneOverlayCyclepath, normalizeLaneOverlayCyclepaths } from './layout'
 import { getCyclepathOverlaySide, getCyclepathStripProps } from './stripProps'
+import { MARKING_RULES, TRAFFIC_ISLAND_RULES } from './rules/markingRules'
 import { getProtectedCyclepathRule } from './rules/stripRules'
 import type { StraightRoadState, Strip } from './types'
 
@@ -15,6 +16,14 @@ function getSafeWidth(strip: Strip): number {
 
 function isRoadwayStrip(strip: Strip): boolean {
   return strip.type === 'lane' || strip.type === 'bus'
+}
+
+function isLinkedCrossingMarking(marking: StraightRoadState['markings'][number]): marking is StraightRoadState['markings'][number] & { linkedIslandId: string } {
+  return (
+    (marking.type === 'crosswalk' || marking.type === 'bike-crossing') &&
+    typeof marking.linkedIslandId === 'string' &&
+    marking.linkedIslandId.trim().length > 0
+  )
 }
 
 function getRoadwayStrips(strips: Strip[]): Strip[] {
@@ -286,6 +295,13 @@ export function validateStraightRoadState(state: Pick<StraightRoadState, 'strips
 
   for (const m of state.markings) {
     if (m.type !== 'traffic-island') continue
+    const linkedCrossing = state.markings.find(
+      (marking) => isLinkedCrossingMarking(marking) && marking.linkedIslandId === m.id,
+    )
+    const linkedCrosswalk = linkedCrossing?.type === 'crosswalk' ? linkedCrossing : null
+    const linkedBikeCrossing = linkedCrossing?.type === 'bike-crossing' ? linkedCrossing : null
+    const preset = m.crossingAidPreset ?? (linkedCrossing ? (linkedBikeCrossing ? 'bike-crossing' : 'standard') : 'free')
+    const islandWidth = m.width ?? (linkedCrossing ? TRAFFIC_ISLAND_RULES.crossingAidMinWidth : TRAFFIC_ISLAND_RULES.recommendedWidth)
     const islandLen = m.length || 8.0
     const showApproach = m.showApproachMarking !== false
     const approachLen = showApproach ? (m.approachLength ?? 3.0) : 0
@@ -312,11 +328,213 @@ export function validateStraightRoadState(state: Pick<StraightRoadState, 'strips
       )
     }
 
-    if (roadwayBounds && (m.width ?? 2.5) > roadwayBounds.width) {
+    if (roadwayBounds && islandWidth > roadwayBounds.width) {
       pushIssue(
         issues,
         `${m.id}-width`,
         `Die Verkehrsinsel ist breiter als die verfügbare Fahrbahn (${roadwayBounds.width.toFixed(2)} m).`,
+        'warning',
+      )
+    }
+
+    if (m.id === '__legacy-disabled__' && islandWidth < TRAFFIC_ISLAND_RULES.narrowMinWidth) {
+      pushIssue(
+        issues,
+        `${m.id}-too-narrow`,
+        `Die Verkehrsinsel ist mit ${(m.width ?? 0).toFixed(2)} m zu schmal für eine belastbare Querungshilfe.`,
+        'warning',
+      )
+    } else if (m.id === '__legacy-disabled__' && islandWidth < TRAFFIC_ISLAND_RULES.trafficIslandMinWidth) {
+      pushIssue(
+        issues,
+        `${m.id}-narrow-exception`,
+        `Die Verkehrsinsel ist schmaler als die übliche Regelbreite von ${TRAFFIC_ISLAND_RULES.minWidth.toFixed(2)} m und sollte nur als Engstellenlösung genutzt werden.`,
+        'info',
+      )
+    }
+
+    if (islandWidth < TRAFFIC_ISLAND_RULES.narrowMinWidth) {
+      pushIssue(
+        issues,
+        `${m.id}-too-narrow`,
+        `Die Verkehrsinsel liegt mit ${islandWidth.toFixed(2)} m unter dem Engstellenmass von ${TRAFFIC_ISLAND_RULES.narrowMinWidth.toFixed(2)} m.`,
+        'warning',
+      )
+    } else if (islandWidth < TRAFFIC_ISLAND_RULES.trafficIslandMinWidth) {
+      pushIssue(
+        issues,
+        `${m.id}-narrow-exception`,
+        `Die Verkehrsinsel liegt unter der Mindestbreite von ${TRAFFIC_ISLAND_RULES.trafficIslandMinWidth.toFixed(2)} m und sollte nur als Engstellenloesung genutzt werden.`,
+        'info',
+      )
+    }
+
+    if (linkedCrossing) {
+      if (islandWidth < TRAFFIC_ISLAND_RULES.crossingAidMinWidth) {
+        pushIssue(
+          issues,
+          `${m.id}-below-crossing-min`,
+          `Die Querungshilfe liegt unter der Mindestbreite von ${TRAFFIC_ISLAND_RULES.crossingAidMinWidth.toFixed(2)} m fuer Aufstellflaechen an Querungen.`,
+          'warning',
+        )
+      } else if (islandWidth < TRAFFIC_ISLAND_RULES.preferredWidth) {
+        pushIssue(
+          issues,
+          `${m.id}-below-crossing-preferred`,
+          `Die Querungshilfe liegt unter der angestrebten Breite von ${TRAFFIC_ISLAND_RULES.preferredWidth.toFixed(2)} m.`,
+          'info',
+        )
+      }
+    } else if (islandWidth >= TRAFFIC_ISLAND_RULES.trafficIslandMinWidth && islandWidth < TRAFFIC_ISLAND_RULES.recommendedWidth) {
+      pushIssue(
+        issues,
+        `${m.id}-below-island-recommended`,
+        `Die Verkehrsinsel liegt unter der empfohlenen Breite von ${TRAFFIC_ISLAND_RULES.recommendedWidth.toFixed(2)} m.`,
+        'info',
+      )
+    }
+
+    if (roadwayBounds) {
+      const leftClearance = m.x - roadwayBounds.minX
+      const rightClearance = roadwayBounds.maxX - (m.x + islandWidth)
+      if (leftClearance < TRAFFIC_ISLAND_RULES.sideClearance || rightClearance < TRAFFIC_ISLAND_RULES.sideClearance) {
+        pushIssue(
+          issues,
+          `${m.id}-side-clearance`,
+          `Seitlich sollten an der Verkehrsinsel mindestens ${TRAFFIC_ISLAND_RULES.sideClearance.toFixed(2)} m Sicherheitsraum je Seite verbleiben.`,
+          'warning',
+        )
+      }
+
+      if (leftClearance < TRAFFIC_ISLAND_RULES.minimumPassageWidth || rightClearance < TRAFFIC_ISLAND_RULES.minimumPassageWidth) {
+        pushIssue(
+          issues,
+          `${m.id}-minimum-passage-width`,
+          `Neben der Verkehrsinsel sollten je Seite mindestens ${TRAFFIC_ISLAND_RULES.minimumPassageWidth.toFixed(2)} m Restfahrbahn verbleiben.`,
+          'warning',
+        )
+      } else if (leftClearance < TRAFFIC_ISLAND_RULES.preferredPassageWidth || rightClearance < TRAFFIC_ISLAND_RULES.preferredPassageWidth) {
+        pushIssue(
+          issues,
+          `${m.id}-preferred-passage-width`,
+          `Fuer einen komfortablen Vorbeifahrraum sind neben der Verkehrsinsel je Seite ${TRAFFIC_ISLAND_RULES.preferredPassageWidth.toFixed(2)} m Restfahrbahn sinnvoll.`,
+          'info',
+        )
+      }
+    }
+
+    if (linkedCrosswalk && preset === 'free') {
+      pushIssue(
+        issues,
+        `${m.id}-linked-free-preset`,
+        linkedBikeCrossing
+          ? 'Die Verkehrsinsel ist mit einer Furt gekoppelt, steht aber noch auf "Freie Insel".'
+          : 'Die Verkehrsinsel ist mit einem FGUE gekoppelt, steht aber noch auf "Freie Insel".',
+        'info',
+      )
+    }
+
+    if (linkedCrosswalk && preset === 'standard' && (m.entryTreatment ?? 'none') === 'none') {
+      pushIssue(
+        issues,
+        `${m.id}-standard-entry-treatment`,
+        'Eine Standard-Querungshilfe sollte an den Querungsranden mindestens ein Rund- oder Flachbord vorsehen.',
+        'warning',
+      )
+    }
+
+    if (linkedCrosswalk && preset === 'barrier-free' && m.entryTreatment !== 'separated-0-6') {
+      pushIssue(
+        issues,
+        `${m.id}-barrier-free-entry-treatment`,
+        'Die barrierefreie Querungshilfe sollte mit getrennter 0/6-cm-Absenkung ausgefuehrt werden.',
+        'warning',
+      )
+    }
+
+    if (linkedCrossing && (m.surfaceType ?? 'paved') === 'green') {
+      pushIssue(
+        issues,
+        `${m.id}-crossing-green-surface`,
+        linkedBikeCrossing
+          ? 'Eine Furtquerung sollte als befestigte Aufstellflaeche dargestellt werden, nicht als Gruenflaeche.'
+          : 'Eine Querungshilfe sollte als befestigte Aufstellflaeche dargestellt werden, nicht als Gruenflaeche.',
+        'warning',
+      )
+    }
+  }
+
+  const lanesByDirection = roadwayStrips.reduce<Record<string, number>>((acc, strip) => {
+    const direction = strip.direction ?? 'unknown'
+    acc[direction] = (acc[direction] ?? 0) + 1
+    return acc
+  }, {})
+
+  for (const marking of state.markings) {
+    if (marking.type !== 'crosswalk') continue
+    const linkedIsland = marking.linkedIslandId
+      ? trafficIslands.find((candidate) => candidate.id === marking.linkedIslandId)
+      : null
+
+    const crosswalkLength = marking.length ?? MARKING_RULES.crosswalk.defaultLength
+    if (crosswalkLength < MARKING_RULES.crosswalk.minLength || crosswalkLength > MARKING_RULES.crosswalk.maxLength) {
+      pushIssue(
+        issues,
+        `${marking.id}-crosswalk-length`,
+        `Die Furtbreite des Zebrastreifens sollte zwischen ${MARKING_RULES.crosswalk.minLength.toFixed(2)} m und ${MARKING_RULES.crosswalk.maxLength.toFixed(2)} m liegen.`,
+        'warning',
+      )
+    }
+
+    if (state.roadClass !== 'innerorts') {
+      pushIssue(
+        issues,
+        `${marking.id}-crosswalk-roadclass`,
+        'Fußgängerüberwege sind in dieser Darstellung primär für innerörtliche Straßen vorgesehen.',
+        marking.linkedIslandId ? 'warning' : 'info',
+      )
+    }
+
+    if ((lanesByDirection.up ?? 0) > 1 || (lanesByDirection.down ?? 0) > 1) {
+      pushIssue(
+        issues,
+        `${marking.id}-crosswalk-lanes`,
+        'Ein Fußgängerüberweg sollte hier nicht mehr als einen Fahrstreifen je Richtung queren.',
+        'warning',
+      )
+    }
+
+    if (marking.linkedIslandId && !linkedIsland) {
+      pushIssue(
+        issues,
+        `${marking.id}-missing-island`,
+        'Der gekoppelte FGUE verweist auf keine vorhandene Verkehrsinsel mehr.',
+        'warning',
+      )
+    }
+  }
+
+  for (const marking of state.markings) {
+    if (marking.type !== 'bike-crossing') continue
+    const linkedIsland = marking.linkedIslandId
+      ? trafficIslands.find((candidate) => candidate.id === marking.linkedIslandId)
+      : null
+
+    const crossingLength = marking.length ?? MARKING_RULES.bikeCrossing.defaultLength
+    if (crossingLength < MARKING_RULES.bikeCrossing.minLength || crossingLength > MARKING_RULES.bikeCrossing.maxLength) {
+      pushIssue(
+        issues,
+        `${marking.id}-bike-crossing-length`,
+        `Die Furtbreite der Furtquerung sollte zwischen ${MARKING_RULES.bikeCrossing.minLength.toFixed(2)} m und ${MARKING_RULES.bikeCrossing.maxLength.toFixed(2)} m liegen.`,
+        'warning',
+      )
+    }
+
+    if (marking.linkedIslandId && !linkedIsland) {
+      pushIssue(
+        issues,
+        `${marking.id}-bike-crossing-missing-island`,
+        'Die gekoppelte Furt verweist auf keine vorhandene Verkehrsinsel mehr.',
         'warning',
       )
     }

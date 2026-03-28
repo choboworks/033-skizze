@@ -43,7 +43,7 @@ const STRIP_SUBCATEGORIES: SubcategoryDef[] = [
 const STRUCTURAL_SUBCATEGORIES: SubcategoryDef[] = [
   { id: 'edge', label: 'Rand' },
   { id: 'separator', label: 'Trennung' },
-  { id: 'island', label: 'Verkehrsinsel' },
+  { id: 'crossings', label: 'Verkehrsinseln & Querungen' },
 ]
 
 const MARKING_SUBCATEGORIES: SubcategoryDef[] = [
@@ -52,7 +52,7 @@ const MARKING_SUBCATEGORIES: SubcategoryDef[] = [
   { id: 'crosswalk', label: 'Zebrastreifen' },
   { id: 'stopline', label: 'Haltelinie' },
   { id: 'arrow', label: 'Richtungspfeil' },
-  { id: 'blocked-area', label: 'Sperrfläche' },
+  { id: 'blocked-area', label: 'Sperrflaeche' },
 ]
 
 const STRIP_ELEMENTS: Record<string, { variant: StripVariant; label: string; sublabel?: string }[]> = {
@@ -70,8 +70,8 @@ const STRIP_ELEMENTS: Record<string, { variant: StripVariant; label: string; sub
     { variant: 'standard', label: 'Standard', sublabel: 'Gehweg' },
   ],
   parking: [
-    { variant: 'parallel', label: 'Längs', sublabel: 'Parkstreifen' },
-    { variant: 'angled', label: 'Schräg', sublabel: 'Parkstreifen' },
+    { variant: 'parallel', label: 'Laengs', sublabel: 'Parkstreifen' },
+    { variant: 'angled', label: 'Schraeg', sublabel: 'Parkstreifen' },
     { variant: 'perpendicular', label: 'Quer', sublabel: 'Parkstreifen' },
   ],
   path: [
@@ -129,26 +129,46 @@ const STRUCTURAL_ELEMENTS: StructuralElementDef[] = [
     kind: 'strip',
     type: 'green',
     variant: 'standard',
-    label: 'Grünstreifen',
+    label: 'Gruenstreifen',
     sublabel: 'Trennung',
     icon: TreePine,
   },
   {
-    id: 'structural-island',
-    category: 'island',
+    id: 'structural-traffic-island',
+    category: 'crossings',
     kind: 'marking',
     markingType: 'traffic-island',
-    markingVariant: 'median-island',
+    markingVariant: 'raised-paved',
     label: 'Verkehrsinsel',
-    sublabel: 'Trennung',
+    sublabel: 'Bauliches Element',
     icon: Minus,
+  },
+  {
+    id: 'structural-crossing-aid',
+    category: 'crossings',
+    kind: 'marking',
+    markingType: 'crosswalk',
+    markingVariant: 'default',
+    label: 'Querungshilfe',
+    sublabel: 'FGUe + Insel',
+    icon: Footprints,
+  },
+  {
+    id: 'structural-bike-crossing-aid',
+    category: 'crossings',
+    kind: 'marking',
+    markingType: 'bike-crossing',
+    markingVariant: 'default',
+    label: 'Furtquerung',
+    sublabel: 'Furt + Insel',
+    icon: Footprints,
   },
 ]
 
 const MARKING_ELEMENTS: Record<string, { variant: MarkingVariant; label: string; sublabel?: string }[]> = {
   centerline: [
     { variant: 'standard-dash', label: 'Innerorts (3m/6m)', sublabel: 'Leitlinie' },
-    { variant: 'rural-dash', label: 'Außerorts (4m/8m)', sublabel: 'Leitlinie' },
+    { variant: 'rural-dash', label: 'Ausserorts (4m/8m)', sublabel: 'Leitlinie' },
     { variant: 'autobahn-dash', label: 'Autobahn (6m/12m)', sublabel: 'Leitlinie' },
     { variant: 'warning-dash', label: 'Warnlinie I (3m/1,5m)', sublabel: 'Leitlinie' },
     { variant: 'rural-warning', label: 'Warnlinie A (4m/2m)', sublabel: 'Leitlinie' },
@@ -161,11 +181,11 @@ const MARKING_ELEMENTS: Record<string, { variant: MarkingVariant; label: string;
   crosswalk: [{ variant: 'default', label: 'Standard', sublabel: 'Zebrastreifen' }],
   stopline: [{ variant: 'default', label: 'Standard', sublabel: 'Haltelinie' }],
   arrow: [
-    { variant: 'straight', label: '↑ Geradeaus', sublabel: 'Richtungspfeil' },
-    { variant: 'left', label: '← Links', sublabel: 'Richtungspfeil' },
-    { variant: 'right', label: '→ Rechts', sublabel: 'Richtungspfeil' },
+    { variant: 'straight', label: 'Geradeaus', sublabel: 'Richtungspfeil' },
+    { variant: 'left', label: 'Links', sublabel: 'Richtungspfeil' },
+    { variant: 'right', label: 'Rechts', sublabel: 'Richtungspfeil' },
   ],
-  'blocked-area': [{ variant: 'default', label: 'Schraffur', sublabel: 'Sperrfläche' }],
+  'blocked-area': [{ variant: 'default', label: 'Schraffur', sublabel: 'Sperrflaeche' }],
 }
 
 const STRIP_ICONS: Record<string, LucideIcon> = {
@@ -179,12 +199,22 @@ const STRIP_ICONS: Record<string, LucideIcon> = {
 interface Props {
   onAddStrip: (type: StripType, variant: StripVariant, side: 'left' | 'right') => void
   onAddMarking: (type: MarkingType, variant: MarkingVariant) => void
+  onAddCrossingAid: () => void
+  onAddBikeCrossingAid: () => void
   onLoadPreset: (state: StraightRoadState) => void
   presets: { id: string; label: string; create: () => StraightRoadState }[]
   hasTrafficIsland?: boolean
 }
 
-export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets, hasTrafficIsland = false }: Props) {
+export function ElementPalette({
+  onAddStrip,
+  onAddMarking,
+  onAddCrossingAid,
+  onAddBikeCrossingAid,
+  onLoadPreset,
+  presets,
+  hasTrafficIsland = false,
+}: Props) {
   const [activeCategory, setActiveCategory] = useState<TopCategory>('strips')
   const [activeSubcategory, setActiveSubcategory] = useState<string | null>(null)
   const [searchInput, setSearchInput] = useState('')
@@ -214,19 +244,23 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
           : []
 
   const elements: ElementDef[] = (() => {
+    const trafficIslandDisabledState = hasTrafficIsland
+      ? {
+          disabled: true,
+          disabledReason: 'Aktuell ist nur eine Verkehrsinsel, Querungshilfe oder Furtquerung pro Gerade vorgesehen.',
+        }
+      : {}
+
     const getMarkingDisabledState = (type: MarkingType) => {
       if (!hasTrafficIsland) return {}
       if (type === 'centerline') {
         return {
           disabled: true,
-          disabledReason: 'Mit Verkehrsinsel sind Leitlinien in diesem Segment unterdrückt.',
+          disabledReason: 'Mit Verkehrsinsel sind Leitlinien in diesem Segment unterdrueckt.',
         }
       }
       if (type === 'traffic-island') {
-        return {
-          disabled: true,
-          disabledReason: 'Aktuell ist nur eine Verkehrsinsel pro Gerade vorgesehen.',
-        }
+        return trafficIslandDisabledState
       }
       return {}
     }
@@ -265,10 +299,26 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
           label: item.label,
           sublabel: item.sublabel,
           icon: item.icon,
-          action: () => item.kind === 'marking'
-            ? onAddMarking(item.markingType, item.markingVariant)
-            : onAddStrip(item.type, item.variant, 'right'),
-          ...(item.kind === 'marking' ? getMarkingDisabledState(item.markingType) : {}),
+          action: () => {
+            if (item.id === 'structural-crossing-aid') {
+              onAddCrossingAid()
+              return
+            }
+            if (item.id === 'structural-bike-crossing-aid') {
+              onAddBikeCrossingAid()
+              return
+            }
+            if (item.kind === 'marking') {
+              onAddMarking(item.markingType, item.markingVariant)
+              return
+            }
+            onAddStrip(item.type, item.variant, 'right')
+          },
+          ...(item.id === 'structural-traffic-island' || item.id === 'structural-crossing-aid' || item.id === 'structural-bike-crossing-aid'
+            ? trafficIslandDisabledState
+            : item.kind === 'marking'
+              ? getMarkingDisabledState(item.markingType)
+              : {}),
         }))
 
     if (isSearchMode) {
@@ -306,7 +356,7 @@ export function ElementPalette({ onAddStrip, onAddMarking, onLoadPreset, presets
             style={{ left: 14, color: 'var(--text-muted)' }}
           />
           <input
-            placeholder="Element suchen …"
+            placeholder="Element suchen ..."
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             className="field-input w-full"

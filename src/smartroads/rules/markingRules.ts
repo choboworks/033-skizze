@@ -1,10 +1,19 @@
-import type { MarkingVariant } from '../types'
+import type {
+  CyclepathLineMode,
+  MarkingVariant,
+  TrafficIslandCurbType,
+  TrafficIslandEntryTreatment,
+  TrafficIslandPreset,
+  TrafficIslandSurfaceType,
+} from '../types'
 import { reference, type RuleSourceRef } from './shared'
 
 export interface CenterlineVariantRule {
   dashPattern: [number, number]
   source: RuleSourceRef[]
 }
+
+export const DEFAULT_BIKE_CROSSING_COLOR = '#d84134'
 
 export const CENTERLINE_VARIANT_RULES: Partial<Record<MarkingVariant, CenterlineVariantRule>> = {
   'standard-dash': {
@@ -65,8 +74,23 @@ export const MARKING_RULES = {
     gap: 0.50,
     minLength: 3.00,
     defaultLength: 4.00,
+    maxLength: 12.00,
     source: [reference('1.4 Quermarkierungen', 'Fussgaengerueberweg / Zebrastreifen (Zeichen 293)')],
     note: 'defaultLength keeps the current editor default above the normative minimum length.',
+  },
+  bikeCrossing: {
+    broadStrokeWidth: 0.25,
+    narrowStrokeWidth: 0.12,
+    dashLength: 0.50,
+    gap: 0.20,
+    minLength: 2.00,
+    defaultLength: 3.00,
+    maxLength: 8.00,
+    source: [
+      reference('Radfahrerfurt', 'Unterbrochener Breitstrich 25 cm / 0,50 m Strich / 0,20 m Luecke'),
+      reference('Roteinfärbung von Radverkehrsflaechen', 'Roteinfärbung in Konfliktbereichen gebräuchlich, aber nicht bundeseinheitlich normiert'),
+    ],
+    note: 'defaultLength is an editor default for compact inner-city furts; actual geometry depends on the conflict area.',
   },
   parkingMarking: {
     strokeWidth: 0.12,
@@ -100,6 +124,122 @@ export const SPERRFLAECHE_RULES = {
   },
 } as const
 
+export const TRAFFIC_ISLAND_RULES = {
+  preferredWidth: 3.00,
+  recommendedWidth: 2.50,
+  crossingAidMinWidth: 2.50,
+  trafficIslandMinWidth: 2.00,
+  minWidth: 2.00,
+  narrowMinWidth: 1.60,
+  nonTraversableMinWidth: 1.50,
+  sideClearance: 0.50,
+  preferredPassageWidth: 3.50,
+  minimumPassageWidth: 2.75,
+  defaultLength: 8.00,
+  defaultApproachLength: 3.00,
+} as const
+
+export interface TrafficIslandPresetRule {
+  label: string
+  surfaceType: TrafficIslandSurfaceType
+  curbType: TrafficIslandCurbType
+  entryTreatment: TrafficIslandEntryTreatment
+  endShape: 'rounded' | 'pointed' | 'flat'
+  width: number
+  length: number
+  showCurbBorder: boolean
+  showApproachMarking: boolean
+  approachLength: number
+}
+
+export const TRAFFIC_ISLAND_PRESET_RULES: Record<TrafficIslandPreset, TrafficIslandPresetRule> = {
+  standard: {
+    label: 'Standard',
+    surfaceType: 'paved',
+    curbType: 'flat',
+    entryTreatment: 'round-3cm',
+    endShape: 'rounded',
+    width: TRAFFIC_ISLAND_RULES.preferredWidth,
+    length: TRAFFIC_ISLAND_RULES.defaultLength,
+    showCurbBorder: true,
+    showApproachMarking: true,
+    approachLength: TRAFFIC_ISLAND_RULES.defaultApproachLength,
+  },
+  'barrier-free': {
+    label: 'Barrierefrei',
+    surfaceType: 'paved',
+    curbType: 'flat',
+    entryTreatment: 'separated-0-6',
+    endShape: 'rounded',
+    width: TRAFFIC_ISLAND_RULES.preferredWidth,
+    length: TRAFFIC_ISLAND_RULES.defaultLength,
+    showCurbBorder: true,
+    showApproachMarking: true,
+    approachLength: TRAFFIC_ISLAND_RULES.defaultApproachLength,
+  },
+  'bike-crossing': {
+    label: 'Furtquerung',
+    surfaceType: 'paved',
+    curbType: 'flat',
+    entryTreatment: 'none',
+    endShape: 'rounded',
+    width: TRAFFIC_ISLAND_RULES.preferredWidth,
+    length: TRAFFIC_ISLAND_RULES.defaultLength,
+    showCurbBorder: true,
+    showApproachMarking: false,
+    approachLength: TRAFFIC_ISLAND_RULES.defaultApproachLength,
+  },
+  free: {
+    label: 'Freie Insel',
+    surfaceType: 'green',
+    curbType: 'flat',
+    entryTreatment: 'none',
+    endShape: 'rounded',
+    width: TRAFFIC_ISLAND_RULES.recommendedWidth,
+    length: TRAFFIC_ISLAND_RULES.defaultLength,
+    showCurbBorder: true,
+    showApproachMarking: false,
+    approachLength: TRAFFIC_ISLAND_RULES.defaultApproachLength,
+  },
+}
+
+export function getTrafficIslandPresetRule(preset: TrafficIslandPreset): TrafficIslandPresetRule {
+  return TRAFFIC_ISLAND_PRESET_RULES[preset] ?? TRAFFIC_ISLAND_PRESET_RULES.standard
+}
+
+function normalizeLineMetric(value: number | undefined, fallback: number): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return fallback
+  return Math.max(0.01, value)
+}
+
 export function getCenterlineDashPattern(variant: MarkingVariant): [number, number] {
   return CENTERLINE_VARIANT_RULES[variant]?.dashPattern ?? CENTERLINE_VARIANT_RULES['standard-dash']!.dashPattern
+}
+
+export function resolveBikeCrossingBoundaryLineMode(rawMode: CyclepathLineMode | undefined): CyclepathLineMode {
+  if (rawMode === 'dashed' || rawMode === 'solid' || rawMode === 'none') return rawMode
+  return 'solid'
+}
+
+export function getDefaultBikeCrossingBoundaryStrokeWidth(): number {
+  return MARKING_RULES.lineWidths.otherRoads.schmalstrich
+}
+
+export function getDefaultBikeCrossingBoundaryDashPattern(): [number, number] {
+  return [MARKING_RULES.bikeCrossing.dashLength, MARKING_RULES.bikeCrossing.gap]
+}
+
+export function resolveBikeCrossingBoundaryStrokeWidth(rawWidth: number | undefined): number {
+  return normalizeLineMetric(rawWidth, getDefaultBikeCrossingBoundaryStrokeWidth())
+}
+
+export function resolveBikeCrossingBoundaryDashPattern(
+  rawDashLength: number | undefined,
+  rawGapLength: number | undefined,
+): [number, number] {
+  const [defaultDash, defaultGap] = getDefaultBikeCrossingBoundaryDashPattern()
+  return [
+    normalizeLineMetric(rawDashLength, defaultDash),
+    normalizeLineMetric(rawGapLength, defaultGap),
+  ]
 }

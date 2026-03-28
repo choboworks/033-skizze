@@ -1,5 +1,5 @@
 // ============================================================
-// SmartRoads – Type Definitions (Constrained Editor)
+// SmartRoads - Type Definitions (Constrained Editor)
 // ============================================================
 
 // --- Strip Types (road cross-section elements) ---
@@ -8,15 +8,15 @@ export type StripType =
   | 'sidewalk'      // Gehweg
   | 'cyclepath'     // Radweg
   | 'parking'       // Parkstreifen
-  | 'green'         // Grünstreifen
+  | 'green'         // Gruenstreifen
   | 'curb'          // Bordstein
   | 'gutter'        // Rinne
   | 'median'        // Mittelstreifen
   | 'bus'           // Busstreifen
-  | 'tram'          // Gleiskörper
+  | 'tram'          // Gleiskoerper
   | 'shoulder'      // Seitenstreifen / Bankett
   | 'path'          // Weg (Feldweg, Schotterweg, Waldweg)
-  | 'guardrail'     // Leitplanke / Fahrzeug-Rückhaltesystem
+  | 'guardrail'     // Leitplanke / Fahrzeug-Rueckhaltesystem
 
 // --- Strip Variants ---
 export type StripVariant =
@@ -33,18 +33,18 @@ export type StripVariant =
   | 'shared-bike'     // Gemeinsamer Geh-/Radweg
   | 'separated-bike'  // Getrennter Geh-/Radweg
   // Parking
-  | 'parallel'        // Längsparken
-  | 'angled'          // Schrägparken
+  | 'parallel'        // Laengsparken
+  | 'angled'          // Schraegparken
   | 'perpendicular'   // Querparken
   // Median
   | 'marking-only'    // Nur Markierung
-  | 'green-median'    // Grünstreifen
+  | 'green-median'    // Gruenstreifen
   | 'barrier'         // Leitplanke
   // Green
   | 'tree-strip'      // Baumstreifen
   // Tram
   | 'dedicated'       // Eigentrasse
-  | 'flush'           // Bündig
+  | 'flush'           // Buendig
   // Path
   | 'dirt'            // Erdweg / Feldweg
   | 'gravel'          // Schotterweg
@@ -67,7 +67,7 @@ export interface LaneStripProps {
   boundaryLineGapLength?: number
   boundaryLinePhase?: number
 }
-export type SidewalkSurfaceType = 'slabs' | 'paving' | 'natural-stone' | 'clinker' | 'asphalt' | 'gravel-bound'
+export type SidewalkSurfaceType = 'slabs' | 'paving' | 'natural-stone' | 'clinker' | 'asphalt'
 export interface SidewalkStripProps {
   surfaceType?: SidewalkSurfaceType
   boundaryLineMode?: CyclepathLineMode
@@ -123,11 +123,11 @@ export type TramStripProps = Record<string, never>
 export type ShoulderStripProps = Record<string, never>
 export type PathStripProps = Record<string, never>
 export interface GuardrailStripProps {
-  postSpacing?: number    // Pfostenabstand in Metern (2.0 Standard, 1.33 Super-Rail)
-  showShoulder?: boolean  // Randstreifen (asphaltiert) anzeigen
-  shoulderWidth?: number  // Breite Randstreifen in Metern
-  showGreen?: boolean     // Grünstreifen anzeigen
-  greenWidth?: number     // Breite Grünstreifen in Metern
+  postSpacing?: number
+  showShoulder?: boolean
+  shoulderWidth?: number
+  showGreen?: boolean
+  greenWidth?: number
 }
 export interface StripPropsByType {
   lane: LaneStripProps
@@ -150,39 +150,39 @@ export interface Strip {
   id: string
   type: StripType
   variant: StripVariant
-  width: number             // Meter (die Quelle der Wahrheit)
-  height?: number           // Meter (optional; falls gesetzt, kuerzer als die Gesamtstrasse)
+  width: number
+  height?: number
   color?: string
   props?: StripProps
-  direction?: 'up' | 'down' // Fahrtrichtung (nur für lane, bus)
+  direction?: 'up' | 'down'
 }
 
 // --- Marking Types ---
 export type MarkingType =
-  | 'centerline'        // Leitlinie (gestrichelt)
-  | 'laneboundary'      // Fahrstreifenbegrenzung (durchgezogen)
-  | 'stopline'          // Haltelinie
-  | 'crosswalk'         // Zebrastreifen / Fußgängerüberweg
-  | 'arrow'             // Richtungspfeil
-  | 'blocked-area'      // Sperrfläche (Schraffur)
-  | 'yield-line'        // Wartelinie (Haifischzähne)
-  | 'bike-crossing'     // Radfurt
-  | 'bus-stop'          // Bushaltestellenmarkierung
-  | 'speed-limit'       // Tempo-Piktogramm
-  | 'parking-marking'   // Parkflächenmarkierung
-  | 'free-line'         // Freie Linie
-  | 'traffic-island'    // Verkehrsinsel / Mittelinsel
+  | 'centerline'
+  | 'laneboundary'
+  | 'stopline'
+  | 'crosswalk'
+  | 'arrow'
+  | 'blocked-area'
+  | 'yield-line'
+  | 'bike-crossing'
+  | 'bus-stop'
+  | 'speed-limit'
+  | 'parking-marking'
+  | 'free-line'
+  | 'traffic-island'
 
 // --- Marking Variants ---
 export type MarkingVariant =
   // Centerline
-  | 'standard-dash'     // Leitlinie innerorts: 3m/6m
-  | 'rural-dash'        // Leitlinie außerorts/Landstraße: 4m/8m
-  | 'autobahn-dash'     // Leitlinie Autobahn: 6m/12m, 15cm breit
-  | 'short-dash'        // Kurze Leitlinie: 1.5m/3m
-  | 'warning-dash'      // Warnlinie innerorts: 3m/1,5m
-  | 'rural-warning'     // Warnlinie außerorts/Landstraße: 4m/2m
-  | 'autobahn-warning'  // Warnlinie Autobahn: 6m/3m
+  | 'standard-dash'
+  | 'rural-dash'
+  | 'autobahn-dash'
+  | 'short-dash'
+  | 'warning-dash'
+  | 'rural-warning'
+  | 'autobahn-warning'
   // Lane boundary
   | 'solid'
   | 'double'
@@ -198,65 +198,77 @@ export type MarkingVariant =
   // Free line
   | 'custom'
   // Traffic island
-  | 'median-island'     // Begrünt
-  | 'raised-paved'      // Gepflastert
+  | 'raised-paved'
   // Default
   | 'default'
+
+export type TrafficIslandPreset = 'standard' | 'barrier-free' | 'bike-crossing' | 'free'
+export type TrafficIslandSurfaceType = 'green' | 'paved' | 'cobblestone'
+export type TrafficIslandCurbType = 'flat'
+export type TrafficIslandEntryTreatment = 'none' | 'round-3cm' | 'kassel' | 'separated-0-6'
+export type BikeCrossingSurfaceType = 'cyclepath' | 'crosswalk'
+export type LinkedCrossingType = 'crosswalk' | 'bike-crossing'
 
 // --- Marking (freely placed on the top-down view) ---
 export interface Marking {
   id: string
   type: MarkingType
   variant: MarkingVariant
-  // Position on the top-down view (in meters, relative to road origin)
   x: number
   y: number
-  // Optional sizing
-  width?: number          // Meter (e.g. crosswalk width = road width)
-  length?: number         // Meter (used by linear markings like centerlines)
-  offsetY?: number        // Meter (start offset for linear markings)
-  rotation?: number       // Degrees
-  // Free line specific
+  width?: number
+  length?: number
+  offsetY?: number
+  rotation?: number
   strokeWidth?: number
   dashPattern?: number[]
   color?: string
+  linkedIslandId?: string
   // Traffic island specific
-  surfaceType?: string      // 'green' | 'paved' | 'cobblestone'
-  endShape?: string         // 'rounded' | 'pointed' | 'flat'
+  crossingAidPreset?: TrafficIslandPreset
+  surfaceType?: TrafficIslandSurfaceType
+  curbType?: TrafficIslandCurbType
+  entryTreatment?: TrafficIslandEntryTreatment
+  endShape?: string
   endTaperLength?: number
   showCurbBorder?: boolean
   showApproachMarking?: boolean
-  approachLength?: number   // Length of the hatched approach zone in meters
+  approachLength?: number
+  // Bike-crossing specific fields
+  bikeCrossingSurfaceType?: BikeCrossingSurfaceType
+  bikeCrossingBoundaryLineMode?: CyclepathLineMode
+  bikeCrossingBoundaryLineStrokeWidth?: number
+  bikeCrossingBoundaryLineDashLength?: number
+  bikeCrossingBoundaryLineGapLength?: number
 }
 
 // --- Road Class (determines marking dimensions) ---
 export type RoadClass = 'innerorts' | 'ausserorts' | 'autobahn'
 
 // --- Road States (per segment type) ---
-
 export interface StraightRoadState {
   strips: Strip[]
   markings: Marking[]
-  suppressedCenterlines?: Marking[] // hidden while a traffic island suppresses centerlines
-  layerOrder?: string[]      // z-order: first = bottom, last = top
-  length: number           // Meter
-  roadClass?: RoadClass    // defaults to 'innerorts' if absent
+  suppressedCenterlines?: Marking[]
+  layerOrder?: string[]
+  length: number
+  roadClass?: RoadClass
 }
 
 export interface CurveRoadState {
   strips: Strip[]
   markings: Marking[]
-  radius: number           // Meter (Kurvenradius, gemessen an der Straßenmitte)
-  angle: number            // Grad (Bogenwinkel)
+  radius: number
+  angle: number
 }
 
 export interface IntersectionArm {
   id: string
-  angle: number            // Grad (Richtung des Arms, 0° = Norden)
-  strips: Strip[]          // Querschnitt dieses Arms
-  cornerRadius: number     // Meter (Eckradius)
+  angle: number
+  strips: Strip[]
+  cornerRadius: number
   hasCrosswalk: boolean
-  hasSignal: boolean       // Ampel
+  hasSignal: boolean
 }
 
 export interface IntersectionState {
@@ -267,16 +279,16 @@ export interface IntersectionState {
 
 export interface RoundaboutApproach {
   id: string
-  angle: number            // Grad (Richtung der Zufahrt)
-  strips: Strip[]          // Querschnitt dieser Zufahrt
+  angle: number
+  strips: Strip[]
   hasCrosswalk: boolean
 }
 
 export interface RoundaboutState {
   preset: 'mini' | 'compact' | 'large'
-  outerRadius: number      // Meter
-  laneWidth: number        // Meter (Kreisfahrbahnbreite)
-  overridable: boolean     // Überfahrbarer Innenring
+  outerRadius: number
+  laneWidth: number
+  overridable: boolean
   approaches: RoundaboutApproach[]
   markings: Marking[]
 }
@@ -291,7 +303,7 @@ export type RoadState =
 // --- Preset Definition ---
 export interface PresetDefinition {
   id: string
-  label: string            // "Hauptverkehrsstraße", "T-Kreuzung", etc.
+  label: string
   subtype: 'straight' | 'curve' | 'intersection' | 'roundabout'
   state: StraightRoadState | CurveRoadState | IntersectionState | RoundaboutState
 }

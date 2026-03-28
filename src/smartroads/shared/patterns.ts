@@ -21,10 +21,11 @@ let _asphalt: HTMLCanvasElement | null = null
 let _concrete: HTMLCanvasElement | null = null
 let _cobblestone: HTMLCanvasElement | null = null
 let _sidewalkStandard: HTMLCanvasElement | null = null
+let _sidewalkSlabPremium: HTMLCanvasElement | null = null
 let _sidewalkCommercial: HTMLCanvasElement | null = null
 let _naturalStone: HTMLCanvasElement | null = null
+let _naturalStoneWalkway: HTMLCanvasElement | null = null
 let _clinker: HTMLCanvasElement | null = null
-let _gravelBound: HTMLCanvasElement | null = null
 let _dirtPath: HTMLCanvasElement | null = null
 let _gravelPath: HTMLCanvasElement | null = null
 let _forestPath: HTMLCanvasElement | null = null
@@ -411,6 +412,150 @@ export function getSidewalkPattern(): HTMLCanvasElement {
   return _sidewalkStandard
 }
 
+export function getSidewalkSlabPattern(): HTMLCanvasElement {
+  if (!_sidewalkSlabPremium) {
+    _sidewalkSlabPremium = createPattern(96, 96, (ctx) => {
+      let seed = 147
+      const rand = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return (seed >> 16) / 32768 }
+      const module = 48
+      const joint = 3
+      const slab = module - joint
+      const slabColors = [
+        '#b8bbb7', '#aeb2ae',
+        '#c1c4c0', '#a4a8a4',
+      ]
+
+      ctx.fillStyle = '#6c706c'
+      ctx.fillRect(0, 0, 96, 96)
+
+      for (let row = 0; row < 2; row++) {
+        for (let col = 0; col < 2; col++) {
+          const sx = col * module
+          const sy = row * module
+          const sw = slab
+          const sh = slab
+          const baseColor = slabColors[row * 2 + col]
+
+          ctx.globalAlpha = 1
+          ctx.fillStyle = baseColor
+          ctx.fillRect(sx, sy, sw, sh)
+
+          const gradient = ctx.createLinearGradient(sx, sy, sx + sw, sy + sh)
+          gradient.addColorStop(0, 'rgba(247,248,244,0.08)')
+          gradient.addColorStop(0.45, 'rgba(245,246,243,0.02)')
+          gradient.addColorStop(1, 'rgba(78,84,82,0.10)')
+          ctx.fillStyle = gradient
+          ctx.fillRect(sx, sy, sw, sh)
+
+          ctx.globalAlpha = 0.05
+          ctx.fillStyle = row % 2 === col % 2 ? '#c7cbc6' : '#979d99'
+          ctx.fillRect(sx, sy, sw, sh)
+
+          for (let i = 0; i < 135; i++) {
+            const px = sx + Math.floor(rand() * sw)
+            const py = sy + Math.floor(rand() * sh)
+            ctx.globalAlpha = rand() > 0.45 ? 0.09 : 0.07
+            ctx.fillStyle = rand() > 0.5 ? '#d2d5d0' : '#858b87'
+            ctx.fillRect(px, py, 1, 1)
+          }
+
+          for (let i = 0; i < 34; i++) {
+            const py = sy + 3 + Math.floor(rand() * Math.max(1, sh - 6))
+            const px = sx + 3 + Math.floor(rand() * 4)
+            const len = 20 + Math.floor(rand() * 15)
+            ctx.globalAlpha = 0.032
+            ctx.fillStyle = '#7b817e'
+            ctx.fillRect(px, py, Math.min(len, sw - 6), 1)
+          }
+
+          for (let i = 0; i < 10; i++) {
+            const px = sx + 4 + Math.floor(rand() * Math.max(1, sw - 8))
+            const py = sy + 4 + Math.floor(rand() * Math.max(1, sh - 8))
+            ctx.globalAlpha = 0.12
+            ctx.fillStyle = '#676d69'
+            ctx.fillRect(px, py, 1, 1)
+          }
+
+          if (rand() > 0.28) {
+            const patchX = sx + 5 + Math.floor(rand() * 10)
+            const patchY = sy + 5 + Math.floor(rand() * 10)
+            const patchW = 8 + Math.floor(rand() * 7)
+            const patchH = 4 + Math.floor(rand() * 5)
+            ctx.globalAlpha = 0.045
+            ctx.fillStyle = rand() > 0.5 ? '#8d928d' : '#c7cbc6'
+            ctx.fillRect(patchX, patchY, patchW, patchH)
+          }
+
+          if ((row + col) % 2 === 0) {
+            const crackStartX = sx + 8 + Math.floor(rand() * 10)
+            const crackStartY = sy + 12 + Math.floor(rand() * 10)
+            ctx.globalAlpha = 0.09
+            ctx.strokeStyle = '#686f6c'
+            ctx.lineWidth = 0.5
+            ctx.beginPath()
+            ctx.moveTo(crackStartX, crackStartY)
+            ctx.lineTo(crackStartX + 6 + Math.floor(rand() * 7), crackStartY + 1 + Math.floor(rand() * 4))
+            ctx.lineTo(crackStartX + 12 + Math.floor(rand() * 10), crackStartY - 1 + Math.floor(rand() * 5))
+            ctx.stroke()
+          }
+
+          ctx.globalAlpha = 0.12
+          ctx.strokeStyle = '#d8ddd8'
+          ctx.lineWidth = 0.8
+          ctx.beginPath()
+          ctx.moveTo(sx, sy + sh)
+          ctx.lineTo(sx, sy)
+          ctx.lineTo(sx + sw, sy)
+          ctx.stroke()
+
+          ctx.globalAlpha = 0.14
+          ctx.strokeStyle = '#666b67'
+          ctx.lineWidth = 0.9
+          ctx.beginPath()
+          ctx.moveTo(sx + sw, sy)
+          ctx.lineTo(sx + sw, sy + sh)
+          ctx.lineTo(sx, sy + sh)
+          ctx.stroke()
+
+          ctx.globalAlpha = 0.08
+          ctx.fillStyle = '#d6dbd6'
+          ctx.fillRect(sx + 1, sy + 1, 2, 2)
+          ctx.globalAlpha = 0.10
+          ctx.fillStyle = '#646965'
+          ctx.fillRect(sx + sw - 2, sy + sh - 2, 2, 2)
+        }
+      }
+
+      ctx.globalAlpha = 0.74
+      ctx.fillStyle = '#626761'
+      for (let i = 1; i < 2; i++) {
+        const pos = i * module - joint
+        ctx.fillRect(0, pos, 96, joint)
+        ctx.fillRect(pos, 0, joint, 96)
+      }
+
+      ctx.globalAlpha = 0.24
+      ctx.fillStyle = '#565b56'
+      for (let i = 1; i < 2; i++) {
+        const pos = i * module - 0.4
+        ctx.fillRect(0, pos, 96, 0.7)
+        ctx.fillRect(pos, 0, 0.7, 96)
+      }
+
+      ctx.globalAlpha = 0.10
+      ctx.fillStyle = '#c0c5bf'
+      for (let i = 1; i < 2; i++) {
+        const pos = i * module - joint
+        ctx.fillRect(0, pos, 96, 0.5)
+        ctx.fillRect(pos, 0, 0.5, 96)
+      }
+
+      ctx.globalAlpha = 1
+    })
+  }
+  return _sidewalkSlabPremium
+}
+
 export function getSidewalkCommercialPattern(): HTMLCanvasElement {
   if (!_sidewalkCommercial) {
     // Geschäftsstraße: warm-toned, slightly more decorative paving
@@ -464,7 +609,7 @@ export function getSidewalkCommercialPattern(): HTMLCanvasElement {
   return _sidewalkCommercial
 }
 
-export function getNaturalStonePattern(): HTMLCanvasElement {
+export function getNaturalStoneLegacyPattern(): HTMLCanvasElement {
   if (!_naturalStone) {
     // Gesägte Natursteinplatten (Granit) – Innenstadtbereich, Draufsicht
     // Mixed-format rectangular/square sawn plates, cool grey palette with subtle
@@ -618,16 +763,211 @@ export function getNaturalStonePattern(): HTMLCanvasElement {
   return _naturalStone
 }
 
+export function getNaturalStonePattern(): HTMLCanvasElement {
+  if (!_naturalStoneWalkway) {
+    _naturalStoneWalkway = createPattern(96, 96, (ctx) => {
+      type Point = [number, number]
+
+      let seed = 211
+      const rand = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return (seed >> 16) / 32768 }
+
+      const drawPolygon = (points: Point[]) => {
+        ctx.beginPath()
+        points.forEach(([px, py], index) => {
+          if (index === 0) ctx.moveTo(px, py)
+          else ctx.lineTo(px, py)
+        })
+        ctx.closePath()
+      }
+
+      const getCentroid = (points: Point[]): Point => {
+        const sum = points.reduce<Point>((acc, [px, py]) => [acc[0] + px, acc[1] + py], [0, 0])
+        return [sum[0] / points.length, sum[1] / points.length]
+      }
+
+      const insetPolygon = (points: Point[], inset: number): Point[] => {
+        const [cx, cy] = getCentroid(points)
+        return points.map(([px, py]) => {
+          const dx = cx - px
+          const dy = cy - py
+          const len = Math.hypot(dx, dy) || 1
+          return [px + (dx / len) * inset, py + (dy / len) * inset]
+        })
+      }
+
+      const getBounds = (points: Point[]) => {
+        const xs = points.map(([px]) => px)
+        const ys = points.map(([, py]) => py)
+        return {
+          minX: Math.min(...xs),
+          maxX: Math.max(...xs),
+          minY: Math.min(...ys),
+          maxY: Math.max(...ys),
+        }
+      }
+
+      const stones: Point[][] = [
+        [[0, 0], [28, 0], [32, 14], [18, 28], [0, 24]],
+        [[28, 0], [58, 0], [66, 16], [50, 30], [32, 14]],
+        [[58, 0], [96, 0], [96, 22], [80, 32], [66, 16]],
+        [[0, 24], [18, 28], [24, 46], [12, 64], [0, 60]],
+        [[18, 28], [50, 30], [54, 48], [36, 60], [24, 46]],
+        [[50, 30], [80, 32], [84, 48], [70, 64], [54, 48]],
+        [[80, 32], [96, 22], [96, 58], [84, 48]],
+        [[0, 60], [12, 64], [18, 82], [10, 96], [0, 96]],
+        [[12, 64], [36, 60], [44, 78], [30, 96], [10, 96], [18, 82]],
+        [[36, 60], [70, 64], [74, 82], [56, 96], [30, 96], [44, 78]],
+        [[70, 64], [96, 58], [96, 96], [56, 96], [74, 82]],
+      ]
+
+      const stoneColors = [
+        '#9d9a93',
+        '#8f8d87',
+        '#a7a39d',
+        '#96938c',
+        '#aaa59f',
+        '#8c8a85',
+        '#b0aba4',
+      ]
+
+      ctx.fillStyle = '#5d5953'
+      ctx.fillRect(0, 0, 96, 96)
+
+      for (let i = 0; i < 150; i++) {
+        ctx.globalAlpha = rand() > 0.45 ? 0.08 : 0.05
+        ctx.fillStyle = rand() > 0.5 ? '#736f68' : '#4e4a45'
+        ctx.fillRect(Math.floor(rand() * 96), Math.floor(rand() * 96), 1, 1)
+      }
+
+      stones.forEach((stonePoints, index) => {
+        const insetPoints = insetPolygon(stonePoints, 1.8 + rand() * 0.5)
+        const bounds = getBounds(insetPoints)
+        const stoneWidth = Math.max(8, bounds.maxX - bounds.minX)
+        const stoneHeight = Math.max(8, bounds.maxY - bounds.minY)
+        const baseColor = stoneColors[index % stoneColors.length]
+
+        drawPolygon(insetPoints)
+        ctx.globalAlpha = 1
+        ctx.fillStyle = baseColor
+        ctx.fill()
+
+        ctx.save()
+        drawPolygon(insetPoints)
+        ctx.clip()
+
+        const gradient = ctx.createLinearGradient(bounds.minX, bounds.minY, bounds.maxX, bounds.maxY)
+        gradient.addColorStop(0, 'rgba(250,249,245,0.10)')
+        gradient.addColorStop(0.52, 'rgba(246,245,240,0.03)')
+        gradient.addColorStop(1, 'rgba(82,80,74,0.12)')
+        ctx.fillStyle = gradient
+        ctx.fillRect(bounds.minX, bounds.minY, stoneWidth, stoneHeight)
+
+        ctx.globalAlpha = 0.05
+        ctx.fillStyle = index % 2 === 0 ? '#b5b1aa' : '#7f7d77'
+        ctx.fillRect(bounds.minX, bounds.minY, stoneWidth, stoneHeight)
+
+        for (let speck = 0; speck < Math.floor(stoneWidth * stoneHeight * 0.12); speck++) {
+          const px = bounds.minX + Math.floor(rand() * stoneWidth)
+          const py = bounds.minY + Math.floor(rand() * stoneHeight)
+          ctx.globalAlpha = rand() > 0.5 ? 0.08 : 0.06
+          ctx.fillStyle = rand() > 0.45 ? '#c9c5be' : '#7a7771'
+          ctx.fillRect(px, py, 1, 1)
+        }
+
+        for (let streak = 0; streak < 3; streak++) {
+          const startX = bounds.minX + 4 + Math.floor(rand() * Math.max(1, stoneWidth - 12))
+          const startY = bounds.minY + 4 + Math.floor(rand() * Math.max(1, stoneHeight - 12))
+          ctx.globalAlpha = 0.045
+          ctx.strokeStyle = rand() > 0.5 ? '#d8d5cf' : '#736f69'
+          ctx.lineWidth = 0.7
+          ctx.beginPath()
+          ctx.moveTo(startX, startY)
+          ctx.lineTo(startX + 10 + Math.floor(rand() * 8), startY + (rand() > 0.5 ? 2 : -2))
+          ctx.lineTo(startX + 18 + Math.floor(rand() * 10), startY + (rand() > 0.5 ? 4 : -4))
+          ctx.stroke()
+        }
+
+        if (rand() > 0.35) {
+          const patchX = bounds.minX + 4 + Math.floor(rand() * Math.max(1, stoneWidth - 14))
+          const patchY = bounds.minY + 4 + Math.floor(rand() * Math.max(1, stoneHeight - 14))
+          const patchW = 8 + Math.floor(rand() * 9)
+          const patchH = 4 + Math.floor(rand() * 7)
+          ctx.globalAlpha = 0.05
+          ctx.fillStyle = rand() > 0.5 ? '#beb9b2' : '#84817b'
+          ctx.fillRect(patchX, patchY, patchW, patchH)
+        }
+
+        if (rand() > 0.48) {
+          const sparkX = bounds.minX + 3 + Math.floor(rand() * Math.max(1, stoneWidth - 6))
+          const sparkY = bounds.minY + 3 + Math.floor(rand() * Math.max(1, stoneHeight - 6))
+          ctx.globalAlpha = 0.18
+          ctx.fillStyle = '#dedbd5'
+          ctx.fillRect(sparkX, sparkY, 1, 1)
+        }
+
+        ctx.restore()
+
+        drawPolygon(insetPoints)
+        ctx.globalAlpha = 0.16
+        ctx.strokeStyle = '#6a665f'
+        ctx.lineWidth = 0.9
+        ctx.lineJoin = 'round'
+        ctx.stroke()
+
+        drawPolygon(insetPoints)
+        ctx.globalAlpha = 0.08
+        ctx.strokeStyle = '#d4d0c8'
+        ctx.lineWidth = 0.55
+        ctx.lineJoin = 'round'
+        ctx.stroke()
+
+        const highlightEdge = insetPoints.slice(0, 3)
+        ctx.globalAlpha = 0.06
+        ctx.strokeStyle = '#ebe7df'
+        ctx.lineWidth = 0.8
+        ctx.beginPath()
+        highlightEdge.forEach(([px, py], pointIndex) => {
+          if (pointIndex === 0) ctx.moveTo(px, py)
+          else ctx.lineTo(px, py)
+        })
+        ctx.stroke()
+
+        const shadowEdge = insetPoints.slice(-3)
+        ctx.globalAlpha = 0.08
+        ctx.strokeStyle = '#5a5650'
+        ctx.lineWidth = 0.8
+        ctx.beginPath()
+        shadowEdge.forEach(([px, py], pointIndex) => {
+          if (pointIndex === 0) ctx.moveTo(px, py)
+          else ctx.lineTo(px, py)
+        })
+        ctx.stroke()
+      })
+
+      ctx.globalAlpha = 0.06
+      ctx.strokeStyle = '#9c968f'
+      ctx.lineWidth = 0.5
+      stones.forEach((stonePoints) => {
+        drawPolygon(insetPolygon(stonePoints, 0.9))
+        ctx.stroke()
+      })
+
+      ctx.globalAlpha = 1
+    })
+  }
+  return _naturalStoneWalkway
+}
+
 export function getClinkerPattern(): HTMLCanvasElement {
   if (!_clinker) {
     // Klinker — rectangular red-brown bricks in stretcher bond
     _clinker = createPattern(32, 32, (ctx) => {
-      ctx.fillStyle = '#8a6050'
+      ctx.fillStyle = '#7a5246'
       ctx.fillRect(0, 0, 32, 32)
 
       const colors = [
-        '#9a6858', '#8c5c4c', '#a07060', '#946454',
-        '#886050', '#9c6c5c', '#8a5848', '#a47464',
+        '#9f6e5d', '#8c5a4a', '#a87561', '#945f51',
+        '#855447', '#9a6758', '#7f4e41', '#ae7a67',
       ]
       let seed = 59
       const rand = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return (seed >> 16) / 32768 }
@@ -639,14 +979,38 @@ export function getClinkerPattern(): HTMLCanvasElement {
         const offset = (row % 2 === 1) ? 5 : 0
         for (let col = -1; col < 4; col++) {
           const xx = col * gw + offset
-          ctx.fillStyle = colors[Math.floor(rand() * colors.length)]
+          const brickColor = colors[Math.floor(rand() * colors.length)]
           ctx.globalAlpha = 1
+          ctx.fillStyle = brickColor
           ctx.fillRect(xx, yy, bw, bh)
-          // Fired-clay surface variation
-          ctx.globalAlpha = 0.08
-          ctx.fillStyle = rand() > 0.5 ? '#c08060' : '#6a4030'
-          ctx.fillRect(xx + 1, yy + 1, bw - 2, 1)
+
+          ctx.globalAlpha = 0.12
+          ctx.fillStyle = '#d9a48e'
+          ctx.fillRect(xx + 1, yy, Math.max(1, bw - 2), 1)
+
+          ctx.globalAlpha = 0.14
+          ctx.fillStyle = '#5e362d'
+          ctx.fillRect(xx + 1, yy + bh - 1, Math.max(1, bw - 2), 1)
+
+          ctx.globalAlpha = 0.10
+          ctx.fillStyle = rand() > 0.5 ? '#c78670' : '#6f4338'
+          ctx.fillRect(xx + 1, yy + 1, Math.max(1, bw - 2), 1)
+
+          if (rand() > 0.45) {
+            ctx.globalAlpha = 0.08
+            ctx.fillStyle = '#f0c5ae'
+            ctx.fillRect(xx + 2 + Math.floor(rand() * Math.max(1, bw - 4)), yy + 1, 2, 1)
+          }
         }
+      }
+      ctx.globalAlpha = 0.18
+      ctx.strokeStyle = '#b68b78'
+      ctx.lineWidth = 0.4
+      for (let row = 0; row <= 8; row++) {
+        ctx.beginPath()
+        ctx.moveTo(0, row * gh + 0.1)
+        ctx.lineTo(32, row * gh + 0.1)
+        ctx.stroke()
       }
       ctx.globalAlpha = 1
     })
@@ -654,46 +1018,6 @@ export function getClinkerPattern(): HTMLCanvasElement {
   return _clinker
 }
 
-export function getGravelBoundPattern(): HTMLCanvasElement {
-  if (!_gravelBound) {
-    // Wassergebundene Decke — fine gravel/sand surface, parks & rural
-    _gravelBound = createPattern(24, 24, (ctx) => {
-      ctx.fillStyle = '#c8b898'
-      ctx.fillRect(0, 0, 24, 24)
-
-      // Sandy grain variation
-      ctx.globalAlpha = 0.08
-      ctx.fillStyle = '#a89878'
-      ctx.fillRect(2, 1, 2, 1); ctx.fillRect(8, 4, 3, 1)
-      ctx.fillRect(15, 2, 2, 1); ctx.fillRect(20, 6, 2, 1)
-      ctx.fillRect(4, 10, 2, 1); ctx.fillRect(12, 8, 3, 1)
-      ctx.fillRect(18, 12, 2, 1); ctx.fillRect(1, 16, 3, 1)
-      ctx.fillRect(9, 18, 2, 1); ctx.fillRect(16, 15, 2, 1)
-      ctx.fillRect(22, 20, 2, 1); ctx.fillRect(6, 22, 3, 1)
-
-      // Lighter sandy patches
-      ctx.fillStyle = '#d8c8a8'
-      ctx.globalAlpha = 0.06
-      ctx.fillRect(5, 3, 4, 2); ctx.fillRect(17, 10, 3, 2)
-      ctx.fillRect(2, 19, 4, 2); ctx.fillRect(14, 21, 3, 2)
-
-      // Tiny pebbles
-      ctx.globalAlpha = 0.12
-      ctx.fillStyle = '#9a8a70'
-      ctx.beginPath()
-      ctx.arc(6, 7, 0.6, 0, Math.PI * 2)
-      ctx.arc(18, 5, 0.5, 0, Math.PI * 2)
-      ctx.arc(10, 14, 0.6, 0, Math.PI * 2)
-      ctx.arc(22, 16, 0.4, 0, Math.PI * 2)
-      ctx.arc(3, 23, 0.5, 0, Math.PI * 2)
-      ctx.arc(15, 20, 0.5, 0, Math.PI * 2)
-      ctx.fill()
-
-      ctx.globalAlpha = 1
-    })
-  }
-  return _gravelBound
-}
 
 export function getDirtPathPattern(): HTMLCanvasElement {
   if (!_dirtPath) {
@@ -856,3 +1180,4 @@ export function getForestPathPattern(): HTMLCanvasElement {
   }
   return _forestPath
 }
+

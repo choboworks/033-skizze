@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { GripHorizontal } from 'lucide-react'
-import type { Strip, Marking, RoadClass } from '../types'
+import type { Strip, Marking, RoadClass, LinkedCrossingType } from '../types'
 import { STRIP_LABELS } from '../constants'
 import { StripProperties } from './properties/StripProperties'
 import { MarkingProperties } from './properties/MarkingProperties'
@@ -18,13 +18,15 @@ interface Props {
   roadLength?: number
   roadClass?: RoadClass
   roadwayWidth?: number
+  linkedCrossingType?: LinkedCrossingType
+  linkedCrossing?: Marking
   onUpdateStrip?: (changes: Partial<Strip>) => void
   onUpdateMarking?: (changes: Partial<Marking>) => void
   onAction?: (actionId: string) => void
   onClose: () => void
 }
 
-export function FloatingEditorProperties({ strip, marking, roadLength, roadClass, roadwayWidth, onUpdateStrip, onUpdateMarking, onAction, onClose }: Props) {
+export function FloatingEditorProperties({ strip, marking, roadLength, roadClass, roadwayWidth, linkedCrossingType, linkedCrossing, onUpdateStrip, onUpdateMarking, onAction, onClose }: Props) {
   const PANEL_W = 320
 
   const [pos, setPos] = useState(() => ({
@@ -58,7 +60,11 @@ export function FloatingEditorProperties({ strip, marking, roadLength, roadClass
 
   const title = strip
     ? (STRIP_LABELS[strip.type] || 'Streifen')
-    : (marking ? MARKING_TYPE_LABELS[marking.type] || 'Markierung' : '')
+    : marking
+      ? (marking.type === 'traffic-island' && linkedCrossingType
+          ? (linkedCrossingType === 'bike-crossing' ? 'Furtquerung' : 'Querungshilfe')
+          : MARKING_TYPE_LABELS[marking.type] || 'Markierung')
+      : ''
 
   return (
     <div
@@ -89,7 +95,13 @@ export function FloatingEditorProperties({ strip, marking, roadLength, roadClass
           <StripProperties strip={strip} roadLength={roadLength} roadClass={roadClass} onUpdate={onUpdateStrip} onAction={onAction} />
         )}
         {marking && onUpdateMarking && (
-          <MarkingProperties marking={marking} roadwayWidth={roadwayWidth} onUpdate={onUpdateMarking} />
+          <MarkingProperties
+            marking={marking}
+            roadwayWidth={roadwayWidth}
+            linkedCrossingType={linkedCrossingType}
+            linkedCrossing={linkedCrossing}
+            onUpdate={onUpdateMarking}
+          />
         )}
       </div>
     </div>

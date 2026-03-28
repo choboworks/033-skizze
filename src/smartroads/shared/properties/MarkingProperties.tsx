@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import * as ToggleGroup from '@radix-ui/react-toggle-group'
 import { Minus, Plus } from 'lucide-react'
-import type { Marking } from '../../types'
+import type { LinkedCrossingType, Marking } from '../../types'
 import { DEFAULT_MARKING_COLOR } from '../../constants'
+import { DEFAULT_BIKE_CROSSING_COLOR } from '../../rules/markingRules'
 import { MARKING_TYPE_LABELS } from '@/constants/shared'
 import { ElementColorField } from './ElementColorField'
 import {
@@ -20,6 +21,8 @@ import {
 interface Props {
   marking: Marking
   roadwayWidth?: number
+  linkedCrossingType?: LinkedCrossingType
+  linkedCrossing?: Marking
   onUpdate: (changes: Partial<Marking>) => void
 }
 
@@ -73,6 +76,7 @@ function MarkingNumberStepper({
   max,
   step = 0.25,
   displayUnit = 'm',
+  displayFactor = 1,
 }: {
   value: number
   onChange: (v: number) => void
@@ -80,9 +84,10 @@ function MarkingNumberStepper({
   max?: number
   step?: number
   displayUnit?: string
+  displayFactor?: number
 }) {
   const [editing, setEditing] = useState(false)
-  const [editValue, setEditValue] = useState(String(Math.round(value * 100) / 100))
+  const [editValue, setEditValue] = useState(String(Math.round(value * displayFactor * 100) / 100))
 
   const clamp = (next: number) => {
     const boundedMax = max != null ? Math.min(max, next) : next
@@ -90,13 +95,13 @@ function MarkingNumberStepper({
   }
 
   const formatDisplayValue = (v: number) => {
-    const scaled = Math.round(v * 100) / 100
+    const scaled = Math.round(v * displayFactor * 100) / 100
     return Number.isInteger(scaled) ? String(scaled) : scaled.toFixed(2).replace(/\.?0+$/, '')
   }
 
   const commit = () => {
     const n = parseFloat(editValue)
-    if (!isNaN(n)) onChange(clamp(n))
+    if (!isNaN(n)) onChange(clamp(n / displayFactor))
     setEditing(false)
   }
 
@@ -147,13 +152,18 @@ function renderNumberField(
   const min = field.min(context)
   const max = field.max?.(context)
   const unit = field.displayUnit ?? 'm'
+  const displayFactor = field.displayFactor ?? 1
+  const formatDisplayValue = (raw: number) => {
+    const scaled = Math.round(raw * displayFactor * 100) / 100
+    return Number.isInteger(scaled) ? String(scaled) : scaled.toFixed(2).replace(/\.?0+$/, '')
+  }
 
   return (
     <div key={field.id} className="flex items-center justify-between">
       <span className="text-[11px]" style={{ color: 'var(--text)', fontWeight: 500 }}>{field.label}</span>
       {isReadOnly ? (
         <span className="text-[13px] font-mono" style={{ color: 'var(--text-muted)' }}>
-          {value.toFixed(2)} {unit}
+          {formatDisplayValue(value)} {unit}
         </span>
       ) : (
         <MarkingNumberStepper
@@ -163,6 +173,7 @@ function renderNumberField(
           max={max}
           step={field.step ?? 0.25}
           displayUnit={unit}
+          displayFactor={displayFactor}
         />
       )}
     </div>
@@ -179,10 +190,26 @@ function renderField(
   return renderReadOnlyField(field, context.marking)
 }
 
-export function MarkingProperties({ marking, roadwayWidth, onUpdate }: Props) {
+export function MarkingProperties({ marking, roadwayWidth, linkedCrossingType, linkedCrossing, onUpdate }: Props) {
   const label = MARKING_TYPE_LABELS[marking.type] || marking.type
-  const context = { marking, roadwayWidth }
+  const context = { marking, roadwayWidth, linkedCrossingType, linkedCrossing }
   const sections = getMarkingPropertySections(context)
+  const linkedBikeCrossingColorTarget = (
+    marking.type === 'traffic-island' &&
+    linkedCrossingType === 'bike-crossing' &&
+    linkedCrossing?.type === 'bike-crossing' &&
+    (linkedCrossing.bikeCrossingSurfaceType ?? 'cyclepath') === 'cyclepath'
+  ) ? linkedCrossing : null
+  const directBikeCrossingColorTarget = (
+    marking.type === 'bike-crossing' &&
+    (marking.bikeCrossingSurfaceType ?? 'cyclepath') === 'cyclepath'
+  ) ? marking : null
+  const defaultColorTarget = (
+    marking.type !== 'traffic-island' &&
+    marking.type !== 'bike-crossing'
+  ) ? marking : null
+  const colorTarget = linkedBikeCrossingColorTarget ?? directBikeCrossingColorTarget ?? defaultColorTarget
+  const colorFallback = colorTarget?.type === 'bike-crossing' ? DEFAULT_BIKE_CROSSING_COLOR : DEFAULT_MARKING_COLOR
 
   return (
     <div className="flex flex-col" style={{ gap: 14 }}>
@@ -202,10 +229,10 @@ export function MarkingProperties({ marking, roadwayWidth, onUpdate }: Props) {
         </div>
       ))}
 
-      {marking.type !== 'traffic-island' && (
+      {colorTarget && (
         <ElementColorField
-          value={marking.color || DEFAULT_MARKING_COLOR}
-          hasCustomColor={Boolean(marking.color)}
+          value={colorTarget.color || colorFallback}
+          hasCustomColor={Boolean(colorTarget.color)}
           onChange={(color) => onUpdate({ color })}
           onReset={() => onUpdate({ color: undefined })}
         />

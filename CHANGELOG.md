@@ -2,6 +2,87 @@
 
 ---
 
+## Session 13 – 28.03.2026
+
+**Teilnehmer**: Alex + Codex
+**Fokus**: Querungshilfen, Furtquerung, Nachschlagewerk-Abgleich, Gehweg-Polish
+
+### Querungshilfe & Verkehrsinsel fachlich sauber getrennt
+
+- **Palette vereinfacht**: Unter `Bauliches > Verkehrsinseln & Querungen` gibt es jetzt nur noch `Verkehrsinsel`, `Querungshilfe` und `Furtquerung`.
+- **Verkehrsinsel bleibt Oberbegriff**: Reine Inseln sind eigenständige bauliche Elemente ohne Querungslogik.
+- **Querungshilfe als gekoppelter Flow**: Erzeugt `traffic-island + crosswalk`, mit sauberer Synchronisierung zwischen Insel und FGÜ.
+- **Furtquerung als eigener Flow**: Erzeugt `traffic-island + bike-crossing` statt die normale Querungshilfe zu überladen.
+- **Property-Panel bereinigt**:
+- Keine redundante Typ-Auswahl mehr im Insel-Panel.
+- Reine Verkehrsinseln zeigen nur passende Optionen.
+- Querungshilfen und Furtquerungen bekommen ihre querungsbezogenen Optionen nur dort, wo sie fachlich Sinn ergeben.
+- **Floating Properties Titel korrigiert**: Gekoppelte Inseln heißen im Panel jetzt korrekt `Querungshilfe` bzw. `Furtquerung` statt pauschal `Verkehrsinsel`.
+
+### Nachschlagewerke analysiert und Regeln nachgezogen
+
+- **Root-Nachschlagewerke für Querungen/Mittelinseln ausgewertet** und gegen die SmartRoad-Regeln abgeglichen.
+- **Breiten und Mindestmaße angepasst**:
+- Reine Verkehrsinsel: fachlich sinnvoll ab `2,00 m`, empfohlen `2,50 m`
+- Querungshilfe / Mittelinsel-Aufstellfläche: mindestens `2,50 m`, bevorzugt `3,00 m`
+- Engstellen-Ausnahme: `1,60 m`
+- FGÜ: Mindestbreite `3,00 m`, Regelbreite `4,00 m`, Maximum `12,00 m`
+- **Seitlicher Sicherheitsraum `0,50 m`** zur Fahrbahn bleibt als Regel/Warnlogik berücksichtigt.
+- **Restfahrbahnbreite neu gedacht**: Die Insel wird nicht automatisch schmaler gerechnet; stattdessen verbreitert der Editor bei Bedarf die betroffenen Fahrbahnen, damit Insel/Querung ihre eingestellte Breite behalten.
+- **Validierungen erweitert**:
+- Hinweise/Warnungen zu innerorts, Fahrstreifenanzahl, Inselbreite und verbleibendem Vorbeifahrraum
+- Barrierefreie Variante prüft weiter die passende Querungsrand-Ausbildung
+
+### Querungshilfe-Workflow fertiggezogen
+
+- **Querungshilfe standardmäßig gepflastert**: Begrünte Ausführung aus dem Querungshilfe-Kontext entfernt.
+- **Reine Verkehrsinsel wieder mit Grünfläche**: Grüne Inseln sind für freie Verkehrsinseln weiter möglich und wieder als Belag vorhanden.
+- **Querungsrand nur bei echten Querungen**: Reine Verkehrsinseln zeigen keinen Querungsrand mehr.
+- **Sperrfläche-Default bereinigt**:
+- Reine Verkehrsinseln: Sperrfläche standardmäßig aus
+- Furtquerung: Sperrfläche ebenfalls standardmäßig aus
+- **Längen- und Breitenänderungen zentriert**: Inseln, Querungshilfen und gekoppelte Furt-Objekte wachsen bzw. schrumpfen nun um ihre Mitte, damit sie nicht nach jeder Änderung manuell zurück in die Achse gezogen werden müssen.
+- **Überfahrbar wieder entfernt**:
+- Nach fachlichem Abgleich als ungeeignet für den aktuellen Querungshilfe-Flow bewertet
+- Asphalt-/überfahrbare Sonderlogik aus Querungshilfe und Verkehrsinsel wieder ausgebaut
+
+### Neue Furtquerung
+
+- **Neues Querungsobjekt auf Foto-/Vorlagenbasis**: `Furtquerung` als inselgeführte Furt mit zwei Inselköpfen und Mittelband.
+- **Renderer auf Vorbild gedreht**: Nicht mehr mittige Insel mit seitlichen Teilflächen, sondern obere/untere Inselköpfe mit Furt dazwischen.
+- **Flächenoptionen im Panel**:
+- `Radweg`
+- `Überweg`
+- **Überweg-Variante**: Rendert innerhalb der Furt einen Zebrastreifen statt einer roten Radfurt.
+- **Radfurt-Bezeichnung ersetzt**: UI-Label und Sprache überall auf `Furtquerung` vereinheitlicht.
+- **Linienlogik an Radweg-Implementation angeglichen**:
+- Keine Sonder-Edge-Styles mehr
+- Stattdessen dieselben Prinzipien wie bei Radwegen: `Begrenzungslinien`, `Stärke`, `Strichlänge`, `Lückenlänge`
+- Renderer nutzt dafür wieder echte Konva-`Line`s statt selbst gebauter Dash-Rechtecke
+- **Default für Radweg-Furt**:
+- `Durchgezogen`
+- `12 cm` Strichstärke
+- Linienmaße im Panel jetzt in `cm`, intern weiterhin in `m`
+- **Farbfeld korrekt verdrahtet**: Bei der Furtquerung steuert die Farbe jetzt den eigentlichen Radweg in der Furt; Default bleibt das bisherige Rot, kann aber frei geändert werden.
+- **Abwärtskompatibilität**: Alte `bikeCrossingEdgeStyle`-Stände werden beim Laden in die neue Linienlogik migriert.
+
+### Gehwege optisch aufgewertet
+
+- **Gehweg-Patterns auf Querungs-Niveau gebracht**.
+- **Pflaster am Gehweg** nutzt jetzt wieder die stärkere Pflasterstruktur der Verkehrsinseln.
+- **Betonplatten neu gestaltet**:
+- deutlich weniger warm/cremig
+- stärker in Richtung realistisches, stumpfes Gehweg-Betongrau
+- **Naturstein-Pattern von Grund auf neu gebaut**: Unregelmäßige Natursteinplatten statt des alten feinen Rasterlooks.
+- **Wassergebunden wieder entfernt**, nachdem es versehentlich zurück in die Gehweg-Optionen geraten war.
+
+### Nächster Fokus
+
+- **Ziel für die nächste Session**: `Furtquerung polish`
+- Vor allem Feindetails, Variantenreife und letzte Render-/UI-Konsistenz der Furtlogik
+
+---
+
 ## Session 12 – 27.03.2026
 
 **Teilnehmer**: Alex + Claude

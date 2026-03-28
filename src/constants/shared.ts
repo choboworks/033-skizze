@@ -12,7 +12,7 @@ export const MARKING_TYPE_LABELS: Record<string, string> = {
   arrow: 'Richtungspfeil',
   'blocked-area': 'Sperrfläche',
   'yield-line': 'Wartelinie',
-  'bike-crossing': 'Radfurt',
+  'bike-crossing': 'Furtquerung',
   'bus-stop': 'Bushaltestelle',
   'speed-limit': 'Tempo',
   'parking-marking': 'Parkfläche',

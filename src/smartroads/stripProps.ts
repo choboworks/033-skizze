@@ -140,7 +140,7 @@ export function getLaneStripProps(strip: Strip): LaneStripProps {
   }
 }
 
-const VALID_SIDEWALK_SURFACES: SidewalkSurfaceType[] = ['slabs', 'paving', 'natural-stone', 'clinker', 'asphalt', 'gravel-bound']
+const VALID_SIDEWALK_SURFACES: SidewalkSurfaceType[] = ['slabs', 'paving', 'natural-stone', 'clinker', 'asphalt']
 
 function normalizeSidewalkSurface(value: unknown): SidewalkSurfaceType | undefined {
   if (typeof value === 'string' && VALID_SIDEWALK_SURFACES.includes(value as SidewalkSurfaceType)) {

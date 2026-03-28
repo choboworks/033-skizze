@@ -1,8 +1,10 @@
-import type { Marking } from '../../../types'
+import type { LinkedCrossingType, Marking } from '../../../types'
 
 export interface MarkingPropertyContext {
   marking: Marking
   roadwayWidth?: number
+  linkedCrossingType?: LinkedCrossingType
+  linkedCrossing?: Marking
 }
 
 export interface MarkingChoiceOption {
@@ -36,6 +38,7 @@ export interface MarkingNumberFieldDefinition {
   max?: (context: MarkingPropertyContext) => number
   step?: number
   displayUnit?: string
+  displayFactor?: number
   readOnly?: (context: MarkingPropertyContext) => boolean
 }
 

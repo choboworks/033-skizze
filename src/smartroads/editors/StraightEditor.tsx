@@ -8,13 +8,13 @@ import { FloatingEditorProperties } from '../shared/FloatingEditorProperties'
 import { EditorContextMenu } from '../shared/EditorContextMenu'
 import { RoadTopView } from '../rendering/RoadTopView'
 import { createDefaultStraightRoad, createStrip, totalWidth, ROAD_CLASS_CONFIG, generateLaneMarkings, normalizeLayerOrder } from '../constants'
-import { getRoadwayBoundsFromPlacements, getStripPlacements, isLaneOverlayCyclepath } from '../layout'
-import { MARKING_RULES } from '../rules/markingRules'
+import { getRoadwayBoundsFromPlacements, getStripPlacements, isLaneOverlayCyclepath, type RoadwayBounds } from '../layout'
+import { MARKING_RULES, TRAFFIC_ISLAND_RULES, getTrafficIslandPresetRule } from '../rules/markingRules'
 import { applyRoadClassWidthToStrips } from '../rules/stripRules'
 import { getCyclepathOverlaySide } from '../stripProps'
 import { normalizeStraightRoadState } from '../state'
 import { applyCyclepathGeometryConstraints } from '../validation'
-import type { Strip, Marking, StraightRoadState, StripType, StripVariant, MarkingType, MarkingVariant, RoadClass } from '../types'
+import type { Strip, Marking, StraightRoadState, StripType, StripVariant, MarkingType, MarkingVariant, RoadClass, TrafficIslandPreset, LinkedCrossingType } from '../types'
 
 // ============================================================
 // StraightEditor – Complete editor for straight road segments
@@ -41,6 +41,208 @@ function roundMeters(value: number): number {
   return Math.round(value * 100) / 100
 }
 
+function getTrafficIslandLength(marking: Marking): number {
+  return Math.max(0.1, marking.length ?? TRAFFIC_ISLAND_RULES.defaultLength)
+}
+
+function getCrosswalkLength(marking: Marking): number {
+  const rawLength = marking.length ?? MARKING_RULES.crosswalk.defaultLength
+  return Math.max(
+    MARKING_RULES.crosswalk.minLength,
+    Math.min(rawLength, MARKING_RULES.crosswalk.maxLength),
+  )
+}
+
+function getBikeCrossingLength(marking: Marking): number {
+  const rawLength = marking.length ?? MARKING_RULES.bikeCrossing.defaultLength
+  return Math.max(
+    MARKING_RULES.bikeCrossing.minLength,
+    Math.min(rawLength, MARKING_RULES.bikeCrossing.maxLength),
+  )
+}
+
+function getMarkingLengthForCentering(marking: Marking): number {
+  if (marking.type === 'traffic-island') return getTrafficIslandLength(marking)
+  if (marking.type === 'crosswalk') return getCrosswalkLength(marking)
+  if (marking.type === 'bike-crossing') return getBikeCrossingLength(marking)
+  return Math.max(0.1, marking.length ?? 0.1)
+}
+
+function getMarkingWidthForCentering(marking: Marking): number {
+  return Math.max(0.1, marking.width ?? 0.1)
+}
+
+function isRoadwayStrip(strip: Strip): boolean {
+  return strip.type === 'lane' || strip.type === 'bus'
+}
+
+function findRoadwayEdgeStripIndices(strips: Strip[]): { leftIndex: number; rightIndex: number } | null {
+  const leftIndex = strips.findIndex(isRoadwayStrip)
+  if (leftIndex === -1) return null
+
+  for (let i = strips.length - 1; i >= 0; i--) {
+    if (isRoadwayStrip(strips[i])) {
+      return { leftIndex, rightIndex: i }
+    }
+  }
+
+  return null
+}
+
+function ensureMinimumRoadwayPassageForTrafficIslands(
+  strips: Strip[],
+  markings: Marking[],
+  roadLength: number,
+): { strips: Strip[]; markings: Marking[] } {
+  let nextStrips = strips
+  let nextMarkings = markings
+
+  for (let index = 0; index < nextMarkings.length; index++) {
+    const marking = nextMarkings[index]
+    if (marking.type !== 'traffic-island') continue
+
+    const roadwayBounds = getRoadwayBoundsFromPlacements(getStripPlacements(nextStrips, roadLength))
+    if (!roadwayBounds) continue
+
+    const islandWidth = Math.max(0.1, marking.width ?? TRAFFIC_ISLAND_RULES.recommendedWidth)
+    const leftClearance = marking.x - roadwayBounds.minX
+    const rightClearance = roadwayBounds.maxX - (marking.x + islandWidth)
+    const leftDeficit = Math.max(0, TRAFFIC_ISLAND_RULES.minimumPassageWidth - leftClearance)
+    const rightDeficit = Math.max(0, TRAFFIC_ISLAND_RULES.minimumPassageWidth - rightClearance)
+
+    if (leftDeficit <= 0 && rightDeficit <= 0) continue
+
+    const edgeIndices = findRoadwayEdgeStripIndices(nextStrips)
+    if (!edgeIndices) continue
+
+    const widenedStrips = nextStrips.map((strip, stripIndex) => {
+      let nextWidth = strip.width
+      if (stripIndex === edgeIndices.leftIndex) nextWidth += leftDeficit
+      if (stripIndex === edgeIndices.rightIndex) nextWidth += rightDeficit
+
+      if (nextWidth === strip.width) return strip
+      return {
+        ...strip,
+        width: roundMeters(nextWidth),
+      }
+    })
+
+    nextStrips = applyCyclepathGeometryConstraints(widenedStrips)
+    nextMarkings = nextMarkings.map((candidate, candidateIndex) => (
+      candidateIndex === index
+        ? {
+            ...candidate,
+            x: roundMeters(candidate.x + leftDeficit),
+            width: roundMeters(islandWidth),
+          }
+        : candidate
+    ))
+  }
+
+  return {
+    strips: nextStrips,
+    markings: nextMarkings,
+  }
+}
+
+function getTrafficIslandSpawnWidth(
+  _preset: TrafficIslandPreset,
+  preferredWidth: number,
+  roadwayBounds?: RoadwayBounds,
+): number {
+  void roadwayBounds
+  return preferredWidth
+}
+
+function isLinkedCrossingMarking(marking: Marking): marking is Marking & { linkedIslandId: string } {
+  return (
+    (marking.type === 'crosswalk' || marking.type === 'bike-crossing') &&
+    typeof marking.linkedIslandId === 'string' &&
+    marking.linkedIslandId.trim().length > 0
+  )
+}
+
+function getLinkedCrossingLength(marking: Marking): number {
+  return marking.type === 'bike-crossing' ? getBikeCrossingLength(marking) : getCrosswalkLength(marking)
+}
+
+function createTrafficIslandMarking(
+  preset: TrafficIslandPreset,
+  roadwayBounds: RoadwayBounds | undefined,
+  roadLength: number,
+  totalRoadWidth: number,
+): Marking {
+  const rule = getTrafficIslandPresetRule(preset)
+  const islandWidth = roundMeters(getTrafficIslandSpawnWidth(preset, rule.width, roadwayBounds))
+  const islandLength = roundMeters(rule.length)
+  const islandX = roadwayBounds
+    ? roadwayBounds.minX + Math.max(0, roadwayBounds.width - islandWidth) / 2
+    : Math.max(0, (totalRoadWidth - islandWidth) / 2)
+  const islandY = Math.max(0, (roadLength - islandLength) / 2)
+
+  return {
+    id: crypto.randomUUID(),
+    type: 'traffic-island',
+    variant: 'raised-paved',
+    x: roundMeters(islandX),
+    y: roundMeters(islandY),
+    width: islandWidth,
+    length: islandLength,
+    crossingAidPreset: preset,
+    surfaceType: rule.surfaceType,
+    curbType: rule.curbType,
+    entryTreatment: rule.entryTreatment,
+    endShape: rule.endShape,
+    endTaperLength: 1.0,
+    showCurbBorder: rule.showCurbBorder,
+    showApproachMarking: rule.showApproachMarking,
+    approachLength: rule.approachLength,
+  }
+}
+
+function createLinkedCrosswalkMarking(
+  island: Marking,
+  roadwayBounds: RoadwayBounds | undefined,
+  totalRoadWidth: number,
+): Marking {
+  const crosswalkLength = MARKING_RULES.crosswalk.defaultLength
+  const islandLength = getTrafficIslandLength(island)
+
+  return {
+    id: crypto.randomUUID(),
+    type: 'crosswalk',
+    variant: 'default',
+    x: roadwayBounds?.minX ?? 0,
+    y: roundMeters(island.y + islandLength / 2 - crosswalkLength / 2),
+    width: roadwayBounds?.width ?? totalRoadWidth,
+    length: crosswalkLength,
+    linkedIslandId: island.id,
+  }
+}
+
+function createLinkedBikeCrossingMarking(
+  island: Marking,
+  roadwayBounds: RoadwayBounds | undefined,
+  totalRoadWidth: number,
+): Marking {
+  const crossingLength = MARKING_RULES.bikeCrossing.defaultLength
+  const islandLength = getTrafficIslandLength(island)
+
+  return {
+    id: crypto.randomUUID(),
+    type: 'bike-crossing',
+    variant: 'default',
+    x: roadwayBounds?.minX ?? 0,
+    y: roundMeters(island.y + islandLength / 2 - crossingLength / 2),
+    width: roadwayBounds?.width ?? totalRoadWidth,
+    length: crossingLength,
+    linkedIslandId: island.id,
+    bikeCrossingSurfaceType: 'cyclepath',
+    bikeCrossingBoundaryLineMode: 'solid',
+    bikeCrossingBoundaryLineStrokeWidth: MARKING_RULES.lineWidths.otherRoads.schmalstrich,
+  }
+}
+
 function constrainTrafficIslandMarkings(markings: Marking[], strips: Strip[], roadLength: number): Marking[] {
   const roadwayBounds = getRoadwayBoundsFromPlacements(getStripPlacements(strips, roadLength))
   if (!roadwayBounds) return markings
@@ -48,13 +250,56 @@ function constrainTrafficIslandMarkings(markings: Marking[], strips: Strip[], ro
   return markings.map((marking) => {
     if (marking.type !== 'traffic-island') return marking
 
-    const width = Math.max(0.1, Math.min(marking.width ?? 2.5, roadwayBounds.width))
-    const clampedX = Math.max(roadwayBounds.minX, Math.min(marking.x, roadwayBounds.maxX - width))
+    const width = Math.max(0.1, marking.width ?? TRAFFIC_ISLAND_RULES.recommendedWidth)
+    const maxX = width <= roadwayBounds.width ? roadwayBounds.maxX - width : roadwayBounds.minX
+    const clampedX = Math.max(roadwayBounds.minX, Math.min(marking.x, maxX))
 
     return {
       ...marking,
       width: roundMeters(width),
       x: roundMeters(clampedX),
+    }
+  })
+}
+
+function synchronizeCrossingAidMarkings(markings: Marking[], strips: Strip[], roadLength: number): Marking[] {
+  const constrainedIslands = constrainTrafficIslandMarkings(markings, strips, roadLength)
+  const roadwayBounds = getRoadwayBoundsFromPlacements(getStripPlacements(strips, roadLength))
+  const islandById = new Map(
+    constrainedIslands
+      .filter((marking) => marking.type === 'traffic-island')
+      .map((marking) => [marking.id, marking]),
+  )
+
+  return constrainedIslands.map((marking) => {
+    if (marking.type !== 'crosswalk' && marking.type !== 'bike-crossing') {
+      return marking
+    }
+
+    const normalizedLength = roundMeters(getLinkedCrossingLength(marking))
+    if (!isLinkedCrossingMarking(marking)) {
+      return {
+        ...marking,
+        length: normalizedLength,
+      }
+    }
+
+    const linkedIsland = islandById.get(marking.linkedIslandId)
+    if (!linkedIsland || !roadwayBounds) {
+      return {
+        ...marking,
+        length: normalizedLength,
+      }
+    }
+
+    return {
+      ...marking,
+      x: roundMeters(roadwayBounds.minX),
+      y: roundMeters(
+        linkedIsland.y + getTrafficIslandLength(linkedIsland) / 2 - normalizedLength / 2,
+      ),
+      width: roundMeters(roadwayBounds.width),
+      length: normalizedLength,
     }
   })
 }
@@ -108,7 +353,7 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
     [initialState]
   )
   const initialMarkingState = useMemo(() => {
-    const constrainedMarkings = constrainTrafficIslandMarkings(
+    const constrainedMarkings = synchronizeCrossingAidMarkings(
       normalizedInitialState.markings,
       normalizedInitialState.strips,
       normalizedInitialState.length,
@@ -130,8 +375,13 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
   )
   const [length, setLength] = useState(normalizedInitialState.length)
   const [roadClass, setRoadClass] = useState<RoadClass>(normalizedInitialState.roadClass ?? 'innerorts')
+  const stripsRef = useRef(strips)
   const layerOrderRef = useRef(layerOrder)
   const suppressedCenterlinesRef = useRef(suppressedCenterlines)
+
+  useEffect(() => {
+    stripsRef.current = strips
+  }, [strips])
 
   useEffect(() => {
     layerOrderRef.current = layerOrder
@@ -160,8 +410,20 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
     nextRoadClass: RoadClass = roadClass,
     nextLength: number = length,
   ) => {
-    const constrainedMarkings = constrainTrafficIslandMarkings(prevMarkings, nextStrips, nextLength)
-    return reconcileCenterlineState(nextStrips, constrainedMarkings, prevSuppressedCenterlines, nextRoadClass, nextLength)
+    const widenedState = ensureMinimumRoadwayPassageForTrafficIslands(nextStrips, prevMarkings, nextLength)
+    const constrainedMarkings = synchronizeCrossingAidMarkings(widenedState.markings, widenedState.strips, nextLength)
+    const reconciled = reconcileCenterlineState(
+      widenedState.strips,
+      constrainedMarkings,
+      prevSuppressedCenterlines,
+      nextRoadClass,
+      nextLength,
+    )
+
+    return {
+      strips: widenedState.strips,
+      ...reconciled,
+    }
   }, [roadClass, length])
 
   const buildStripAnchoredLayerOrder = useCallback((nextStrips: Strip[], nextMarkings: Marking[]) => {
@@ -181,8 +443,9 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
     setStrips(constrainedStrips)
     setMarkings((prev) => {
       const nextState = rebuildMarkingsForStrips(constrainedStrips, prev)
+      if (nextState.strips !== constrainedStrips) setStrips(nextState.strips)
       setSuppressedCenterlines(nextState.suppressedCenterlines)
-      setLayerOrder(buildStripAnchoredLayerOrder(constrainedStrips, nextState.markings))
+      setLayerOrder(buildStripAnchoredLayerOrder(nextState.strips, nextState.markings))
       return nextState.markings
     })
   }, [buildStripAnchoredLayerOrder, rebuildMarkingsForStrips])
@@ -202,8 +465,9 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       const constrained = applyCyclepathGeometryConstraints(updated)
       setMarkings((current) => {
         const nextState = rebuildMarkingsForStrips(constrained, current, suppressedCenterlinesRef.current, roadClass, length)
+        if (nextState.strips !== constrained) setStrips(nextState.strips)
         setSuppressedCenterlines(nextState.suppressedCenterlines)
-        setLayerOrder(buildStripAnchoredLayerOrder(constrained, nextState.markings))
+        setLayerOrder(buildStripAnchoredLayerOrder(nextState.strips, nextState.markings))
         return nextState.markings
       })
       return constrained
@@ -215,8 +479,9 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       const updated = prev.filter((s) => s.id !== id)
       setMarkings((current) => {
         const nextState = rebuildMarkingsForStrips(updated, current)
+        if (nextState.strips !== updated) setStrips(nextState.strips)
         setSuppressedCenterlines(nextState.suppressedCenterlines)
-        setLayerOrder(buildStripAnchoredLayerOrder(updated, nextState.markings))
+        setLayerOrder(buildStripAnchoredLayerOrder(nextState.strips, nextState.markings))
         return nextState.markings
       })
       return updated
@@ -250,8 +515,9 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       const constrained = applyCyclepathGeometryConstraints(updated)
       setMarkings((current) => {
         const nextState = rebuildMarkingsForStrips(constrained, current)
+        if (nextState.strips !== constrained) setStrips(nextState.strips)
         setSuppressedCenterlines(nextState.suppressedCenterlines)
-        setLayerOrder(buildStripAnchoredLayerOrder(constrained, nextState.markings))
+        setLayerOrder(buildStripAnchoredLayerOrder(nextState.strips, nextState.markings))
         return nextState.markings
       })
       return constrained
@@ -281,74 +547,299 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       return undefined
     })()
     const isIsland = type === 'traffic-island'
-    const defaultIslandWidth = roadwayBounds ? Math.min(2.50, roadwayBounds.width) : 2.50
+    const crosswalkWidth = roadwayBounds?.width ?? tw
+    const crosswalkX = roadwayBounds?.minX ?? 0
 
-    // For traffic islands, spawn centered within the roadway (lane/bus area)
-    const islandX = roadwayBounds
-      ? roadwayBounds.minX + Math.max(0, roadwayBounds.width - defaultIslandWidth) / 2
-      : (tw - defaultIslandWidth) / 2
-
-    const newMarking: Marking = {
-      id: crypto.randomUUID(),
-      type,
-      variant,
-      x: isIsland ? islandX : tw / 2,
-      y: isIsland ? Math.max(0, (length - 8.0) / 2) : length / 2,
-      width: isIsland ? defaultIslandWidth : tw,
-      ...(isIsland ? { length: 8.0, surfaceType: 'green', endShape: 'rounded', endTaperLength: 1.0, showCurbBorder: true, showApproachMarking: true, approachLength: 3.0 } : {}),
-      ...(strokeWidth ? { strokeWidth } : {}),
-    }
+    const newMarking: Marking = isIsland
+      ? {
+          ...createTrafficIslandMarking('free', roadwayBounds, length, tw),
+          variant,
+        }
+      : {
+          id: crypto.randomUUID(),
+          type,
+          variant,
+          x: type === 'crosswalk' ? crosswalkX : tw / 2,
+          y: length / 2,
+          width: type === 'crosswalk' ? crosswalkWidth : tw,
+          ...(type === 'crosswalk' ? { length: MARKING_RULES.crosswalk.defaultLength } : {}),
+          ...(strokeWidth ? { strokeWidth } : {}),
+        }
     setMarkings((prev) => {
       if (!isIsland) {
-        const nextMarkings = [...prev, newMarking]
+        const nextMarkings = synchronizeCrossingAidMarkings([...prev, newMarking], strips, length)
         setLayerOrder(normalizeLayerOrder([...layerOrderRef.current, newMarking.id], strips, nextMarkings))
         return nextMarkings
       }
 
-      const nextState = rebuildMarkingsForStrips(strips, [...prev, newMarking])
+      const nextState = rebuildMarkingsForStrips(stripsRef.current, [...prev, newMarking])
+      if (nextState.strips !== stripsRef.current) setStrips(nextState.strips)
       setSuppressedCenterlines(nextState.suppressedCenterlines)
-      setLayerOrder(normalizeLayerOrder([...layerOrderRef.current, newMarking.id], strips, nextState.markings))
+      setLayerOrder(normalizeLayerOrder([...layerOrderRef.current, newMarking.id], nextState.strips, nextState.markings))
+      return nextState.markings
+    })
+  }, [hasTrafficIsland, length, rebuildMarkingsForStrips, roadwayBounds, strips])
+
+  const handleAddCrossingAid = useCallback(() => {
+    if (hasTrafficIsland) return
+
+    const tw = totalWidth(strips)
+    const island = createTrafficIslandMarking('standard', roadwayBounds, length, tw)
+
+    setMarkings((prev) => {
+      const crosswalk = createLinkedCrosswalkMarking(island, roadwayBounds, tw)
+      const nextState = rebuildMarkingsForStrips(stripsRef.current, [...prev, island, crosswalk])
+      if (nextState.strips !== stripsRef.current) setStrips(nextState.strips)
+      setSuppressedCenterlines(nextState.suppressedCenterlines)
+      setLayerOrder(normalizeLayerOrder([...layerOrderRef.current, island.id, crosswalk.id], nextState.strips, nextState.markings))
+      return nextState.markings
+    })
+  }, [hasTrafficIsland, length, rebuildMarkingsForStrips, roadwayBounds, strips])
+
+  const handleAddBikeCrossingAid = useCallback(() => {
+    if (hasTrafficIsland) return
+
+    const tw = totalWidth(strips)
+    const island = createTrafficIslandMarking('bike-crossing', roadwayBounds, length, tw)
+
+    setMarkings((prev) => {
+      const bikeCrossing = createLinkedBikeCrossingMarking(island, roadwayBounds, tw)
+      const nextState = rebuildMarkingsForStrips(stripsRef.current, [...prev, island, bikeCrossing])
+      if (nextState.strips !== stripsRef.current) setStrips(nextState.strips)
+      setSuppressedCenterlines(nextState.suppressedCenterlines)
+      setLayerOrder(normalizeLayerOrder([...layerOrderRef.current, island.id, bikeCrossing.id], nextState.strips, nextState.markings))
       return nextState.markings
     })
   }, [hasTrafficIsland, length, rebuildMarkingsForStrips, roadwayBounds, strips])
 
   const handleMarkingMove = useCallback((id: string, x: number, y: number) => {
-    setMarkings(prev => prev.map(m => m.id === id ? { ...m, x, y } : m))
-  }, [])
+    setMarkings((prev) => {
+      const moved = prev.find((marking) => marking.id === id)
+      if (!moved) return prev
+
+      let nextMarkings = prev.map((marking) => (marking.id === id ? { ...marking, x, y } : marking))
+
+      if ((moved.type === 'crosswalk' || moved.type === 'bike-crossing') && moved.linkedIslandId) {
+        const crossingCenterY = y + getLinkedCrossingLength({ ...moved, y }) / 2
+        nextMarkings = nextMarkings.map((marking) => (
+          marking.id === moved.linkedIslandId && marking.type === 'traffic-island'
+            ? { ...marking, y: roundMeters(crossingCenterY - getTrafficIslandLength(marking) / 2) }
+            : marking
+        ))
+      }
+
+      if (moved.type === 'traffic-island') {
+        const islandCenterY = y + getTrafficIslandLength({ ...moved, y }) / 2
+        nextMarkings = nextMarkings.map((marking) => (
+          isLinkedCrossingMarking(marking) && marking.linkedIslandId === moved.id
+            ? { ...marking, y: roundMeters(islandCenterY - getLinkedCrossingLength(marking) / 2) }
+            : marking
+        ))
+
+        const nextState = rebuildMarkingsForStrips(stripsRef.current, nextMarkings)
+        if (nextState.strips !== stripsRef.current) setStrips(nextState.strips)
+        setSuppressedCenterlines(nextState.suppressedCenterlines)
+        return nextState.markings
+      }
+
+      return synchronizeCrossingAidMarkings(nextMarkings, strips, length)
+    })
+  }, [length, strips, rebuildMarkingsForStrips])
 
   const handleDeleteMarking = useCallback((id: string) => {
     setMarkings((prev) => {
       const deleted = prev.find((m) => m.id === id)
-      const nextMarkings = prev.filter((marking) => marking.id !== id)
+      const removedIds = new Set([id])
 
       if (deleted?.type === 'traffic-island') {
-        const nextState = rebuildMarkingsForStrips(strips, nextMarkings)
+        for (const marking of prev) {
+          if (isLinkedCrossingMarking(marking) && marking.linkedIslandId === id) {
+            removedIds.add(marking.id)
+          }
+        }
+      }
+
+      const nextMarkings = prev.filter((marking) => !removedIds.has(marking.id))
+
+      if (deleted?.type === 'traffic-island') {
+        const nextState = rebuildMarkingsForStrips(stripsRef.current, nextMarkings)
+        if (nextState.strips !== stripsRef.current) setStrips(nextState.strips)
         setSuppressedCenterlines(nextState.suppressedCenterlines)
         setLayerOrder(normalizeLayerOrder(
-          layerOrderRef.current.filter((layerId) => layerId !== id),
+          layerOrderRef.current.filter((layerId) => !removedIds.has(layerId)),
+          nextState.strips,
+          nextState.markings,
+        ))
+        if (selectedMarkingId && removedIds.has(selectedMarkingId)) {
+          setSelectedMarkingId(null)
+          setPropertiesOpen(false)
+        }
+        return nextState.markings
+      }
+
+      if ((deleted?.type === 'crosswalk' || deleted?.type === 'bike-crossing') && deleted.linkedIslandId) {
+        const nextMarkingsWithFreeIsland = nextMarkings.map((marking) => (
+          marking.id === deleted.linkedIslandId && marking.type === 'traffic-island'
+            ? {
+                ...marking,
+                crossingAidPreset: 'free' as const,
+                entryTreatment: 'none' as const,
+                showApproachMarking: false,
+              }
+            : marking
+        ))
+        setLayerOrder(normalizeLayerOrder(
+          layerOrderRef.current.filter((layerId) => !removedIds.has(layerId)),
           strips,
+          nextMarkingsWithFreeIsland,
+        ))
+        if (selectedMarkingId && removedIds.has(selectedMarkingId)) {
+          setSelectedMarkingId(null)
+          setPropertiesOpen(false)
+        }
+        return synchronizeCrossingAidMarkings(nextMarkingsWithFreeIsland, strips, length)
+      }
+
+      setLayerOrder(normalizeLayerOrder(
+        layerOrderRef.current.filter((layerId) => !removedIds.has(layerId)),
+        strips,
+        nextMarkings,
+      ))
+      if (selectedMarkingId && removedIds.has(selectedMarkingId)) {
+        setSelectedMarkingId(null)
+        setPropertiesOpen(false)
+      }
+      return synchronizeCrossingAidMarkings(nextMarkings, strips, length)
+    })
+  }, [selectedMarkingId, strips, rebuildMarkingsForStrips, length])
+
+  const handleUpdateMarking = useCallback((id: string, changes: Partial<Marking>) => {
+    setMarkings((prev) => {
+      const current = prev.find((marking) => marking.id === id)
+      if (!current) return prev
+
+      const normalizedChanges = (() => {
+        if (current.type !== 'traffic-island' && current.type !== 'crosswalk') return changes
+
+        const nextChanges: Partial<Marking> = { ...changes }
+
+        if (typeof changes.length === 'number') {
+          const currentCenterY = current.y + getMarkingLengthForCentering(current) / 2
+          nextChanges.y = roundMeters(currentCenterY - changes.length / 2)
+        }
+
+        if (typeof changes.width === 'number') {
+          const currentCenterX = current.x + getMarkingWidthForCentering(current) / 2
+          nextChanges.x = roundMeters(currentCenterX - changes.width / 2)
+        }
+
+        return nextChanges
+      })()
+
+      const forwardedBikeCrossingChanges: Partial<Marking> = {}
+      if (current.type === 'traffic-island') {
+        if ('color' in normalizedChanges) {
+          forwardedBikeCrossingChanges.color = normalizedChanges.color
+          delete normalizedChanges.color
+        }
+        if ('bikeCrossingSurfaceType' in normalizedChanges) {
+          forwardedBikeCrossingChanges.bikeCrossingSurfaceType = normalizedChanges.bikeCrossingSurfaceType
+          delete normalizedChanges.bikeCrossingSurfaceType
+        }
+        if ('bikeCrossingBoundaryLineMode' in normalizedChanges) {
+          forwardedBikeCrossingChanges.bikeCrossingBoundaryLineMode = normalizedChanges.bikeCrossingBoundaryLineMode
+          delete normalizedChanges.bikeCrossingBoundaryLineMode
+        }
+        if ('bikeCrossingBoundaryLineStrokeWidth' in normalizedChanges) {
+          forwardedBikeCrossingChanges.bikeCrossingBoundaryLineStrokeWidth = normalizedChanges.bikeCrossingBoundaryLineStrokeWidth
+          delete normalizedChanges.bikeCrossingBoundaryLineStrokeWidth
+        }
+        if ('bikeCrossingBoundaryLineDashLength' in normalizedChanges) {
+          forwardedBikeCrossingChanges.bikeCrossingBoundaryLineDashLength = normalizedChanges.bikeCrossingBoundaryLineDashLength
+          delete normalizedChanges.bikeCrossingBoundaryLineDashLength
+        }
+        if ('bikeCrossingBoundaryLineGapLength' in normalizedChanges) {
+          forwardedBikeCrossingChanges.bikeCrossingBoundaryLineGapLength = normalizedChanges.bikeCrossingBoundaryLineGapLength
+          delete normalizedChanges.bikeCrossingBoundaryLineGapLength
+        }
+      }
+
+      let nextMarkings = prev.map((marking) => (marking.id === id ? { ...marking, ...normalizedChanges } : marking))
+
+      if (current.type !== 'traffic-island') {
+        return synchronizeCrossingAidMarkings(nextMarkings, strips, length)
+      }
+
+      const currentLinkedCrossing = prev.find(
+        (marking) => isLinkedCrossingMarking(marking) && marking.linkedIslandId === id,
+      )
+      if (currentLinkedCrossing?.type === 'bike-crossing' && Object.keys(forwardedBikeCrossingChanges).length > 0) {
+        nextMarkings = nextMarkings.map((marking) => (
+          marking.id === currentLinkedCrossing.id
+            ? { ...marking, ...forwardedBikeCrossingChanges }
+            : marking
+        ))
+      }
+      const nextIsland = nextMarkings.find((marking) => marking.id === id && marking.type === 'traffic-island')
+      if (!nextIsland) {
+        return synchronizeCrossingAidMarkings(nextMarkings, strips, length)
+      }
+
+      const nextPreset = nextIsland.crossingAidPreset ?? 'free'
+      const desiredLinkedCrossingType: LinkedCrossingType | null = nextPreset === 'bike-crossing'
+        ? 'bike-crossing'
+        : nextPreset !== 'free'
+          ? 'crosswalk'
+          : null
+
+      if (!currentLinkedCrossing && desiredLinkedCrossingType) {
+        const linkedCrossing = desiredLinkedCrossingType === 'bike-crossing'
+          ? createLinkedBikeCrossingMarking(nextIsland, roadwayBounds, totalWidth(strips))
+          : createLinkedCrosswalkMarking(nextIsland, roadwayBounds, totalWidth(strips))
+        nextMarkings = [...nextMarkings, linkedCrossing]
+        const nextState = rebuildMarkingsForStrips(stripsRef.current, nextMarkings)
+        if (nextState.strips !== stripsRef.current) setStrips(nextState.strips)
+        setSuppressedCenterlines(nextState.suppressedCenterlines)
+        setLayerOrder(normalizeLayerOrder([...layerOrderRef.current, linkedCrossing.id], nextState.strips, nextState.markings))
+        return nextState.markings
+      }
+
+      if (currentLinkedCrossing && !desiredLinkedCrossingType) {
+        nextMarkings = nextMarkings.filter((marking) => marking.id !== currentLinkedCrossing.id)
+        const nextState = rebuildMarkingsForStrips(stripsRef.current, nextMarkings)
+        if (nextState.strips !== stripsRef.current) setStrips(nextState.strips)
+        setSuppressedCenterlines(nextState.suppressedCenterlines)
+        setLayerOrder(normalizeLayerOrder(
+          layerOrderRef.current.filter((layerId) => layerId !== currentLinkedCrossing.id),
+          nextState.strips,
           nextState.markings,
         ))
         return nextState.markings
       }
 
-      setLayerOrder(normalizeLayerOrder(
-        layerOrderRef.current.filter((layerId) => layerId !== id),
-        strips,
-        nextMarkings,
-      ))
-      return nextMarkings
-    })
-    if (selectedMarkingId === id) { setSelectedMarkingId(null); setPropertiesOpen(false) }
-  }, [selectedMarkingId, strips, rebuildMarkingsForStrips])
+      if (currentLinkedCrossing && desiredLinkedCrossingType && currentLinkedCrossing.type !== desiredLinkedCrossingType) {
+        nextMarkings = nextMarkings.filter((marking) => marking.id !== currentLinkedCrossing.id)
+        const replacement = desiredLinkedCrossingType === 'bike-crossing'
+          ? createLinkedBikeCrossingMarking(nextIsland, roadwayBounds, totalWidth(strips))
+          : createLinkedCrosswalkMarking(nextIsland, roadwayBounds, totalWidth(strips))
+        nextMarkings = [...nextMarkings, replacement]
+        const nextState = rebuildMarkingsForStrips(stripsRef.current, nextMarkings)
+        if (nextState.strips !== stripsRef.current) setStrips(nextState.strips)
+        setSuppressedCenterlines(nextState.suppressedCenterlines)
+        setLayerOrder(normalizeLayerOrder(
+          [...layerOrderRef.current.filter((layerId) => layerId !== currentLinkedCrossing.id), replacement.id],
+          nextState.strips,
+          nextState.markings,
+        ))
+        return nextState.markings
+      }
 
-  const handleUpdateMarking = useCallback((id: string, changes: Partial<Marking>) => {
-    setMarkings((prev) => constrainTrafficIslandMarkings(
-      prev.map((marking) => (marking.id === id ? { ...marking, ...changes } : marking)),
-      strips,
-      length,
-    ))
-  }, [length, strips])
+      const nextState = rebuildMarkingsForStrips(stripsRef.current, nextMarkings)
+      if (nextState.strips !== stripsRef.current) setStrips(nextState.strips)
+      setSuppressedCenterlines(nextState.suppressedCenterlines)
+      return nextState.markings
+    })
+  }, [length, roadwayBounds, strips, rebuildMarkingsForStrips])
 
   // --- Context menu ---
   const handleContextMenu = useCallback((e: React.MouseEvent, kind: 'strip' | 'marking', id: string) => {
@@ -369,8 +860,9 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       const constrained = applyCyclepathGeometryConstraints(updated)
       setMarkings((current) => {
         const nextState = rebuildMarkingsForStrips(constrained, current)
+        if (nextState.strips !== constrained) setStrips(nextState.strips)
         setSuppressedCenterlines(nextState.suppressedCenterlines)
-        setLayerOrder(buildStripAnchoredLayerOrder(constrained, nextState.markings))
+        setLayerOrder(buildStripAnchoredLayerOrder(nextState.strips, nextState.markings))
         return nextState.markings
       })
       return constrained
@@ -413,8 +905,9 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       ))
       setMarkings((current) => {
         const nextState = rebuildMarkingsForStrips(updated, current, suppressedCenterlinesRef.current, roadClass, newLength)
+        if (nextState.strips !== updated) setStrips(nextState.strips)
         setSuppressedCenterlines(nextState.suppressedCenterlines)
-        setLayerOrder(buildStripAnchoredLayerOrder(updated, nextState.markings))
+        setLayerOrder(buildStripAnchoredLayerOrder(nextState.strips, nextState.markings))
         return nextState.markings
       })
       return updated
@@ -428,8 +921,9 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
       const updated = applyCyclepathGeometryConstraints(applyRoadClassWidthToStrips(prev, nextRoadClass))
       setMarkings((current) => {
         const nextState = rebuildMarkingsForStrips(updated, current, suppressedCenterlinesRef.current, nextRoadClass, length)
+        if (nextState.strips !== updated) setStrips(nextState.strips)
         setSuppressedCenterlines(nextState.suppressedCenterlines)
-        setLayerOrder(buildStripAnchoredLayerOrder(updated, nextState.markings))
+        setLayerOrder(buildStripAnchoredLayerOrder(nextState.strips, nextState.markings))
         return nextState.markings
       })
       return updated
@@ -439,24 +933,23 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
   // --- Presets ---
   const handleLoadPreset = useCallback((state: StraightRoadState) => {
     const normalized = normalizeStraightRoadState(state, createDefaultStraightRoad())
-    const constrainedMarkings = constrainTrafficIslandMarkings(normalized.markings, normalized.strips, normalized.length)
-    const nextMarkingState = reconcileCenterlineState(
+    const nextState = rebuildMarkingsForStrips(
       normalized.strips,
-      constrainedMarkings,
+      normalized.markings,
       normalized.suppressedCenterlines ?? [],
       normalized.roadClass ?? 'innerorts',
       normalized.length,
     )
-    setStrips(normalized.strips)
-    setMarkings(nextMarkingState.markings)
-    setSuppressedCenterlines(nextMarkingState.suppressedCenterlines)
-    setLayerOrder(normalizeLayerOrder(normalized.layerOrder, normalized.strips, nextMarkingState.markings))
+    setStrips(nextState.strips)
+    setMarkings(nextState.markings)
+    setSuppressedCenterlines(nextState.suppressedCenterlines)
+    setLayerOrder(normalizeLayerOrder(normalized.layerOrder, nextState.strips, nextState.markings))
     setLength(normalized.length)
     setRoadClass(normalized.roadClass ?? 'innerorts')
     setSelectedStripId(null)
     setSelectedMarkingId(null)
     setPropertiesOpen(false)
-  }, [])
+  }, [rebuildMarkingsForStrips])
 
   const handleReorderLayers = useCallback((nextLayerOrder: string[]) => {
     setLayerOrder(normalizeLayerOrder(nextLayerOrder, strips, markings))
@@ -464,23 +957,23 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
 
   const handleReset = useCallback(() => {
     const defaultState = normalizeStraightRoadState(createDefaultStraightRoad(), createDefaultStraightRoad())
-    const nextMarkingState = reconcileCenterlineState(
+    const nextState = rebuildMarkingsForStrips(
       defaultState.strips,
       defaultState.markings,
       defaultState.suppressedCenterlines ?? [],
       defaultState.roadClass ?? 'innerorts',
       defaultState.length,
     )
-    setStrips(defaultState.strips)
-    setMarkings(nextMarkingState.markings)
-    setSuppressedCenterlines(nextMarkingState.suppressedCenterlines)
-    setLayerOrder(normalizeLayerOrder(defaultState.layerOrder, defaultState.strips, nextMarkingState.markings))
+    setStrips(nextState.strips)
+    setMarkings(nextState.markings)
+    setSuppressedCenterlines(nextState.suppressedCenterlines)
+    setLayerOrder(normalizeLayerOrder(defaultState.layerOrder, nextState.strips, nextState.markings))
     setLength(defaultState.length)
     setRoadClass(defaultState.roadClass ?? 'innerorts')
     setSelectedStripId(null)
     setSelectedMarkingId(null)
     setPropertiesOpen(false)
-  }, [])
+  }, [rebuildMarkingsForStrips])
 
   // --- Finish ---
   const handleFinish = () => {
@@ -490,12 +983,23 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
   // --- Resolve selected objects for floating properties ---
   const selectedStrip = selectedStripId ? strips.find(s => s.id === selectedStripId) ?? null : null
   const selectedMarking = selectedMarkingId ? markings.find(m => m.id === selectedMarkingId) ?? null : null
+  const selectedIslandLinkedCrossing = selectedMarking?.type === 'traffic-island'
+    ? markings.find((marking): marking is Marking & { linkedIslandId: string } => (
+        isLinkedCrossingMarking(marking) && marking.linkedIslandId === selectedMarking.id
+      ))
+    : undefined
+  const selectedIslandLinkedCrossingType: LinkedCrossingType | undefined =
+    selectedIslandLinkedCrossing?.type === 'crosswalk' || selectedIslandLinkedCrossing?.type === 'bike-crossing'
+      ? selectedIslandLinkedCrossing.type
+      : undefined
 
   // --- Build sidebar: unified palette with chips ---
   const sidebar = (
     <ElementPalette
       onAddStrip={handleAddStrip}
       onAddMarking={handleAddMarking}
+      onAddCrossingAid={handleAddCrossingAid}
+      onAddBikeCrossingAid={handleAddBikeCrossingAid}
       onLoadPreset={handleLoadPreset}
       presets={STRAIGHT_PRESETS}
       hasTrafficIsland={hasTrafficIsland}
@@ -550,6 +1054,8 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
           roadLength={length}
           roadClass={roadClass}
           roadwayWidth={roadwayWidth}
+          linkedCrossingType={selectedIslandLinkedCrossingType}
+          linkedCrossing={selectedIslandLinkedCrossing}
           onUpdateStrip={selectedStripId ? (changes) => handleUpdateStrip(selectedStripId, changes) : undefined}
           onUpdateMarking={selectedMarkingId ? (changes) => handleUpdateMarking(selectedMarkingId, changes) : undefined}
           onClose={() => setPropertiesOpen(false)}
@@ -642,3 +1148,4 @@ export function StraightEditor({ open, initialState, onFinish, onCancel }: Props
     />
   )
 }
+

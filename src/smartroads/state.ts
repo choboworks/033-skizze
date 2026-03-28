@@ -1,7 +1,24 @@
 import { createDefaultStraightRoad, normalizeLayerOrder } from './constants'
+import { getTrafficIslandPresetRule } from './rules/markingRules'
 import { getBusStripProps, getCurbStripProps, getCyclepathStripProps, getDefaultStripProps, getGuardrailStripProps, getLaneStripProps, getParkingStripProps, getSidewalkStripProps } from './stripProps'
 import { getStripDefaultWidth } from './rules/stripRules'
-import type { Marking, MarkingType, MarkingVariant, RoadClass, StraightRoadState, Strip, StripProps, StripType, StripVariant } from './types'
+import type {
+  BikeCrossingSurfaceType,
+  CyclepathLineMode,
+  LinkedCrossingType,
+  Marking,
+  MarkingType,
+  MarkingVariant,
+  RoadClass,
+  StraightRoadState,
+  Strip,
+  StripProps,
+  StripType,
+  StripVariant,
+  TrafficIslandEntryTreatment,
+  TrafficIslandPreset,
+  TrafficIslandSurfaceType,
+} from './types'
 
 const STRIP_TYPES: StripType[] = ['lane', 'sidewalk', 'cyclepath', 'parking', 'green', 'curb', 'gutter', 'median', 'bus', 'tram', 'shoulder', 'path', 'guardrail']
 const MARKING_TYPES: MarkingType[] = ['centerline', 'laneboundary', 'stopline', 'crosswalk', 'arrow', 'blocked-area', 'yield-line', 'bike-crossing', 'bus-stop', 'speed-limit', 'parking-marking', 'free-line', 'traffic-island']
@@ -28,10 +45,11 @@ const MARKING_VARIANTS_BY_TYPE: Partial<Record<MarkingType, MarkingVariant[]>> =
   laneboundary: ['solid', 'double'],
   stopline: ['default'],
   crosswalk: ['default'],
+  'bike-crossing': ['default'],
   arrow: ['straight', 'left', 'right', 'straight-left', 'straight-right'],
   'speed-limit': ['tempo-30', 'tempo-50'],
   'free-line': ['custom'],
-  'traffic-island': ['median-island', 'raised-paved'],
+  'traffic-island': ['raised-paved'],
 }
 
 const DEFAULT_VARIANT_BY_TYPE: Record<StripType, StripVariant> = {
@@ -55,10 +73,11 @@ const DEFAULT_MARKING_VARIANT_BY_TYPE: Partial<Record<MarkingType, MarkingVarian
   laneboundary: 'solid',
   stopline: 'default',
   crosswalk: 'default',
+  'bike-crossing': 'default',
   arrow: 'straight',
   'speed-limit': 'tempo-50',
   'free-line': 'custom',
-  'traffic-island': 'median-island',
+  'traffic-island': 'raised-paved',
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -120,6 +139,12 @@ function sanitizeDashPattern(value: unknown): number[] | undefined {
     .filter((entry): entry is number => typeof entry === 'number' && Number.isFinite(entry) && entry > 0)
     .map((entry) => Math.max(0.05, entry))
   return next.length > 0 ? next : undefined
+}
+
+function sanitizeLineMode(value: unknown): CyclepathLineMode | undefined {
+  return value === 'dashed' || value === 'solid' || value === 'none'
+    ? value as CyclepathLineMode
+    : undefined
 }
 
 function sanitizeStrip(raw: unknown, roadLength: number, roadClass: RoadClass): Strip | null {
@@ -184,6 +209,56 @@ function sanitizeMarking(raw: unknown, roadLength: number): Marking | null {
 
   const dashPattern = sanitizeDashPattern(raw.dashPattern)
   const markingColor = sanitizeColor(raw.color)
+  const rawTrafficIslandSurfaceType: TrafficIslandSurfaceType | undefined =
+    typeof raw.surfaceType === 'string' && ['green', 'paved', 'cobblestone'].includes(raw.surfaceType)
+      ? (raw.surfaceType as TrafficIslandSurfaceType)
+      : undefined
+  const trafficIslandPreset = typeof raw.crossingAidPreset === 'string' && ['standard', 'barrier-free', 'bike-crossing', 'free'].includes(raw.crossingAidPreset)
+    ? (raw.crossingAidPreset as TrafficIslandPreset)
+    // Legacy: map removed "overrunnable" states to the nearest supported crossing-aid preset.
+    : raw.crossingAidPreset === 'overrunnable'
+      ? ('standard' as TrafficIslandPreset)
+      : ('free' as TrafficIslandPreset)
+  const defaultTrafficIslandSurfaceType: TrafficIslandSurfaceType = raw.surfaceType === 'asphalt'
+    // Legacy: removed asphalt traffic-island surfaces fall back to a paved island body.
+    ? 'paved'
+    : trafficIslandPreset === 'free'
+      ? 'green'
+      : 'paved'
+  const sanitizedTrafficIslandSurfaceType = rawTrafficIslandSurfaceType ?? defaultTrafficIslandSurfaceType
+  const defaultTrafficIslandShowCurbBorder = true
+  const defaultTrafficIslandEntryTreatment = 'none' as TrafficIslandEntryTreatment
+  const defaultTrafficIslandShowApproachMarking = getTrafficIslandPresetRule(trafficIslandPreset).showApproachMarking
+  const bikeCrossingSurfaceType: BikeCrossingSurfaceType =
+    raw.bikeCrossingSurfaceType === 'crosswalk'
+      ? 'crosswalk'
+      : raw.bikeCrossingSurfaceType === 'cyclepath' || raw.bikeCrossingSurfaceType === 'red' || raw.bikeCrossingSurfaceType === 'none'
+        ? 'cyclepath'
+        : 'cyclepath'
+  const legacyBikeCrossingEdgeStyle = typeof raw.bikeCrossingEdgeStyle === 'string' ? raw.bikeCrossingEdgeStyle : undefined
+  const bikeCrossingBoundaryLineMode = sanitizeLineMode(raw.bikeCrossingBoundaryLineMode)
+    ?? (legacyBikeCrossingEdgeStyle === 'dashed-broad' || legacyBikeCrossingEdgeStyle === 'dashed-narrow'
+      ? 'dashed'
+      : legacyBikeCrossingEdgeStyle === 'none'
+        ? 'none'
+        : undefined)
+  const bikeCrossingBoundaryLineStrokeWidth = typeof raw.bikeCrossingBoundaryLineStrokeWidth === 'number' && Number.isFinite(raw.bikeCrossingBoundaryLineStrokeWidth)
+    ? Math.max(0.01, raw.bikeCrossingBoundaryLineStrokeWidth)
+    : legacyBikeCrossingEdgeStyle === 'dashed-narrow'
+      ? 0.12
+      : legacyBikeCrossingEdgeStyle === 'dashed-broad'
+        ? 0.25
+        : undefined
+  const bikeCrossingBoundaryLineDashLength = typeof raw.bikeCrossingBoundaryLineDashLength === 'number' && Number.isFinite(raw.bikeCrossingBoundaryLineDashLength)
+    ? Math.max(0.01, raw.bikeCrossingBoundaryLineDashLength)
+    : bikeCrossingBoundaryLineMode === 'dashed'
+      ? 0.5
+      : undefined
+  const bikeCrossingBoundaryLineGapLength = typeof raw.bikeCrossingBoundaryLineGapLength === 'number' && Number.isFinite(raw.bikeCrossingBoundaryLineGapLength)
+    ? Math.max(0.01, raw.bikeCrossingBoundaryLineGapLength)
+    : bikeCrossingBoundaryLineMode === 'dashed'
+      ? 0.2
+      : undefined
 
   const marking: Marking = {
     id: sanitizeId(raw.id, `${type}-marking`),
@@ -198,18 +273,81 @@ function sanitizeMarking(raw: unknown, roadLength: number): Marking | null {
     ...(typeof raw.strokeWidth === 'number' && Number.isFinite(raw.strokeWidth) ? { strokeWidth: Math.max(0.01, raw.strokeWidth) } : {}),
     ...(dashPattern ? { dashPattern } : {}),
     ...(markingColor ? { color: markingColor } : {}),
+    ...(typeof raw.linkedIslandId === 'string' && raw.linkedIslandId.trim().length > 0 ? { linkedIslandId: raw.linkedIslandId } : {}),
     // Traffic island specific fields
     ...(type === 'traffic-island' ? {
-      ...(typeof raw.surfaceType === 'string' && ['green', 'paved', 'cobblestone'].includes(raw.surfaceType) ? { surfaceType: raw.surfaceType } : { surfaceType: 'green' }),
+      crossingAidPreset: trafficIslandPreset,
+      surfaceType: sanitizedTrafficIslandSurfaceType,
+      curbType: 'flat',
+      ...(typeof raw.entryTreatment === 'string' && ['none', 'round-3cm', 'kassel', 'separated-0-6'].includes(raw.entryTreatment)
+        ? { entryTreatment: raw.entryTreatment as TrafficIslandEntryTreatment }
+        : { entryTreatment: defaultTrafficIslandEntryTreatment }),
       ...(typeof raw.endShape === 'string' && ['rounded', 'pointed', 'flat'].includes(raw.endShape) ? { endShape: raw.endShape } : { endShape: 'rounded' }),
       ...(typeof raw.endTaperLength === 'number' && Number.isFinite(raw.endTaperLength) ? { endTaperLength: Math.max(0.2, raw.endTaperLength) } : { endTaperLength: 1.0 }),
-      showCurbBorder: raw.showCurbBorder !== false,
-      showApproachMarking: raw.showApproachMarking !== false,
+      showCurbBorder: typeof raw.showCurbBorder === 'boolean' ? raw.showCurbBorder : defaultTrafficIslandShowCurbBorder,
+      showApproachMarking: typeof raw.showApproachMarking === 'boolean' ? raw.showApproachMarking : defaultTrafficIslandShowApproachMarking,
       ...(typeof raw.approachLength === 'number' && Number.isFinite(raw.approachLength) ? { approachLength: Math.max(1.0, Math.min(15.0, raw.approachLength)) } : { approachLength: 3.0 }),
+    } : {}),
+    ...(type === 'bike-crossing' ? {
+      bikeCrossingSurfaceType,
+      ...(bikeCrossingBoundaryLineMode ? { bikeCrossingBoundaryLineMode } : {}),
+      ...(bikeCrossingBoundaryLineStrokeWidth != null ? { bikeCrossingBoundaryLineStrokeWidth } : {}),
+      ...(bikeCrossingBoundaryLineDashLength != null ? { bikeCrossingBoundaryLineDashLength } : {}),
+      ...(bikeCrossingBoundaryLineGapLength != null ? { bikeCrossingBoundaryLineGapLength } : {}),
     } : {}),
   }
 
   return marking
+}
+
+function normalizeTrafficIslandMarkings(markings: Marking[]): Marking[] {
+  const linkedCrossingTypes = new Map<string, LinkedCrossingType>()
+  for (const marking of markings) {
+    if ((marking.type === 'crosswalk' || marking.type === 'bike-crossing') && typeof marking.linkedIslandId === 'string' && marking.linkedIslandId.trim().length > 0) {
+      linkedCrossingTypes.set(marking.linkedIslandId, marking.type)
+    }
+  }
+
+  const linkedIslandIds = new Set(
+    markings
+      .filter((marking): marking is Marking & { linkedIslandId: string } => (
+        (marking.type === 'crosswalk' || marking.type === 'bike-crossing') && typeof marking.linkedIslandId === 'string' && marking.linkedIslandId.trim().length > 0
+      ))
+      .map((marking) => marking.linkedIslandId),
+  )
+
+  return markings.map((marking) => {
+    if (marking.type !== 'traffic-island') return marking
+
+    const hasLinkedCrosswalk = linkedIslandIds.has(marking.id)
+    const linkedCrossingType = linkedCrossingTypes.get(marking.id)
+    const preset: TrafficIslandPreset = linkedCrossingType === 'bike-crossing'
+      ? 'bike-crossing'
+      : hasLinkedCrosswalk
+        ? (marking.crossingAidPreset === 'barrier-free' ? 'barrier-free' : 'standard')
+      : 'free'
+    const presetRule = getTrafficIslandPresetRule(preset)
+    const surfaceType = linkedCrossingType
+      ? (marking.surfaceType === 'cobblestone' || marking.surfaceType === 'paved' ? marking.surfaceType : presetRule.surfaceType)
+      : (marking.surfaceType === 'green' || marking.surfaceType === 'paved' || marking.surfaceType === 'cobblestone'
+          ? marking.surfaceType
+          : presetRule.surfaceType)
+
+    return {
+      ...marking,
+      crossingAidPreset: preset,
+      surfaceType,
+      curbType: 'flat',
+      entryTreatment: linkedCrossingType === 'crosswalk'
+        ? (preset === 'barrier-free'
+            ? 'separated-0-6'
+            : (marking.entryTreatment ?? presetRule.entryTreatment))
+        : 'none',
+      showCurbBorder: typeof marking.showCurbBorder === 'boolean' ? marking.showCurbBorder : presetRule.showCurbBorder,
+      showApproachMarking: typeof marking.showApproachMarking === 'boolean' ? marking.showApproachMarking : presetRule.showApproachMarking,
+      approachLength: marking.approachLength ?? presetRule.approachLength,
+    }
+  })
 }
 
 export function normalizeStraightRoadState(raw: unknown, fallback: StraightRoadState = createDefaultStraightRoad()): StraightRoadState {
@@ -223,6 +361,7 @@ export function normalizeStraightRoadState(raw: unknown, fallback: StraightRoadS
   const markings = Array.isArray(raw.markings)
     ? raw.markings.map((marking) => sanitizeMarking(marking, length)).filter((marking): marking is Marking => Boolean(marking))
     : fallback.markings
+  const normalizedMarkings = normalizeTrafficIslandMarkings(markings)
   const suppressedCenterlines = Array.isArray(raw.suppressedCenterlines)
     ? raw.suppressedCenterlines
       .map((marking) => sanitizeMarking(marking, length))
@@ -235,10 +374,11 @@ export function normalizeStraightRoadState(raw: unknown, fallback: StraightRoadS
 
   return {
     strips,
-    markings,
+    markings: normalizedMarkings,
     suppressedCenterlines,
     length,
     roadClass,
-    layerOrder: normalizeLayerOrder(rawLayerOrder, strips, markings),
+    layerOrder: normalizeLayerOrder(rawLayerOrder, strips, normalizedMarkings),
   }
 }
+
